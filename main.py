@@ -1,5 +1,4 @@
 from typing import Tuple
-
 import numpy as np
 import pandas as pd
 import requests
@@ -234,5 +233,5 @@ if __name__ == '__main__':
         cprint(format_percentage(v) + ' ', color=get_color(v), attrs=['reverse'], end='')
         print(f' - {k}')
 
-    print('\n')
-    cli_ui.info_3('Source code: https://github.com/Zaczero/CBBI')
+    print()
+    cli_ui.info_3('Source code: https://github.com/Zaczero/CBBI', end='\n\n')
