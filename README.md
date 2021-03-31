@@ -2,7 +2,13 @@
 
 Python implementation of the Colin Talks Crypto Bitcoin Bull Run Index (CBBI).
 
-If you want to learn more, [click here](https://www.youtube.com/watch?v=ZFQG59ZMSU0).
+If you want to learn more, [watch this video](https://www.youtube.com/watch?v=ZFQG59ZMSU0).
+
+<details>
+  <summary>Show an example output</summary>
+
+  ![preview image](https://github.com/Zaczero/CBBI/blob/main/resources/preview.png)
+</details>
 
 ## Check out this demo
 
