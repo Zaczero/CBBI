@@ -5,7 +5,7 @@ This is a Python implementation of the **Colin Talks Crypto Bitcoin Bull Run Ind
 If you want to learn more on that topic, [watch this video](https://www.youtube.com/watch?v=ZFQG59ZMSU0).
 
 <details>
-  <summary>Show an example output</summary>
+  <summary>View an example output</summary>
 
   ![preview image](https://github.com/Zaczero/CBBI/blob/main/resources/preview.png)
 </details>
