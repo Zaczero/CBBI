@@ -1,0 +1,4 @@
+User-Agent: *
+Disallow:
+
+Sitemap: https://cbbi.monicz.pl/sitemap.xml

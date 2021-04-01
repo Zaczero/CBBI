@@ -10,6 +10,12 @@ If you want to learn more on that topic, [watch this video](https://www.youtube.
   ![preview image](https://github.com/Zaczero/CBBI/blob/main/resources/preview.png)
 </details>
 
+## Visit the project's website
+
+Bookmark it and receive the most recent updates with just a single click. The confidence value is updated a few times a day. No installation required.
+
+- [cbbi.monicz.pl](https://cbbi.monicz.pl/)
+
 ## Check out this demo
 
 [![asciicast](https://asciinema.org/a/6oYLls2F1nCz6Sv6KyMKLL0n7.svg)](https://asciinema.org/a/6oYLls2F1nCz6Sv6KyMKLL0n7)

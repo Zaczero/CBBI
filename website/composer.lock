@@ -1,0 +1,71 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "a36c3ce0da19a9a5c75ac43f32df1c92",
+    "packages": [
+        {
+            "name": "neilime/ansi-escapes-to-html",
+            "version": "v2.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/neilime/ansi-escapes-to-html.git",
+                "reference": "9a8ca9710a6abe0f089e0e20cf5801107cf6bfaf"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/neilime/ansi-escapes-to-html/zipball/9a8ca9710a6abe0f089e0e20cf5801107cf6bfaf",
+                "reference": "9a8ca9710a6abe0f089e0e20cf5801107cf6bfaf",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.2"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^7 || ^8.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "AnsiEscapesToHtml\\": "src/AnsiEscapesToHtml"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Neilime",
+                    "homepage": "https://github.com/neilime",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Convert ANSI escapes (terminal formatting/color codes) to HTML",
+            "homepage": "http://neilime.github.io/ansi-escapes-to-html/",
+            "keywords": [
+                "ansi",
+                "convert",
+                "escapes",
+                "highlight",
+                "html"
+            ],
+            "support": {
+                "issues": "https://github.com/neilime/ansi-escapes-to-html/issues",
+                "source": "https://github.com/neilime/ansi-escapes-to-html/tree/master"
+            },
+            "time": "2019-10-09T19:09:25+00:00"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": [],
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": [],
+    "platform-dev": [],
+    "plugin-api-version": "2.0.0"
+}
