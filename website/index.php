@@ -21,7 +21,7 @@ $updated_on = date(DATE_FORMAT, $mtime);
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, shrink-to-fit=yes">
         
         <link rel="shortcut icon" href="/favicon.ico">
         <link rel="icon" sizes="16x16 32x32 64x64" href="/favicon.ico">
