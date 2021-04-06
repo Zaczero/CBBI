@@ -30,7 +30,7 @@ Bookmark it and receive the most recent updates with just a single click. The co
 
 ### Execute the script
 
-`$ py main.py`
+`$ py main.py <JSON_FILE_PATH>`
 
 ## Metrics
 
