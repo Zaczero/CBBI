@@ -12,8 +12,29 @@ import cli_ui
 
 cli_ui.CONFIG['color'] = 'always'
 
+HTTP_TIMEOUT = 30
+
 
 def mark_highs_lows(df: pd.DataFrame, col: str, begin_with_high: bool, window_size: float) -> pd.DataFrame:
+    """
+    Marks highs and lows (peaks) of the column values inside the given DataFrame.
+    Marked points are indicated by the value '1' inside their corresponding, newly added, 'High' and 'Low' columns.
+
+    Args:
+        df: DataFrame from which the column values are selected and to which marked points columns are added.
+        col: Column name of which values are selected inside the given DataFrame.
+        begin_with_high: Indicates whether the first peak is high or low.
+        window_size: Window size for the algorithm to consider.
+                     Too low value will mark too many peaks, whereas, too high value will mark too little peaks.
+
+    Returns:
+        Modified input DataFrame with columns, indicating the marked points, added.
+    """
+    assert col in df.columns, 'The column name (col) could not be found inside the given DataFrame (df)'
+    assert window_size > 0, 'Value of the window_size argument must be at least 1'
+    assert 'High' not in df.columns, 'The DataFrame (df) already contains the "High" column - bugprone'
+    assert 'Low' not in df.columns, 'The DataFrame (df) already contains the "Low" column - bugprone'
+
     df['High'] = 0
     df['Low'] = 0
 
@@ -38,6 +59,16 @@ def mark_highs_lows(df: pd.DataFrame, col: str, begin_with_high: bool, window_si
 
 
 def get_google_trends_index() -> float:
+    """
+    Calculates the current "Bitcoin" Google Trends index.
+
+    Returns:
+        Percentage value (0.0 - 1.0) of the "Bitcoin" Google Trends index.
+
+    References:
+        Source: https://trends.google.com/trends/explore?date=today%205-y&q=bitcoin
+    """
+
     target_ratio = 1 / .125
 
     cli_ui.info_2('Fetching Google Trends data')
@@ -67,12 +98,22 @@ def get_google_trends_index() -> float:
 
 
 def get_rupl_index() -> float:
+    """
+    Calculates the current Relative Unrealized Profit/Loss index.
+
+    Returns:
+        Percentage value (0.0 - 1.0) of the Relative Unrealized Profit/Loss index.
+
+    References:
+        Source: https://www.lookintobitcoin.com/charts/relative-unrealized-profit--loss/
+    """
+
     projected_max = .75
     projected_min = -.2
 
     cli_ui.info_2('Fetching RUPL data')
 
-    response = requests.get('https://www.lookintobitcoin.com/django_plotly_dash/app/unrealised_profit_loss/_dash-layout', timeout=30)
+    response = requests.get('https://www.lookintobitcoin.com/django_plotly_dash/app/unrealised_profit_loss/_dash-layout', timeout=HTTP_TIMEOUT)
     response.raise_for_status()
     response_json = response.json()
 
@@ -82,13 +123,25 @@ def get_rupl_index() -> float:
 
 
 def fetch_bitcoin_data(past_days: int) -> pd.DataFrame:
+    """
+    Fetches Bitcoin data into a DataFrame for the past ``past_days`` days.
+    The current day is skipped as the data for it is often incomplete (e.g. TotalGenerationUSD).
+
+    Args:
+        past_days: Amount of past days to fetch the Bitcoin data of.
+
+    Returns:
+        DataFrame containing Bitcoin data.
+    """
+    assert past_days > 0, 'Value of the past_days argument must be at least 1'
+
     cli_ui.info_2(f'Fetching Bitcoin data for the past {past_days} days')
 
     response = requests.get('https://api.blockchair.com/bitcoin/blocks', {
         'a': 'date,count(),min(id),max(id),sum(generation),sum(generation_usd)',
         's': 'date(desc)',
         'limit': past_days + 1,
-    }, timeout=30)
+    }, timeout=HTTP_TIMEOUT)
     response.raise_for_status()
     response_json = response.json()
 
@@ -112,12 +165,23 @@ def fetch_bitcoin_data(past_days: int) -> pd.DataFrame:
     current_price = df['Price'].tail(1).values[0]
     cli_ui.info_1(f'Current Bitcoin price: ${round(current_price):,}')
 
-    # the current day doesn't have complete data yet so it's better to skip it
-    # e.g. get_puell_index would be affected because of the wrong TotalGenerationUSD value
     return df.head(past_days)
 
 
 def get_golden_ratio_index(df: pd.DataFrame) -> float:
+    """
+    Calculates the current Golden Ratio index.
+
+    Args:
+        df: DataFrame containing Bitcoin data.
+
+    Returns:
+        Percentage value (0.0 - 1.0) of the Golden Ratio index.
+
+    References:
+        Source: https://www.tradingview.com/chart/BTCUSD/QBeNL8jt-BITCOIN-The-Golden-51-49-Ratio-600-days-of-Bull-Market-left/
+    """
+
     current_bottom_date = pd.to_datetime('2018-12-03')
     current_halving_date = pd.to_datetime('2020-05-11')
     current_peak_date = current_bottom_date + (current_halving_date - current_bottom_date) / .51
@@ -127,6 +191,19 @@ def get_golden_ratio_index(df: pd.DataFrame) -> float:
 
 
 def get_sf_index(df: pd.DataFrame) -> float:
+    """
+    Calculates the current Stock to Flow index.
+
+    Args:
+        df: DataFrame containing Bitcoin data.
+
+    Returns:
+        Percentage value (0.0 - 1.0) of the Stock to Flow index.
+
+    References:
+        Source: https://digitalik.net/btc/
+    """
+
     previous_hinge_date = pd.to_datetime('2017-10-15')
     previous_peak_date = pd.to_datetime('2017-12-15')
     current_hinge_date = pd.to_datetime('2021-08-15')
@@ -137,6 +214,19 @@ def get_sf_index(df: pd.DataFrame) -> float:
 
 
 def get_pi_cycle_index(df: pd.DataFrame) -> float:
+    """
+    Calculates the current Pi Cycle index.
+
+    Args:
+        df: DataFrame containing Bitcoin data.
+
+    Returns:
+        Percentage value (0.0 - 1.0) of the Pi Cycle index.
+
+    References:
+        Source: https://www.lookintobitcoin.com/charts/pi-cycle-top-indicator/
+    """
+
     max_divergence_price_high = np.log(12000)
     max_divergence_price_low = np.log(3700)
     max_divergence = max_divergence_price_high - max_divergence_price_low
@@ -152,6 +242,19 @@ def get_pi_cycle_index(df: pd.DataFrame) -> float:
 
 
 def get_2yma_index(df: pd.DataFrame) -> float:
+    """
+    Calculates the current 2-Year Moving Average index.
+
+    Args:
+        df: DataFrame containing Bitcoin data.
+
+    Returns:
+        Percentage value (0.0 - 1.0) of the 2-Year Moving Average index.
+
+    References:
+        Source: https://www.lookintobitcoin.com/charts/bitcoin-investor-tool/
+    """
+
     overshoot = .2
 
     df['2YMA'] = df['Price'].rolling(365 * 2).mean()
@@ -168,6 +271,19 @@ def get_2yma_index(df: pd.DataFrame) -> float:
 
 
 def get_trolololo_index(df: pd.DataFrame) -> float:
+    """
+    Calculates the current Trolololo index.
+
+    Args:
+        df: DataFrame containing Bitcoin data.
+
+    Returns:
+        Percentage value (0.0 - 1.0) of the Trolololo index.
+
+    References:
+        Source: https://www.blockchaincenter.net/bitcoin-rainbow-chart/
+    """
+
     begin_date = pd.to_datetime('2012-01-01')
     log_diff_line_count = 8
     log_diff_top = 7
@@ -188,6 +304,19 @@ def get_trolololo_index(df: pd.DataFrame) -> float:
 
 
 def get_puell_index(df: pd.DataFrame) -> float:
+    """
+    Calculates the current Puell Multiple index.
+
+    Args:
+        df: DataFrame containing Bitcoin data.
+
+    Returns:
+        Percentage value (0.0 - 1.0) of the Puell Multiple index.
+
+    References:
+        Source: https://www.lookintobitcoin.com/charts/puell-multiple/
+    """
+
     projected_max = np.log(4.75)
     projected_min = np.log(0.3)
 
@@ -199,29 +328,69 @@ def get_puell_index(df: pd.DataFrame) -> float:
 
 
 def format_percentage(val: float) -> str:
+    """
+    Formats a percentage value (0.0 - 1.0) in a standardized way.
+    Returned value has a constant width and a trailing '%' sign.
+
+    Args:
+        val: Percentage value to be formatted.
+
+    Returns:
+        Formatted percentage value with a constant width and trailing '%' sign.
+
+    Examples:
+        >>> print(format_percentage(0.359))
+        str(' 36 %')
+
+        >>> print(format_percentage(1.1))
+        str('110 %')
+    """
+
     return f'{round(val * 100): >3d} %'
 
 
 def get_color(val: float) -> str:
-    bin_map = [
+    """
+    Maps a percentage value (0.0 - 1.0) to its corresponding color.
+    The color is used to indicate whether the value is low (0.0) or high (1.0).
+    Returned value is a valid termcolor-package color string.
+
+    Args:
+        val: Percentage value to be mapped into a color.
+
+    Returns:
+        Valid termcolor-package color string.
+    """
+
+    config = [
         'red',
+        .3,
         'yellow',
+        .65,
         'green',
+        .85,
         'cyan',
+        .97,
         'magenta',
     ]
-    bins = [
-        .3,
-        .65,
-        .85,
-        .97,
-    ]
 
-    bin_index = np.digitize([round(val, 2)], bins)[0]
-    return bin_map[bin_index]
+    bin_index = np.digitize([round(val, 2)], config[1::2])[0]
+    return config[::2][bin_index]
 
 
 def run(file: str) -> None:
+    """
+    Calculates the current CBBI confidence value alongside all the required metrics.
+    Everything gets pretty printed to the current stdout and a clean copy
+    is written to a JSON file specified by the path in the ``file`` argument.
+
+    Args:
+        file: File path where the output is stored in the JSON format.
+
+    Returns:
+        None
+    """
+
     # fetch online data
     google_trends_index = get_google_trends_index()
     rupl_index = get_rupl_index()
@@ -289,7 +458,8 @@ def run_and_retry(file: str, max_attempts: int = 10, sleep_seconds_on_error: flo
     """
     Calculates the current CBBI confidence value alongside all the required metrics.
     Everything gets pretty printed to the current stdout and a clean copy
-    is written to a JSON file specified by the path in the 'file' argument.
+    is written to a JSON file specified by the path in the ``file`` argument.
+    The execution will be attempted multiple times in case an error occurs.
 
     Args:
         file: File path where the output is stored in the JSON format.
@@ -299,6 +469,8 @@ def run_and_retry(file: str, max_attempts: int = 10, sleep_seconds_on_error: flo
     Returns:
         None
     """
+    assert max_attempts > 0, 'Value of the max_attempts argument must be at least 1'
+    assert sleep_seconds_on_error >= 0, 'Value of the sleep_seconds_on_error argument must be positive'
 
     for _ in range(max_attempts):
         try:
