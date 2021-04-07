@@ -34,7 +34,7 @@ Bookmark it and receive the most recent updates with just a single click. The co
 
 ## Metrics
 
-The current CBBI version *(2021-03-27)* includes the following metrics:
+The current CBBI version *(April 2021)* includes the following metrics:
 
 | Name | Link |
 |---------------|------|
@@ -42,8 +42,9 @@ The current CBBI version *(2021-03-27)* includes the following metrics:
 | Google Trends for "Bitcoin" | [Visit page](https://trends.google.com/trends/explore?date=today%205-y&q=bitcoin) |
 | Stock-to-Flow Chart | [Visit page](https://digitalik.net/btc/) |
 | Pi Cycle Top Indicator | [Visit page](https://www.lookintobitcoin.com/charts/pi-cycle-top-indicator/) |
-| BIT: 2-Year Moving Average | [Visit page](https://www.lookintobitcoin.com/charts/bitcoin-investor-tool/) |
-| NUPL a.k.a. RUPL | [Visit page](https://www.lookintobitcoin.com/charts/relative-unrealized-profit--loss/) |
+| 2 Year Moving Average | [Visit page](https://www.lookintobitcoin.com/charts/bitcoin-investor-tool/) |
+| Bitcoin Trolololo Trend Line | [Visit page](https://www.blockchaincenter.net/bitcoin-rainbow-chart/) |
+| RUPL/NUPL Chart | [Visit page](https://www.lookintobitcoin.com/charts/relative-unrealized-profit--loss/) |
 | Puell Multiple | [Visit page](https://www.lookintobitcoin.com/charts/puell-multiple/) |
 
 ## Footer

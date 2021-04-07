@@ -167,6 +167,26 @@ def get_2yma_index(df: pd.DataFrame) -> float:
     return ((df['PriceLog'] - df['2YMALogUndershoot']) / (df['2YMALogOvershoot'] - df['2YMALogUndershoot'])).tail(1).values[0]
 
 
+def get_trolololo_index(df: pd.DataFrame) -> float:
+    begin_date = pd.to_datetime('2012-01-01')
+    log_diff_line_count = 8
+    log_diff_top = 7
+    log_diff_bottom = 0.5
+
+    df['TrolololoDaysSinceBegin'] = (df['Date'] - begin_date).dt.days
+
+    df['TrolololoLineTopPrice'] = np.power(10, 2.900 * np.log(df['TrolololoDaysSinceBegin'] + 1400) - 19.463)  # Maximum Bubble Territory
+    df['TrolololoLineTopPriceLog'] = np.log(df['TrolololoLineTopPrice'])
+    df['TrolololoLineBottomPrice'] = np.power(10, 2.788 * np.log(df['TrolololoDaysSinceBegin'] + 1200) - 19.463)  # Basically a Fire Sale
+    df['TrolololoLineBottomPriceLog'] = np.log(df['TrolololoLineBottomPrice'])
+
+    df['TrolololoLogDifference'] = (df['TrolololoLineTopPriceLog'] - df['TrolololoLineBottomPriceLog']) / log_diff_line_count
+    df['TrolololoLogTop'] = df['TrolololoLineBottomPriceLog'] + log_diff_top * df['TrolololoLogDifference']
+    df['TrolololoLogBottom'] = df['TrolololoLineBottomPriceLog'] - log_diff_bottom * df['TrolololoLogDifference']
+
+    return ((df['PriceLog'] - df['TrolololoLogBottom']) / (df['TrolololoLogTop'] - df['TrolololoLogBottom'])).tail(1).values[0]
+
+
 def get_puell_index(df: pd.DataFrame) -> float:
     projected_max = np.log(4.75)
     projected_min = np.log(0.3)
@@ -212,6 +232,7 @@ def run(file: str) -> None:
     sf_index = get_sf_index(df_bitcoin)
     pi_cycle_index = get_pi_cycle_index(df_bitcoin)
     _2yma_index = get_2yma_index(df_bitcoin)
+    trolololo_index = get_trolololo_index(df_bitcoin)
     puell_index = get_puell_index(df_bitcoin)
 
     confidence = np.mean([
@@ -220,6 +241,7 @@ def run(file: str) -> None:
         sf_index,
         pi_cycle_index,
         _2yma_index,
+        trolololo_index,
         rupl_index,
         puell_index
     ])
@@ -231,6 +253,7 @@ def run(file: str) -> None:
         'stock_to_flow': sf_index,
         'pi_cycle': pi_cycle_index,
         '2yma': _2yma_index,
+        'trolololo': trolololo_index,
         'rupl': rupl_index,
         'puell': puell_index,
         'timestamp': int(time.time())
@@ -244,8 +267,9 @@ def run(file: str) -> None:
         '"Bitcoin" search term (Google Trends)': google_trends_index,
         'Stock-to-Flow Chart': sf_index,
         'Pi Cycle Top Indicator': pi_cycle_index,
-        'Bitcoin Investor Tool: 2-Year Moving Average': _2yma_index,
-        'NUPL a.k.a. RUPL': rupl_index,
+        '2 Year Moving Average': _2yma_index,
+        'Bitcoin Trolololo Trend Line': trolololo_index,
+        'RUPL/NUPL Chart': rupl_index,
         'Puell Multiple': puell_index,
     }
 
