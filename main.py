@@ -78,7 +78,7 @@ def get_google_trends_index() -> float:
     df_interest = pytrends.interest_over_time()
 
     if df_interest.shape[0] < 100:
-        raise Exception('Google Trends returned too little data.')
+        raise Exception('Google Trends API returned too little data.')
 
     df_interest.reset_index(inplace=True)
     df_interest.rename(columns={
