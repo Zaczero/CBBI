@@ -58,70 +58,6 @@ def mark_highs_lows(df: pd.DataFrame, col: str, begin_with_high: bool, window_si
     return df
 
 
-def get_google_trends_index() -> float:
-    """
-    Calculates the current "Bitcoin" Google Trends index.
-
-    Returns:
-        Percentage value (0.0 - 1.0) of the "Bitcoin" Google Trends index.
-
-    References:
-        Source: https://trends.google.com/trends/explore?date=today%205-y&q=bitcoin
-    """
-
-    target_ratio = 1 / .125
-
-    cli_ui.info_2('Fetching Google Trends data')
-
-    pytrends = TrendReq()
-    pytrends.build_payload(kw_list=['Bitcoin'])
-    df_interest = pytrends.interest_over_time()
-
-    if df_interest.shape[0] < 100:
-        raise Exception('Google Trends API returned too little data.')
-
-    df_interest.reset_index(inplace=True)
-    df_interest.rename(columns={
-        'date': 'Date',
-        'Bitcoin': 'Interest'
-    }, inplace=True)
-    df_interest = mark_highs_lows(df_interest, 'Interest', True, round(365 * 2 / 7))
-
-    previous_peak = df_interest.loc[df_interest['High'] == 1].head(1)['Interest'].values[0]
-    current_peak = df_interest.tail(1)['Interest'].values[0]
-
-    cli_ui.info_1(f'Previous Google Trends peak: {previous_peak}%')
-    cli_ui.info_1(f'Current Google Trends peak: {current_peak}%')
-
-    current_ratio = current_peak / previous_peak
-    return current_ratio / target_ratio
-
-
-def get_rupl_index() -> float:
-    """
-    Calculates the current Relative Unrealized Profit/Loss index.
-
-    Returns:
-        Percentage value (0.0 - 1.0) of the Relative Unrealized Profit/Loss index.
-
-    References:
-        Source: https://www.lookintobitcoin.com/charts/relative-unrealized-profit--loss/
-    """
-
-    projected_max = .75
-    projected_min = -.2
-
-    cli_ui.info_2('Fetching RUPL data')
-
-    response = requests.get('https://www.lookintobitcoin.com/django_plotly_dash/app/unrealised_profit_loss/_dash-layout', timeout=HTTP_TIMEOUT)
-    response.raise_for_status()
-    response_json = response.json()
-
-    current_value = response_json['props']['children'][0]['props']['figure']['data'][0]['y'][-1]
-
-    return (current_value - projected_min) / (projected_max - projected_min)
-
-
 def fetch_bitcoin_data(past_days: int) -> pd.DataFrame:
     """
     Fetches Bitcoin data into a DataFrame for the past ``past_days`` days.
@@ -168,15 +104,108 @@ def fetch_bitcoin_data(past_days: int) -> pd.DataFrame:
     return df.head(past_days)
 
 
-def get_golden_ratio_index(df: pd.DataFrame) -> float:
+def add_google_trends_index(df: pd.DataFrame) -> (str, pd.DataFrame):
     """
-    Calculates the current Golden Ratio index.
+    Calculates the current "Bitcoin" Google Trends index and appends it to the DataFrame.
 
     Args:
         df: DataFrame containing Bitcoin data.
 
     Returns:
-        Percentage value (0.0 - 1.0) of the Golden Ratio index.
+        Tuple.
+            The first element is a string containing the column name of the index values.
+            The second element is a modified source DataFrame containing the index values.
+
+    References:
+        Source: https://trends.google.com/trends/explore?date=today%205-y&q=bitcoin
+    """
+
+    target_ratio = 1 / .125
+
+    cli_ui.info_2('Fetching Google Trends data')
+
+    pytrends = TrendReq()
+    pytrends.build_payload(kw_list=['Bitcoin'])
+    df_interest = pytrends.interest_over_time()
+
+    if df_interest.shape[0] < 100:
+        raise Exception('Google Trends API returned too little data.')
+
+    df_interest.reset_index(inplace=True)
+    df_interest.rename(columns={
+        'date': 'Date',
+        'Bitcoin': 'Interest'
+    }, inplace=True)
+
+    df_interest = mark_highs_lows(df_interest, 'Interest', True, round(365 * 2 / 7))
+    ignore_marks_since = pd.Timestamp('today').floor('D') - pd.Timedelta(365, unit='D')
+    df_interest.loc[df_interest['Date'] > ignore_marks_since, ['High', 'Low']] = 0
+
+    df = df.join(df_interest.set_index('Date'), on='Date')
+    df.fillna({'High': 0, 'Low': 0}, inplace=True)
+    df['Interest'].interpolate(inplace=True)
+
+    def find_previous_high(row: pd.Series):
+        peak_indexes = df[df['High'] == 1].index
+        bin_index = np.digitize(row.name, peak_indexes)
+        peak_value = np.NaN if bin_index == 0 else df.loc[peak_indexes[bin_index - 1], 'Interest']
+        return peak_value
+
+    df['PreviousHighInterest'] = df.apply(find_previous_high, axis=1)
+    df['GoogleTrendsIndex'] = df['Interest'] / (df['PreviousHighInterest'] * target_ratio)
+
+    return 'GoogleTrendsIndex', df
+
+
+def add_rupl_index(df: pd.DataFrame) -> (str, pd.DataFrame):
+    """
+    Calculates the current Relative Unrealized Profit/Loss index and appends it to the DataFrame.
+
+    Args:
+        df: DataFrame containing Bitcoin data.
+
+    Returns:
+        Tuple.
+            The first element is a string containing the column name of the index values.
+            The second element is a modified source DataFrame containing the index values.
+
+    References:
+        Source: https://www.lookintobitcoin.com/charts/relative-unrealized-profit--loss/
+    """
+
+    projected_max = .75
+    projected_min = -.2
+
+    cli_ui.info_2('Fetching RUPL data')
+
+    response = requests.get('https://www.lookintobitcoin.com/django_plotly_dash/app/unrealised_profit_loss/_dash-layout', timeout=HTTP_TIMEOUT)
+    response.raise_for_status()
+    response_json = response.json()
+    response_x = response_json['props']['children'][0]['props']['figure']['data'][0]['x']
+    response_y = response_json['props']['children'][0]['props']['figure']['data'][0]['y']
+
+    df_rupl = pd.DataFrame({
+        'Date': response_x[:len(response_y)],
+        'RUPL': response_y,
+    })
+    df_rupl['Date'] = pd.to_datetime(df_rupl['Date']).dt.tz_localize(None)
+
+    df = df.join(df_rupl.set_index('Date'), on='Date')
+    df['RUPL'].ffill(inplace=True)
+    df['RUPLIndex'] = (df['RUPL'] - projected_min) / (projected_max - projected_min)
+
+    return 'RUPLIndex', df
+
+
+def add_golden_ratio_index(df: pd.DataFrame) -> str:
+    """
+    Calculates the current Golden Ratio index and appends it to the DataFrame inline.
+
+    Args:
+        df: DataFrame containing Bitcoin data.
+
+    Returns:
+        String containing the column name of the index values.
 
     References:
         Source: https://www.tradingview.com/chart/BTCUSD/QBeNL8jt-BITCOIN-The-Golden-51-49-Ratio-600-days-of-Bull-Market-left/
@@ -185,20 +214,22 @@ def get_golden_ratio_index(df: pd.DataFrame) -> float:
     current_bottom_date = pd.to_datetime('2018-12-03')
     current_halving_date = pd.to_datetime('2020-05-11')
     current_peak_date = current_bottom_date + (current_halving_date - current_bottom_date) / .51
-    current_date = df['Date'].tail(1).values[0]
 
-    return (current_date - current_bottom_date) / (current_peak_date - current_bottom_date)
+    df['GoldenRatioIndex'] = (df['Date'] - current_bottom_date) / (current_peak_date - current_bottom_date)
+    df.loc[df['GoldenRatioIndex'] < 0.51, 'GoldenRatioIndex'] = np.nan
+
+    return 'GoldenRatioIndex'
 
 
-def get_sf_index(df: pd.DataFrame) -> float:
+def add_stock_to_flow_index(df: pd.DataFrame) -> str:
     """
-    Calculates the current Stock to Flow index.
+    Calculates the current Stock to Flow index and appends it to the DataFrame inline.
 
     Args:
         df: DataFrame containing Bitcoin data.
 
     Returns:
-        Percentage value (0.0 - 1.0) of the Stock to Flow index.
+        String containing the column name of the index values.
 
     References:
         Source: https://digitalik.net/btc/
@@ -208,20 +239,22 @@ def get_sf_index(df: pd.DataFrame) -> float:
     previous_peak_date = pd.to_datetime('2017-12-15')
     current_hinge_date = pd.to_datetime('2021-08-15')
     current_peak_date = current_hinge_date + (previous_peak_date - previous_hinge_date)
-    current_date = df['Date'].tail(1).values[0]
 
-    return (current_date - previous_peak_date) / (current_peak_date - previous_peak_date)
+    df['StockToFlowIndex'] = (df['Date'] - previous_peak_date) / (current_peak_date - previous_peak_date)
+    df.loc[df['StockToFlowIndex'] < 0, 'StockToFlowIndex'] = np.nan
+
+    return 'StockToFlowIndex'
 
 
-def get_pi_cycle_index(df: pd.DataFrame) -> float:
+def add_pi_cycle_index(df: pd.DataFrame) -> str:
     """
-    Calculates the current Pi Cycle index.
+    Calculates the current Pi Cycle index and appends it to the DataFrame inline.
 
     Args:
         df: DataFrame containing Bitcoin data.
 
     Returns:
-        Percentage value (0.0 - 1.0) of the Pi Cycle index.
+        String containing the column name of the index values.
 
     References:
         Source: https://www.lookintobitcoin.com/charts/pi-cycle-top-indicator/
@@ -238,18 +271,20 @@ def get_pi_cycle_index(df: pd.DataFrame) -> float:
     df['350DMAx2Log'] = np.log(df['350DMAx2'])
     df['PiCycleDifference'] = np.abs(df['111DMALog'] - df['350DMAx2Log'])
 
-    return (1 - df['PiCycleDifference'] / max_divergence).tail(1).values[0]
+    df['PiCycleIndex'] = 1 - (df['PiCycleDifference'] / max_divergence)
+
+    return 'PiCycleIndex'
 
 
-def get_2yma_index(df: pd.DataFrame) -> float:
+def add_2yma_index(df: pd.DataFrame) -> str:
     """
-    Calculates the current 2-Year Moving Average index.
+    Calculates the current 2-Year Moving Average index and appends it to the DataFrame inline.
 
     Args:
         df: DataFrame containing Bitcoin data.
 
     Returns:
-        Percentage value (0.0 - 1.0) of the 2-Year Moving Average index.
+        String containing the column name of the index values.
 
     References:
         Source: https://www.lookintobitcoin.com/charts/bitcoin-investor-tool/
@@ -267,18 +302,20 @@ def get_2yma_index(df: pd.DataFrame) -> float:
     df['2YMALogOvershoot'] = df['2YMAx5Log'] + df['2YMALogOvershootDifference']
     df['2YMALogUndershoot'] = df['2YMALog'] - df['2YMALogOvershootDifference']
 
-    return ((df['PriceLog'] - df['2YMALogUndershoot']) / (df['2YMALogOvershoot'] - df['2YMALogUndershoot'])).tail(1).values[0]
+    df['2YMAIndex'] = (df['PriceLog'] - df['2YMALogUndershoot']) / (df['2YMALogOvershoot'] - df['2YMALogUndershoot'])
+
+    return '2YMAIndex'
 
 
-def get_trolololo_index(df: pd.DataFrame) -> float:
+def add_trolololo_index(df: pd.DataFrame) -> str:
     """
-    Calculates the current Trolololo index.
+    Calculates the current Trolololo index and appends it to the DataFrame inline.
 
     Args:
         df: DataFrame containing Bitcoin data.
 
     Returns:
-        Percentage value (0.0 - 1.0) of the Trolololo index.
+        String containing the column name of the index values.
 
     References:
         Source: https://www.blockchaincenter.net/bitcoin-rainbow-chart/
@@ -300,18 +337,20 @@ def get_trolololo_index(df: pd.DataFrame) -> float:
     df['TrolololoLogTop'] = df['TrolololoLineBottomPriceLog'] + log_diff_top * df['TrolololoLogDifference']
     df['TrolololoLogBottom'] = df['TrolololoLineBottomPriceLog'] - log_diff_bottom * df['TrolololoLogDifference']
 
-    return ((df['PriceLog'] - df['TrolololoLogBottom']) / (df['TrolololoLogTop'] - df['TrolololoLogBottom'])).tail(1).values[0]
+    df['TrolololoIndex'] = (df['PriceLog'] - df['TrolololoLogBottom']) / (df['TrolololoLogTop'] - df['TrolololoLogBottom'])
+
+    return 'TrolololoIndex'
 
 
-def get_puell_index(df: pd.DataFrame) -> float:
+def add_puell_index(df: pd.DataFrame) -> str:
     """
-    Calculates the current Puell Multiple index.
+    Calculates the current Puell Multiple index and appends it to the DataFrame inline.
 
     Args:
         df: DataFrame containing Bitcoin data.
 
     Returns:
-        Percentage value (0.0 - 1.0) of the Puell Multiple index.
+        String containing the column name of the index values.
 
     References:
         Source: https://www.lookintobitcoin.com/charts/puell-multiple/
@@ -324,16 +363,19 @@ def get_puell_index(df: pd.DataFrame) -> float:
     df['Puell'] = df['TotalGenerationUSD'] / df['PuellMA365']
     df['PuellLog'] = np.log(df['Puell'])
 
-    return ((df['PuellLog'] - projected_min) / (projected_max - projected_min)).tail(1).values[0]
+    df['PuellIndex'] = (df['PuellLog'] - projected_min) / (projected_max - projected_min)
+
+    return 'PuellIndex'
 
 
-def format_percentage(val: float) -> str:
+def format_percentage(val: float, suffix: str = ' %') -> str:
     """
     Formats a percentage value (0.0 - 1.0) in a standardized way.
     Returned value has a constant width and a trailing '%' sign.
 
     Args:
         val: Percentage value to be formatted.
+        suffix: String to be appended to the result.
 
     Returns:
         Formatted percentage value with a constant width and trailing '%' sign.
@@ -346,7 +388,7 @@ def format_percentage(val: float) -> str:
         str('110 %')
     """
 
-    return f'{round(val * 100): >3d} %'
+    return f'{round(val * 100): >3d}{suffix}'
 
 
 def get_color(val: float) -> str:
@@ -392,59 +434,58 @@ def run(file: str) -> None:
     """
 
     # fetch online data
-    google_trends_index = get_google_trends_index()
-    rupl_index = get_rupl_index()
-    df_bitcoin = fetch_bitcoin_data(365 * 2)
+    df_bitcoin = fetch_bitcoin_data(365 * 4)
+
+    col_google_trends, df_bitcoin = add_google_trends_index(df_bitcoin)
+    col_rupl, df_bitcoin = add_rupl_index(df_bitcoin)
 
     # parse and analyse the data
-    golden_ratio_index = get_golden_ratio_index(df_bitcoin)
-    sf_index = get_sf_index(df_bitcoin)
-    pi_cycle_index = get_pi_cycle_index(df_bitcoin)
-    _2yma_index = get_2yma_index(df_bitcoin)
-    trolololo_index = get_trolololo_index(df_bitcoin)
-    puell_index = get_puell_index(df_bitcoin)
+    col_golden_ratio = add_golden_ratio_index(df_bitcoin)
+    col_stock_to_flow = add_stock_to_flow_index(df_bitcoin)
+    col_pi_cycle = add_pi_cycle_index(df_bitcoin)
+    col_2yma = add_2yma_index(df_bitcoin)
+    col_trolololo = add_trolololo_index(df_bitcoin)
+    col_puell = add_puell_index(df_bitcoin)
+    col_confidence = 'Confidence'
 
-    confidence = np.mean([
-        golden_ratio_index,
-        google_trends_index,
-        sf_index,
-        pi_cycle_index,
-        _2yma_index,
-        trolololo_index,
-        rupl_index,
-        puell_index
-    ])
+    cols_metric = [
+        col_google_trends,
+        col_rupl,
+        col_golden_ratio,
+        col_stock_to_flow,
+        col_pi_cycle,
+        col_2yma,
+        col_trolololo,
+        col_puell,
+    ]
 
-    details_json = {
-        'confidence': confidence,
-        'golden_ratio': golden_ratio_index,
-        'google_trends': google_trends_index,
-        'stock_to_flow': sf_index,
-        'pi_cycle': pi_cycle_index,
-        '2yma': _2yma_index,
-        'trolololo': trolololo_index,
-        'rupl': rupl_index,
-        'puell': puell_index,
-        'timestamp': int(time.time())
-    }
+    df_result = pd.DataFrame(df_bitcoin[['Date', 'Price'] + cols_metric])
 
-    with open(file, 'w+') as f:
-        json.dump(details_json, f, indent=2)
+    df_result.dropna(inplace=True)
+    df_result.set_index('Date', inplace=True)
+    df_result[col_confidence] = df_result[cols_metric].mean(axis=1)
+    df_result.to_json(file,
+                      double_precision=4,
+                      date_unit='s',
+                      indent=2,
+                      )
+
+    df_result_latest = df_result.tail(1)
 
     details_stdout = {
-        'The Golden 51%-49% Ratio': golden_ratio_index,
-        '"Bitcoin" search term (Google Trends)': google_trends_index,
-        'Stock-to-Flow Chart': sf_index,
-        'Pi Cycle Top Indicator': pi_cycle_index,
-        '2 Year Moving Average': _2yma_index,
-        'Bitcoin Trolololo Trend Line': trolololo_index,
-        'RUPL/NUPL Chart': rupl_index,
-        'Puell Multiple': puell_index,
+        'The Golden 51%-49% Ratio': df_result_latest[col_golden_ratio][0],
+        '"Bitcoin" search term (Google Trends)': df_result_latest[col_google_trends][0],
+        'Stock-to-Flow Chart': df_result_latest[col_stock_to_flow][0],
+        'Pi Cycle Top Indicator': df_result_latest[col_pi_cycle][0],
+        '2 Year Moving Average': df_result_latest[col_2yma][0],
+        'Bitcoin Trolololo Trend Line': df_result_latest[col_trolololo][0],
+        'RUPL/NUPL Chart': df_result_latest[col_rupl][0],
+        'Puell Multiple': df_result_latest[col_puell][0],
     }
 
     print('\n')
     cli_ui.info_3('Confidence we are at the peak:')
-    cprint(figlet_format(format_percentage(confidence), font='univers'), 'cyan', attrs=['bold'], end='')
+    cprint(figlet_format(format_percentage(df_result_latest[col_confidence][0], ''), font='univers'), 'cyan', attrs=['bold'], end='')
 
     for k, v in details_stdout.items():
         cprint(format_percentage(v) + ' ', color=get_color(v), attrs=['reverse'], end='')
