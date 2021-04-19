@@ -14,7 +14,8 @@ If you want to learn more on that topic, [watch this video](https://www.youtube.
 
 Bookmark it and receive the most recent updates with just a single click. The confidence value is updated a few times a day. No installation required.
 
-- [cbbi.monicz.pl](https://cbbi.monicz.pl/)
+- [cbbi.info](https://cbbi.info/) (official)
+- [cbbi.monicz.pl](https://cbbi.monicz.pl/) (mirror)
 
 ## Check out this demo
 
