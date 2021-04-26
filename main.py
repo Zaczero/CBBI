@@ -226,9 +226,6 @@ def add_rupl_index(df: pd.DataFrame) -> (str, pd.DataFrame):
         Source: https://www.lookintobitcoin.com/charts/relative-unrealized-profit--loss/
     """
 
-    projected_max = .75
-    projected_min = -.2
-
     cli_ui.info_2('Fetching RUPL data')
 
     response = requests.get('https://www.lookintobitcoin.com/django_plotly_dash/app/unrealised_profit_loss/_dash-layout', timeout=HTTP_TIMEOUT)
