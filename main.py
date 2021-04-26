@@ -13,13 +13,14 @@ from termcolor import cprint
 import cli_ui
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.linear_model import LinearRegression
 
 cli_ui.CONFIG['color'] = 'always'
 
 HTTP_TIMEOUT = 30
 
 
-def mark_highs_lows(df: pd.DataFrame, col: str, begin_with_high: bool, window_size: float) -> pd.DataFrame:
+def mark_highs_lows(df: pd.DataFrame, col: str, begin_with_high: bool, window_size: float, ignore_last_rows: int) -> pd.DataFrame:
     """
     Marks highs and lows (peaks) of the column values inside the given DataFrame.
     Marked points are indicated by the value '1' inside their corresponding, newly added, 'High' and 'Low' columns.
@@ -34,13 +35,16 @@ def mark_highs_lows(df: pd.DataFrame, col: str, begin_with_high: bool, window_si
     Returns:
         Modified input DataFrame with columns, indicating the marked points, added.
     """
-    assert col in df.columns, 'The column name (col) could not be found inside the given DataFrame (df)'
-    assert window_size > 0, 'Value of the window_size argument must be at least 1'
-    assert 'High' not in df.columns, 'The DataFrame (df) already contains the "High" column - bugprone'
-    assert 'Low' not in df.columns, 'The DataFrame (df) already contains the "Low" column - bugprone'
+    col_high = col + 'High'
+    col_low = col + 'Low'
 
-    df['High'] = 0
-    df['Low'] = 0
+    assert col in df.columns, 'The column name (col) could not be found inside the given DataFrame (df)'
+    assert col_high not in df.columns, 'The DataFrame (df) already contains the "High" column - bugprone'
+    assert col_low not in df.columns, 'The DataFrame (df) already contains the "Low" column - bugprone'
+    assert window_size > 0, 'Value of the window_size argument must be at least 1'
+
+    df[col_high] = 0
+    df[col_low] = 0
 
     searching_high = begin_with_high
     current_index = df.index[0]
@@ -53,15 +57,17 @@ def mark_highs_lows(df: pd.DataFrame, col: str, begin_with_high: bool, window_si
             break
 
         if window_index == current_index:
-            df.loc[window_index, 'High' if searching_high else 'Low'] = 1
+            df.loc[window_index, col_high if searching_high else col_low] = 1
             searching_high = not searching_high
             window_index = window_index + 1
 
         current_index = window_index
 
+    df.loc[df.shape[0]-ignore_last_rows:, (col_high, col_low)] = 0
     return df
 
 
+@filecache(3600 * 2)  # 2 hours cache
 def fetch_bitcoin_data() -> pd.DataFrame:
     """
     Fetches Bitcoin data into a DataFrame for the past ``past_days`` days.
@@ -107,15 +113,15 @@ def fetch_bitcoin_data() -> pd.DataFrame:
     return df.iloc[:-1]
 
 
-@filecache(3600 * 24 * 3)
-def fetch_google_trends_data(keyword: str, timeframe: str) -> pd.DataFrame:
+@filecache(3600 * 24 * 3)  # 3 day cache
+def fetch_google_trends_data(keyword: str, timeframe: str, repeat_if_empty: bool) -> pd.DataFrame:
     pytrends = TrendReq()
 
     for _ in range(5):
         pytrends.build_payload(kw_list=[keyword], timeframe=timeframe)
         df = pytrends.interest_over_time()
 
-        if df.shape[0] > 0:
+        if df.shape[0] > 0 or not repeat_if_empty:
             return df
 
         time.sleep(10)
@@ -162,8 +168,9 @@ def add_google_trends_index(df: pd.DataFrame) -> (str, pd.DataFrame):
         date_current = min(date_current + delta, date_end)
         date_end_str = date_current.strftime('%Y-%m-%d')
         timeframe = f'{date_start_str} {date_end_str}'
+        repeat_if_empty = i + 1 < iteration_count
 
-        df_fetched = fetch_google_trends_data(keyword, timeframe)
+        df_fetched = fetch_google_trends_data(keyword, timeframe, repeat_if_empty)
 
         if df_interest.shape[0] > 0:
             prev_scale = df_interest.iloc[-1][keyword]
@@ -186,24 +193,20 @@ def add_google_trends_index(df: pd.DataFrame) -> (str, pd.DataFrame):
         'date': 'Date',
         'Bitcoin': 'Interest'
     }, inplace=True)
-
-    df_interest = mark_highs_lows(df_interest, 'Interest', True, round(365 * 2))
-    ignore_marks_since = pd.Timestamp('today').floor('D') - pd.Timedelta(365, unit='D')
-    df_interest.loc[df_interest['Date'] > ignore_marks_since, ['High', 'Low']] = 0
+    df_interest = mark_highs_lows(df_interest, 'Interest', True, round(365 * 2), 365)
 
     df = df.join(df_interest.set_index('Date'), on='Date')
-    df.fillna({'High': 0, 'Low': 0}, inplace=True)
-    df['Interest'].interpolate(inplace=True)
+    df.fillna({'InterestHigh': 0, 'InterestLow': 0}, inplace=True)
+    df['Interest'].ffill(inplace=True)
 
     def find_previous_high(row: pd.Series):
-        peak_indexes = df[df['High'] == 1].index
+        peak_indexes = df[df['InterestHigh'] == 1].index
         bin_index = np.digitize(row.name, peak_indexes, right=True)
         peak_value = np.NaN if bin_index == 0 else df.loc[peak_indexes[bin_index - 1], 'Interest']
         return peak_value
 
     df['PreviousHighInterest'] = df.apply(find_previous_high, axis=1)
     df['GoogleTrendsIndex'] = df['Interest'] / (df['PreviousHighInterest'] * target_ratio)
-
     return 'GoogleTrendsIndex', df
 
 
@@ -239,11 +242,38 @@ def add_rupl_index(df: pd.DataFrame) -> (str, pd.DataFrame):
         'RUPL': response_y,
     })
     df_rupl['Date'] = pd.to_datetime(df_rupl['Date']).dt.tz_localize(None)
+    df_rupl = mark_highs_lows(df_rupl, 'RUPL', True, round(365 * 2), 365)
 
     df = df.join(df_rupl.set_index('Date'), on='Date')
+    df.fillna({'RUPLHigh': 0, 'RUPLLow': 0}, inplace=True)
     df['RUPL'].ffill(inplace=True)
-    df['RUPLIndex'] = (df['RUPL'] - projected_min) / (projected_max - projected_min)
 
+    low_rows = df.loc[df['RUPLLow'] == 1]
+    low_x = low_rows.index.values.reshape(-1, 1)
+    low_y = low_rows['RUPL'].values.reshape(-1, 1)
+
+    high_rows = df.loc[df['RUPLHigh'] == 1]
+    high_x = high_rows.index.values.reshape(-1, 1)
+    high_y = high_rows['RUPL'].values.reshape(-1, 1)
+
+    x = df.index.values.reshape(-1, 1)
+
+    lin_model = LinearRegression()
+    lin_model.fit(low_x, low_y)
+    df['RUPLLowModel'] = lin_model.predict(x)
+
+    lin_model.fit(high_x, high_y)
+    df['RUPLHighModel'] = lin_model.predict(x)
+
+    # sns.set()
+    # _, ax = plt.subplots()
+    # sns.lineplot(x='Date', y='RUPL', data=df, ax=ax)
+    # sns.lineplot(x='Date', y='RUPLHighModel', data=df, ax=ax, color='g')
+    # sns.lineplot(x='Date', y='RUPLLowModel', data=df, ax=ax, color='r')
+    # plt.legend(['RUPL', 'Best high fit', 'Best low fit'])
+    # plt.show()
+
+    df['RUPLIndex'] = (df['RUPL'] - df['RUPLLowModel']) / (df['RUPLHighModel'] - df['RUPLLowModel'])
     return 'RUPLIndex', df
 
 

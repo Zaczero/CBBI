@@ -9,3 +9,4 @@ fire~=0.4.0
 matplotlib~=3.4.1
 seaborn~=0.11.1
 filecache~=0.81
+scikit-learn~=0.24.1
