@@ -199,14 +199,10 @@ def add_google_trends_index(df: pd.DataFrame) -> (str, pd.DataFrame):
     df.fillna({'InterestHigh': 0, 'InterestLow': 0}, inplace=True)
     df['Interest'].ffill(inplace=True)
 
-    def find_previous_high(row: pd.Series):
-        peak_indexes = df[df['InterestHigh'] == 1].index
-        bin_index = np.digitize(row.name, peak_indexes, right=True)
-        peak_value = np.NaN if bin_index == 0 else df.loc[peak_indexes[bin_index - 1], 'Interest']
-        return peak_value
+    for _, high_row in df.loc[df['InterestHigh'] == 1].iterrows():
+        df.loc[df.index > high_row.name, 'PreviousInterestHigh'] = high_row['Interest']
 
-    df['PreviousHighInterest'] = df.apply(find_previous_high, axis=1)
-    df['GoogleTrendsIndex'] = df['Interest'] / (df['PreviousHighInterest'] * target_ratio)
+    df['GoogleTrendsIndex'] = df['Interest'] / (df['PreviousInterestHigh'] * target_ratio)
     return 'GoogleTrendsIndex', df
 
 
