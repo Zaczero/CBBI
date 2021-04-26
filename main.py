@@ -1,4 +1,6 @@
 import json
+from datetime import timedelta
+from filecache import filecache
 import fire
 import numpy as np
 import pandas as pd
@@ -9,6 +11,8 @@ from pytrends.request import TrendReq
 from pyfiglet import figlet_format
 from termcolor import cprint
 import cli_ui
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 cli_ui.CONFIG['color'] = 'always'
 
@@ -58,7 +62,7 @@ def mark_highs_lows(df: pd.DataFrame, col: str, begin_with_high: bool, window_si
     return df
 
 
-def fetch_bitcoin_data(past_days: int) -> pd.DataFrame:
+def fetch_bitcoin_data() -> pd.DataFrame:
     """
     Fetches Bitcoin data into a DataFrame for the past ``past_days`` days.
     The current day is skipped as the data for it is often incomplete (e.g. TotalGenerationUSD).
@@ -69,14 +73,11 @@ def fetch_bitcoin_data(past_days: int) -> pd.DataFrame:
     Returns:
         DataFrame containing Bitcoin data.
     """
-    assert past_days > 0, 'Value of the past_days argument must be at least 1'
-
-    cli_ui.info_2(f'Fetching Bitcoin data for the past {past_days} days')
+    cli_ui.info_2(f'Fetching historical Bitcoin data')
 
     response = requests.get('https://api.blockchair.com/bitcoin/blocks', {
         'a': 'date,count(),min(id),max(id),sum(generation),sum(generation_usd)',
         's': 'date(desc)',
-        'limit': past_days + 1,
     }, timeout=HTTP_TIMEOUT)
     response.raise_for_status()
     response_json = response.json()
@@ -97,11 +98,29 @@ def fetch_bitcoin_data(past_days: int) -> pd.DataFrame:
     df['BlockGenerationUSD'] = df['TotalGenerationUSD'] / df['TotalBlocks']
     df['Price'] = df['BlockGenerationUSD'] / df['BlockGeneration']
     df['PriceLog'] = np.log(df['Price'])
+    df = df[df['Date'] >= '2011-06-27']
 
     current_price = df['Price'].tail(1).values[0]
     cli_ui.info_1(f'Current Bitcoin price: ${round(current_price):,}')
 
-    return df.head(past_days)
+    # drop last row (current day)
+    return df.iloc[:-1]
+
+
+@filecache(3600 * 24 * 3)
+def fetch_google_trends_data(keyword: str, timeframe: str) -> pd.DataFrame:
+    pytrends = TrendReq()
+
+    for _ in range(5):
+        pytrends.build_payload(kw_list=[keyword], timeframe=timeframe)
+        df = pytrends.interest_over_time()
+
+        if df.shape[0] > 0:
+            return df
+
+        time.sleep(10)
+
+    raise Exception(f'Google Trends API returned no data (timeframe="{timeframe}").')
 
 
 def add_google_trends_index(df: pd.DataFrame) -> (str, pd.DataFrame):
@@ -120,16 +139,47 @@ def add_google_trends_index(df: pd.DataFrame) -> (str, pd.DataFrame):
         Source: https://trends.google.com/trends/explore?date=today%205-y&q=bitcoin
     """
 
-    target_ratio = 1 / .125
+    target_ratio = 1 / 0.2
 
-    cli_ui.info_2('Fetching Google Trends data')
+    cli_ui.info_2(f'Fetching Google Trends data')
 
-    pytrends = TrendReq()
-    pytrends.build_payload(kw_list=['Bitcoin'])
-    df_interest = pytrends.interest_over_time()
+    keyword = 'Bitcoin'
+    date_start = df.iloc[0]['Date']
+    date_end = df.iloc[-1]['Date']
+    date_current = date_start
+    delta = timedelta(days=90)
+    iteration_count = np.ceil((date_end - date_start) / delta).astype(int)
 
-    if df_interest.shape[0] < 100:
-        raise Exception('Google Trends API returned too little data.')
+    df_interest = pd.DataFrame()
+
+    cli_ui.info_1('Progress: [', end='')
+
+    for i in range(iteration_count):
+        if i % 4 == 0:
+            print('#', end='')
+
+        date_start_str = date_current.strftime('%Y-%m-%d')
+        date_current = min(date_current + delta, date_end)
+        date_end_str = date_current.strftime('%Y-%m-%d')
+        timeframe = f'{date_start_str} {date_end_str}'
+
+        df_fetched = fetch_google_trends_data(keyword, timeframe)
+
+        if df_interest.shape[0] > 0:
+            prev_scale = df_interest.iloc[-1][keyword]
+            next_scale = df_fetched.iloc[0][keyword]
+            ratio_scale = next_scale / prev_scale
+
+            if ratio_scale > 1:
+                df_fetched[keyword] /= ratio_scale
+            elif ratio_scale < 1:
+                df_interest[keyword] *= ratio_scale
+
+            df_fetched = df_fetched.iloc[1:]
+
+        df_interest = df_interest.append(df_fetched)
+
+    print(']')
 
     df_interest.reset_index(inplace=True)
     df_interest.rename(columns={
@@ -137,7 +187,7 @@ def add_google_trends_index(df: pd.DataFrame) -> (str, pd.DataFrame):
         'Bitcoin': 'Interest'
     }, inplace=True)
 
-    df_interest = mark_highs_lows(df_interest, 'Interest', True, round(365 * 2 / 7))
+    df_interest = mark_highs_lows(df_interest, 'Interest', True, round(365 * 2))
     ignore_marks_since = pd.Timestamp('today').floor('D') - pd.Timedelta(365, unit='D')
     df_interest.loc[df_interest['Date'] > ignore_marks_since, ['High', 'Low']] = 0
 
@@ -147,7 +197,7 @@ def add_google_trends_index(df: pd.DataFrame) -> (str, pd.DataFrame):
 
     def find_previous_high(row: pd.Series):
         peak_indexes = df[df['High'] == 1].index
-        bin_index = np.digitize(row.name, peak_indexes)
+        bin_index = np.digitize(row.name, peak_indexes, right=True)
         peak_value = np.NaN if bin_index == 0 else df.loc[peak_indexes[bin_index - 1], 'Interest']
         return peak_value
 
@@ -433,8 +483,7 @@ def run(file: str) -> None:
         None
     """
 
-    # fetch online data
-    df_bitcoin = fetch_bitcoin_data(365 * 4)
+    df_bitcoin = fetch_bitcoin_data()
 
     col_google_trends, df_bitcoin = add_google_trends_index(df_bitcoin)
     col_rupl, df_bitcoin = add_rupl_index(df_bitcoin)
