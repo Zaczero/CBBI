@@ -63,7 +63,15 @@ def mark_highs_lows(df: pd.DataFrame, col: str, begin_with_high: bool, window_si
 
         current_index = window_index
 
-    df.loc[df.shape[0]-ignore_last_rows:, (col_high, col_low)] = 0
+    df.loc[df.shape[0] - ignore_last_rows:, (col_high, col_low)] = 0
+    return df
+
+
+def mark_days_since(df: pd.DataFrame, cols: list) -> pd.DataFrame:
+    for col in cols:
+        indexes = df.loc[df[col] == 1].index
+        df[f'DaysSince{col}'] = df.index.to_series().apply(lambda v: min([v-index if index <= v else np.nan for index in indexes]))
+
     return df
 
 
@@ -105,6 +113,11 @@ def fetch_bitcoin_data() -> pd.DataFrame:
     df['Price'] = df['BlockGenerationUSD'] / df['BlockGeneration']
     df['PriceLog'] = np.log(df['Price'])
     df = df[df['Date'] >= '2011-06-27']
+    df.reset_index(drop=True, inplace=True)
+
+    df = mark_highs_lows(df, 'Price', False, round(365 * 2), 90)
+    df = add_block_halving_data(df)
+    df = mark_days_since(df, ['PriceHigh', 'PriceLow', 'IsHalving'])
 
     current_price = df['Price'].tail(1).values[0]
     cli_ui.info_1(f'Current Bitcoin price: ${round(current_price):,}')
@@ -113,9 +126,31 @@ def fetch_bitcoin_data() -> pd.DataFrame:
     return df.iloc[:-1]
 
 
+def add_block_halving_data(df: pd.DataFrame) -> (str, pd.DataFrame):
+    current_block_production = 50
+    df['IsHalving'] = 0
+
+    while True:
+        current_block_production_min = 0.95 * current_block_production
+        current_block_production_max = 1.05 * current_block_production
+
+        df.loc[(current_block_production_min < df['BlockGeneration']) &
+               (df['BlockGeneration'] < current_block_production_max), 'BlockGeneration'] = current_block_production
+
+        block_halving_index = np.min(df[df['BlockGeneration'] < current_block_production].index)
+
+        if np.isnan(block_halving_index):
+            break
+
+        df.loc[block_halving_index, 'IsHalving'] = 1
+        current_block_production /= 2
+
+    return df
+
+
 @filecache(3600 * 24 * 3)  # 3 day cache
 def fetch_google_trends_data(keyword: str, timeframe: str, repeat_if_empty: bool) -> pd.DataFrame:
-    pytrends = TrendReq()
+    pytrends = TrendReq(retries=5, backoff_factor=1)  # this mechanism seems unreliable
 
     for _ in range(5):
         pytrends.build_payload(kw_list=[keyword], timeframe=timeframe)
@@ -145,36 +180,39 @@ def add_google_trends_index(df: pd.DataFrame) -> (str, pd.DataFrame):
         Source: https://trends.google.com/trends/explore?date=today%205-y&q=bitcoin
     """
 
-    target_ratio = 1 / 0.2
+    target_ratio = 7
 
     cli_ui.info_2(f'Fetching Google Trends data')
 
     keyword = 'Bitcoin'
-    date_start = df.iloc[0]['Date']
+    date_start = df.iloc[0]['Date'] - timedelta(90)
     date_end = df.iloc[-1]['Date']
     date_current = date_start
-    delta = timedelta(days=90)
-    iteration_count = np.ceil((date_end - date_start) / delta).astype(int)
+
+    delta_days = 269  # 270 days will cause Google Trends API return weekly format
+    match_window_days = int(np.floor(delta_days / 2)) + 1
+    iteration_count = int(np.ceil((date_end - date_start) / timedelta(delta_days - match_window_days)))
 
     df_interest = pd.DataFrame()
-
     cli_ui.info_1('Progress: [', end='')
 
     for i in range(iteration_count):
-        if i % 4 == 0:
+        if i % 2 == 0:
             print('#', end='')
 
         date_start_str = date_current.strftime('%Y-%m-%d')
-        date_current = min(date_current + delta, date_end)
+        date_current = min(date_current + timedelta(delta_days), date_end)
         date_end_str = date_current.strftime('%Y-%m-%d')
+        date_current -= timedelta(match_window_days - 1)
+
         timeframe = f'{date_start_str} {date_end_str}'
         repeat_if_empty = i + 1 < iteration_count
 
         df_fetched = fetch_google_trends_data(keyword, timeframe, repeat_if_empty)
 
         if df_interest.shape[0] > 0:
-            prev_scale = df_interest.iloc[-1][keyword]
-            next_scale = df_fetched.iloc[0][keyword]
+            prev_scale = np.max(df_interest.iloc[-match_window_days:][keyword])
+            next_scale = np.max(df_fetched.iloc[:match_window_days][keyword])
             ratio_scale = next_scale / prev_scale
 
             if ratio_scale > 1:
@@ -182,7 +220,7 @@ def add_google_trends_index(df: pd.DataFrame) -> (str, pd.DataFrame):
             elif ratio_scale < 1:
                 df_interest[keyword] *= ratio_scale
 
-            df_fetched = df_fetched.iloc[1:]
+            df_fetched = df_fetched.iloc[match_window_days:]
 
         df_interest = df_interest.append(df_fetched)
 
@@ -191,16 +229,17 @@ def add_google_trends_index(df: pd.DataFrame) -> (str, pd.DataFrame):
     df_interest.reset_index(inplace=True)
     df_interest.rename(columns={
         'date': 'Date',
-        'Bitcoin': 'Interest'
+        keyword: 'Interest'
     }, inplace=True)
-    df_interest = mark_highs_lows(df_interest, 'Interest', True, round(365 * 2), 365)
+    df_interest = mark_highs_lows(df_interest, 'Interest', False, round(365 * 1.5), 365)
+
+    for _, high_row in df_interest.loc[df_interest['InterestHigh'] == 1].iterrows():
+        df_interest.loc[df_interest.index > high_row.name, 'PreviousInterestHigh'] = high_row['Interest']
 
     df = df.join(df_interest.set_index('Date'), on='Date')
     df.fillna({'InterestHigh': 0, 'InterestLow': 0}, inplace=True)
     df['Interest'].ffill(inplace=True)
-
-    for _, high_row in df.loc[df['InterestHigh'] == 1].iterrows():
-        df.loc[df.index > high_row.name, 'PreviousInterestHigh'] = high_row['Interest']
+    df['PreviousInterestHigh'].ffill(inplace=True)
 
     df['GoogleTrendsIndex'] = df['Interest'] / (df['PreviousInterestHigh'] * target_ratio)
     return 'GoogleTrendsIndex', df
@@ -241,7 +280,7 @@ def add_rupl_index(df: pd.DataFrame) -> (str, pd.DataFrame):
     df.fillna({'RUPLHigh': 0, 'RUPLLow': 0}, inplace=True)
     df['RUPL'].ffill(inplace=True)
 
-    low_rows = df.loc[df['RUPLLow'] == 1]
+    low_rows = df.loc[df['RUPLLow'] == 1][1:]
     low_x = low_rows.index.values.reshape(-1, 1)
     low_y = low_rows['RUPL'].values.reshape(-1, 1)
 
@@ -284,13 +323,13 @@ def add_golden_ratio_index(df: pd.DataFrame) -> str:
         Source: https://www.tradingview.com/chart/BTCUSD/QBeNL8jt-BITCOIN-The-Golden-51-49-Ratio-600-days-of-Bull-Market-left/
     """
 
-    current_bottom_date = pd.to_datetime('2018-12-03')
-    current_halving_date = pd.to_datetime('2020-05-11')
-    current_peak_date = current_bottom_date + (current_halving_date - current_bottom_date) / .51
+    df['DaysBetweenLowAndHalving'] = df['DaysSincePriceLow'] - df['DaysSinceIsHalving']
+    df.loc[df['DaysBetweenLowAndHalving'] < 0, 'DaysBetweenLowAndHalving'] = np.nan
 
-    df['GoldenRatioIndex'] = (df['Date'] - current_bottom_date) / (current_peak_date - current_bottom_date)
-    df.loc[df['GoldenRatioIndex'] < 0.51, 'GoldenRatioIndex'] = np.nan
-
+    df['GoldenRatioProjected'] = (df['DaysBetweenLowAndHalving'] / 0.51) * 0.49
+    df['GoldenRatio'] = df['DaysSincePriceLow'] / (df['GoldenRatioProjected'] + df['DaysBetweenLowAndHalving'])
+    df['GoldenRatioIndex'] = 1 - np.abs(1 - df['GoldenRatio'])
+    df.fillna({'GoldenRatioIndex': 0}, inplace=True)
     return 'GoldenRatioIndex'
 
 
