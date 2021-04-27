@@ -181,7 +181,7 @@ def add_google_trends_index(df: pd.DataFrame) -> (str, pd.DataFrame):
     """
 
     target_ratio = 7
-    drop_off_per_day = 0.01
+    drop_off_per_day = 0.015
 
     cli_ui.info_2(f'Fetching Google Trends data')
 
