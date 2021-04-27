@@ -181,6 +181,7 @@ def add_google_trends_index(df: pd.DataFrame) -> (str, pd.DataFrame):
     """
 
     target_ratio = 7
+    drop_off_per_day = 0.01
 
     cli_ui.info_2(f'Fetching Google Trends data')
 
@@ -240,8 +241,27 @@ def add_google_trends_index(df: pd.DataFrame) -> (str, pd.DataFrame):
     df.fillna({'InterestHigh': 0, 'InterestLow': 0}, inplace=True)
     df['Interest'].ffill(inplace=True)
     df['PreviousInterestHigh'].ffill(inplace=True)
+    df['GoogleTrends'] = df['Interest'] / (df['PreviousInterestHigh'] * target_ratio)
 
-    df['GoogleTrendsIndex'] = df['Interest'] / (df['PreviousInterestHigh'] * target_ratio)
+    def calculate_drop_off(rows_ref: np.ndarray):
+        rows = np.copy(rows_ref)
+
+        for i, drop_off in zip(range(rows.shape[0]-1), range(rows.shape[0]-1, 0, -1)):
+            rows[i] -= drop_off * drop_off_per_day
+
+        return np.max(rows)
+
+    df['GoogleTrendsIndex'] = df['GoogleTrends'].rolling(int(1.2 / drop_off_per_day), min_periods=1).apply(calculate_drop_off, raw=True)
+
+    # df['GoogleTrends'] = np.log(df['GoogleTrends'])
+    # df['GoogleTrendsIndex'] = np.log(df['GoogleTrendsIndex'])
+    # df = df.loc[(df['Date'] >= '2017-10-01') & (df['Date'] < '2018-03-01')]
+    # sns.set()
+    # _, ax = plt.subplots()
+    # sns.lineplot(x='Date', y='GoogleTrends', data=df, ax=ax)
+    # sns.lineplot(x='Date', y='GoogleTrendsIndex', data=df, ax=ax, color='g', alpha=0.6)
+    # plt.show()
+
     return 'GoogleTrendsIndex', df
 
 
@@ -484,12 +504,22 @@ def add_trolololo_index(df: pd.DataFrame) -> str:
     high_rows = df.loc[(df['PriceHigh'] == 1) & (df['Date'] >= begin_date)]
     high_x = high_rows.index.values.reshape(-1, 1)
     high_y = high_rows['TrolololoOvershootActual'].values.reshape(-1, 1)
+    high_y[0] *= 0.6  # the first value seems too high
 
     x = df.index.values.reshape(-1, 1)
 
     lin_model = LinearRegression()
     lin_model.fit(high_x, high_y)
     df['TrolololoOvershootModel'] = lin_model.predict(x)
+
+    # df['TrolololoOvershootModelValue'] = df['TrolololoTopPriceLog'] + df['TrolololoOvershootModel']
+    # sns.set()
+    # _, ax = plt.subplots()
+    # sns.lineplot(x='Date', y='PriceLog', data=df, ax=ax)
+    # sns.lineplot(x='Date', y='TrolololoTopPriceLog', data=df, ax=ax, color='lime')
+    # sns.lineplot(x='Date', y='TrolololoBottomPriceLog', data=df, ax=ax, color='limegreen')
+    # sns.lineplot(x='Date', y='TrolololoOvershootModelValue', data=df, ax=ax, color='red')
+    # plt.show()
 
     df['TrolololoIndex'] = (df['PriceLog'] - df['TrolololoBottomPriceLogCorrect']) / (df['TrolololoTopPriceLog'] + df['TrolololoOvershootModel'] - df['TrolololoBottomPriceLogCorrect'])
     return 'TrolololoIndex'
@@ -509,15 +539,29 @@ def add_puell_index(df: pd.DataFrame) -> str:
         Source: https://www.lookintobitcoin.com/charts/puell-multiple/
     """
 
-    projected_max = np.log(4.75)
     projected_min = np.log(0.3)
 
     df['PuellMA365'] = df['TotalGenerationUSD'].rolling(365).mean()
     df['Puell'] = df['TotalGenerationUSD'] / df['PuellMA365']
     df['PuellLog'] = np.log(df['Puell'])
 
-    df['PuellIndex'] = (df['PuellLog'] - projected_min) / (projected_max - projected_min)
+    high_rows = df.loc[(df['PriceHigh'] == 1) & ~ (df['Puell'].isna())]
+    high_x = high_rows.index.values.reshape(-1, 1)
+    high_y = high_rows['PuellLog'].values.reshape(-1, 1)
 
+    x = df.index.values.reshape(-1, 1)
+
+    lin_model = LinearRegression()
+    lin_model.fit(high_x, high_y)
+    df['PuellLogModel'] = lin_model.predict(x)
+
+    # sns.set()
+    # _, ax = plt.subplots()
+    # sns.lineplot(x='Date', y='PuellLog', data=df, ax=ax)
+    # sns.lineplot(x='Date', y='PuellLogModel', data=df, ax=ax, color='lime')
+    # plt.show()
+
+    df['PuellIndex'] = (df['PuellLog'] - projected_min) / (df['PuellLogModel'] - projected_min)
     return 'PuellIndex'
 
 
