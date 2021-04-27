@@ -378,19 +378,21 @@ def add_pi_cycle_index(df: pd.DataFrame) -> str:
         Source: https://www.lookintobitcoin.com/charts/pi-cycle-top-indicator/
     """
 
-    max_divergence_price_high = np.log(12000)
-    max_divergence_price_low = np.log(3700)
-    max_divergence = max_divergence_price_high - max_divergence_price_low
-
     df['111DMA'] = df['Price'].rolling(111).mean()
     df['350DMAx2'] = df['Price'].rolling(350).mean() * 2
 
     df['111DMALog'] = np.log(df['111DMA'])
     df['350DMAx2Log'] = np.log(df['350DMAx2'])
-    df['PiCycleDifference'] = np.abs(df['111DMALog'] - df['350DMAx2Log'])
+    df['PiCycleDiff'] = np.abs(df['111DMALog'] - df['350DMAx2Log'])
 
-    df['PiCycleIndex'] = 1 - (df['PiCycleDifference'] / max_divergence)
+    df = mark_highs_lows(df, 'PiCycleDiff', True, round(365 * 2), 365)
 
+    for _, high_row in df.loc[df['PiCycleDiffHigh'] == 1].iterrows():
+        df.loc[df.index > high_row.name, 'PreviousPiCycleDiffHigh'] = high_row['PiCycleDiff']
+
+    df['PiCycleIndex'] = 1 - (df['PiCycleDiff'] / df['PreviousPiCycleDiffHigh'])
+    df.loc[df['PiCycleIndex'] < 0, 'PiCycleIndex'] = np.nan
+    df.fillna({'PiCycleIndex': 0}, inplace=True)
     return 'PiCycleIndex'
 
 
