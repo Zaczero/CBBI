@@ -410,8 +410,6 @@ def add_2yma_index(df: pd.DataFrame) -> str:
         Source: https://www.lookintobitcoin.com/charts/bitcoin-investor-tool/
     """
 
-    overshoot = .2
-
     df['2YMA'] = df['Price'].rolling(365 * 2).mean()
     df['2YMALog'] = np.log(df['2YMA'])
     df['2YMAx5'] = df['2YMA'] * 5
@@ -470,22 +468,30 @@ def add_trolololo_index(df: pd.DataFrame) -> str:
 
     begin_date = pd.to_datetime('2012-01-01')
     log_diff_line_count = 8
-    log_diff_top = 7
     log_diff_bottom = 0.5
 
     df['TrolololoDaysSinceBegin'] = (df['Date'] - begin_date).dt.days
 
-    df['TrolololoLineTopPrice'] = np.power(10, 2.900 * np.log(df['TrolololoDaysSinceBegin'] + 1400) - 19.463)  # Maximum Bubble Territory
-    df['TrolololoLineTopPriceLog'] = np.log(df['TrolololoLineTopPrice'])
-    df['TrolololoLineBottomPrice'] = np.power(10, 2.788 * np.log(df['TrolololoDaysSinceBegin'] + 1200) - 19.463)  # Basically a Fire Sale
-    df['TrolololoLineBottomPriceLog'] = np.log(df['TrolololoLineBottomPrice'])
+    df['TrolololoTopPrice'] = np.power(10, 2.900 * np.log(df['TrolololoDaysSinceBegin'] + 1400) - 19.463)  # Maximum Bubble Territory
+    df['TrolololoTopPriceLog'] = np.log(df['TrolololoTopPrice'])
+    df['TrolololoBottomPrice'] = np.power(10, 2.788 * np.log(df['TrolololoDaysSinceBegin'] + 1200) - 19.463)  # Basically a Fire Sale
+    df['TrolololoBottomPriceLog'] = np.log(df['TrolololoBottomPrice'])
 
-    df['TrolololoLogDifference'] = (df['TrolololoLineTopPriceLog'] - df['TrolololoLineBottomPriceLog']) / log_diff_line_count
-    df['TrolololoLogTop'] = df['TrolololoLineBottomPriceLog'] + log_diff_top * df['TrolololoLogDifference']
-    df['TrolololoLogBottom'] = df['TrolololoLineBottomPriceLog'] - log_diff_bottom * df['TrolololoLogDifference']
+    df['TrolololoPriceLogDifference'] = (df['TrolololoTopPriceLog'] - df['TrolololoBottomPriceLog']) / log_diff_line_count
+    df['TrolololoBottomPriceLogCorrect'] = df['TrolololoBottomPriceLog'] - log_diff_bottom * df['TrolololoPriceLogDifference']
+    df['TrolololoOvershootActual'] = df['PriceLog'] - df['TrolololoTopPriceLog']
 
-    df['TrolololoIndex'] = (df['PriceLog'] - df['TrolololoLogBottom']) / (df['TrolololoLogTop'] - df['TrolololoLogBottom'])
+    high_rows = df.loc[(df['PriceHigh'] == 1) & (df['Date'] >= begin_date)]
+    high_x = high_rows.index.values.reshape(-1, 1)
+    high_y = high_rows['TrolololoOvershootActual'].values.reshape(-1, 1)
 
+    x = df.index.values.reshape(-1, 1)
+
+    lin_model = LinearRegression()
+    lin_model.fit(high_x, high_y)
+    df['TrolololoOvershootModel'] = lin_model.predict(x)
+
+    df['TrolololoIndex'] = (df['PriceLog'] - df['TrolololoBottomPriceLogCorrect']) / (df['TrolololoTopPriceLog'] + df['TrolololoOvershootModel'] - df['TrolololoBottomPriceLogCorrect'])
     return 'TrolololoIndex'
 
 
