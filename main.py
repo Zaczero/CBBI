@@ -117,7 +117,7 @@ def fetch_bitcoin_data() -> pd.DataFrame:
 
     df = mark_highs_lows(df, 'Price', False, round(365 * 2), 90)
     df = add_block_halving_data(df)
-    df = mark_days_since(df, ['PriceHigh', 'PriceLow', 'IsHalving'])
+    df = mark_days_since(df, ['PriceHigh', 'PriceLow', 'Halving'])
 
     current_price = df['Price'].tail(1).values[0]
     cli_ui.info_1(f'Current Bitcoin price: ${round(current_price):,}')
@@ -128,7 +128,7 @@ def fetch_bitcoin_data() -> pd.DataFrame:
 
 def add_block_halving_data(df: pd.DataFrame) -> (str, pd.DataFrame):
     current_block_production = 50
-    df['IsHalving'] = 0
+    df['Halving'] = 0
 
     while True:
         current_block_production_min = 0.95 * current_block_production
@@ -142,7 +142,7 @@ def add_block_halving_data(df: pd.DataFrame) -> (str, pd.DataFrame):
         if np.isnan(block_halving_index):
             break
 
-        df.loc[block_halving_index, 'IsHalving'] = 1
+        df.loc[block_halving_index, 'Halving'] = 1
         current_block_production /= 2
 
     return df
@@ -323,11 +323,11 @@ def add_golden_ratio_index(df: pd.DataFrame) -> str:
         Source: https://www.tradingview.com/chart/BTCUSD/QBeNL8jt-BITCOIN-The-Golden-51-49-Ratio-600-days-of-Bull-Market-left/
     """
 
-    df['DaysBetweenLowAndHalving'] = df['DaysSincePriceLow'] - df['DaysSinceIsHalving']
+    df['DaysBetweenLowAndHalving'] = df['DaysSincePriceLow'] - df['DaysSinceHalving']
     df.loc[df['DaysBetweenLowAndHalving'] < 0, 'DaysBetweenLowAndHalving'] = np.nan
 
-    df['GoldenRatioProjected'] = (df['DaysBetweenLowAndHalving'] / 0.51) * 0.49
-    df['GoldenRatio'] = df['DaysSincePriceLow'] / (df['GoldenRatioProjected'] + df['DaysBetweenLowAndHalving'])
+    df['GoldenRatioProjected'] = df['DaysBetweenLowAndHalving'] / 0.51
+    df['GoldenRatio'] = df['DaysSincePriceLow'] / df['GoldenRatioProjected']
     df['GoldenRatioIndex'] = 1 - np.abs(1 - df['GoldenRatio'])
     df.fillna({'GoldenRatioIndex': 0}, inplace=True)
     return 'GoldenRatioIndex'
@@ -347,14 +347,20 @@ def add_stock_to_flow_index(df: pd.DataFrame) -> str:
         Source: https://digitalik.net/btc/
     """
 
-    previous_hinge_date = pd.to_datetime('2017-10-15')
-    previous_peak_date = pd.to_datetime('2017-12-15')
-    current_hinge_date = pd.to_datetime('2021-08-15')
-    current_peak_date = current_hinge_date + (previous_peak_date - previous_hinge_date)
+    sf_emerge_days = 463
+    sf_peak_delay = 60
 
-    df['StockToFlowIndex'] = (df['Date'] - previous_peak_date) / (current_peak_date - previous_peak_date)
-    df.loc[df['StockToFlowIndex'] < 0, 'StockToFlowIndex'] = np.nan
+    for _, high_row in df.loc[df['PriceHigh'] == 1].iterrows():
+        df.loc[df.index > high_row.name, 'PreviousPriceHighDate'] = high_row['Date']
 
+    for _, high_row in df.loc[df['Halving'] == 1].iterrows():
+        df.loc[df.index > high_row.name, 'PreviousHalvingDate'] = high_row['Date']
+
+    df['StockToFlowTarget'] = df['PreviousHalvingDate'] + timedelta(sf_emerge_days + sf_peak_delay)
+    df['StockToFlow'] = (df['Date'] - df['PreviousPriceHighDate']) / (df['StockToFlowTarget'] - df['PreviousPriceHighDate'])
+    df['StockToFlowIndex'] = 1 - np.abs(1 - df['StockToFlow'])
+    df.loc[df['PreviousPriceHighDate'] >= df['PreviousHalvingDate'], 'StockToFlowIndex'] = np.nan
+    df.fillna({'StockToFlowIndex': 0}, inplace=True)
     return 'StockToFlowIndex'
 
 
