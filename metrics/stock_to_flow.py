@@ -38,9 +38,11 @@ class StockToFlowMetric(BaseMetric):
                             (df['StockToFlowTarget'] - df['PreviousPriceHighDate'])
 
         df['StockToFlowIndex'] = 1 - np.abs(1 - df['StockToFlow'])
+        df.loc[(0 < df['DaysSincePriceHigh']) & (df['DaysSincePriceHigh'] < df['DaysSincePriceLow']), 'StockToFlowIndex'] = np.nan
 
+        df['StockToFlowIndexNoNa'] = df['StockToFlowIndex'].fillna(0)
         ax[0].set_title(self.description)
-        sns.lineplot(data=df, x='Date', y='StockToFlowIndex', ax=ax[0])
+        sns.lineplot(data=df, x='Date', y='StockToFlowIndexNoNa', ax=ax[0])
         add_common_markers(df, ax[0])
 
         return df['StockToFlowIndex']

@@ -28,9 +28,11 @@ class GoldenRatioMetric(BaseMetric):
         df['GoldenRatioProjected'] = df['DaysBetweenPriceLowAndHalving'] / 0.51
         df['GoldenRatio'] = df['DaysSincePriceLow'] / df['GoldenRatioProjected']
         df['GoldenRatioIndex'] = 1 - np.abs(1 - df['GoldenRatio'])
+        df.loc[(0 < df['DaysSincePriceHigh']) & (df['DaysSincePriceHigh'] < df['DaysSincePriceLow']), 'GoldenRatioIndex'] = np.nan
 
+        df['GoldenRatioIndexNoNa'] = df['GoldenRatioIndex'].fillna(0)
         ax[0].set_title(self.description)
-        sns.lineplot(data=df, x='Date', y='GoldenRatioIndex', ax=ax[0])
+        sns.lineplot(data=df, x='Date', y='GoldenRatioIndexNoNa', ax=ax[0])
         add_common_markers(df, ax[0])
 
         return df['GoldenRatioIndex']

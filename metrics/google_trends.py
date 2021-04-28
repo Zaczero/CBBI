@@ -8,6 +8,7 @@ import seaborn as sns
 from filecache import filecache
 from matplotlib import pyplot as plt
 from pytrends.request import TrendReq
+from sklearn.linear_model import LinearRegression
 
 from utils import mark_highs_lows, add_common_markers
 from .base_metric import BaseMetric
@@ -32,7 +33,6 @@ class GoogleTrendsMetric(BaseMetric):
         return '"Bitcoin" search term (Google Trends)'
 
     def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
-        target_ratio = 7
         drop_off_per_day = 0.015
 
         df = source_df.copy()
@@ -87,11 +87,24 @@ class GoogleTrendsMetric(BaseMetric):
         for _, row in df_interest.loc[df_interest['InterestHigh'] == 1].iterrows():
             df_interest.loc[df_interest.index > row.name, 'PreviousInterestHigh'] = row['Interest']
 
+        df_interest['InterestScaleActual'] = df_interest['Interest'] / df_interest['PreviousInterestHigh']
+
+        high_rows = df_interest.loc[(df_interest['InterestHigh'] == 1) & ~ (df_interest['PreviousInterestHigh'].isna())]
+        high_x = high_rows.index.values.reshape(-1, 1)
+        high_y = high_rows['InterestScaleActual'].values.reshape(-1, 1)
+
+        x = df_interest.index.values.reshape(-1, 1)
+
+        lin_model = LinearRegression()
+        lin_model.fit(high_x, high_y)
+        df_interest['InterestScaleModel'] = lin_model.predict(x)
+
         df = df.join(df_interest.set_index('Date'), on='Date')
         df.fillna({'InterestHigh': 0, 'InterestLow': 0}, inplace=True)
         df['Interest'].ffill(inplace=True)
         df['PreviousInterestHigh'].ffill(inplace=True)
-        df['GoogleTrends'] = df['Interest'] / (df['PreviousInterestHigh'] * target_ratio)
+        df['InterestScaleModel'].ffill(inplace=True)
+        df['GoogleTrends'] = df['Interest'] / (df['InterestScaleModel'] * df['PreviousInterestHigh'])
 
         def calculate_drop_off(rows_ref: np.ndarray):
             rows = np.copy(rows_ref)
@@ -105,10 +118,6 @@ class GoogleTrendsMetric(BaseMetric):
             .rolling(int(1.2 / drop_off_per_day), min_periods=1) \
             .apply(calculate_drop_off, raw=True)
 
-        # df['GoogleTrendsIndexLog'] = np.log(df['GoogleTrendsIndex'])
-        # df['GoogleTrendsIndexLog'] = np.interp(df['GoogleTrendsIndexLog'],
-        #                                        (df['GoogleTrendsIndexLog'].min(), df['GoogleTrendsIndexLog'].max()),
-        #                                        (0, 1))
         ax[0].set_title(self.description)
         sns.lineplot(data=df, x='Date', y='GoogleTrendsIndex', ax=ax[0])
         add_common_markers(df, ax[0])

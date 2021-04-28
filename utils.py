@@ -117,6 +117,25 @@ def add_common_markers(df: pd.DataFrame, ax: plt.Axes):
         ax.axvline(x=days_since_epoch, color='green', linestyle=':')
 
 
+def split_df_on_index_gap(df: pd.DataFrame, min_gap: int = 1) -> List[pd.DataFrame]:
+    begin_idx = None
+    end_idx = None
+
+    for i, row in df.iterrows():
+        if begin_idx is None:
+            begin_idx = i
+            end_idx = i
+        elif (i - end_idx) <= min_gap:
+            end_idx = i
+        else:
+            yield df.loc[begin_idx:end_idx]
+            begin_idx = i
+            end_idx = i
+
+    if begin_idx is not None:
+        yield df.loc[begin_idx:end_idx]
+
+
 def format_percentage(val: float, suffix: str = ' %') -> str:
     """
     Formats a percentage value (0.0 - 1.0) in a standardized way.
