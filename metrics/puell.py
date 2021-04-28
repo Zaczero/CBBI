@@ -1,7 +1,12 @@
+from typing import List
+
 import numpy as np
 import pandas as pd
+import seaborn as sns
+from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 
+from utils import add_common_markers
 from .base_metric import BaseMetric
 
 
@@ -14,7 +19,7 @@ class PuellMetric(BaseMetric):
     def description(self) -> str:
         return 'Puell Multiple'
 
-    def calculate(self, source_df: pd.DataFrame) -> pd.Series:
+    def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         projected_min = np.log(0.3)
 
         df = source_df.copy()
@@ -41,4 +46,10 @@ class PuellMetric(BaseMetric):
 
         df['PuellIndex'] = (df['PuellLog'] - projected_min) / \
                            (df['PuellLogModel'] - projected_min)
+
+        df['PuellIndexNoNa'] = df['PuellIndex'].fillna(0)
+        ax[0].set_title(self.description)
+        sns.lineplot(data=df, x='Date', y='PuellIndexNoNa', ax=ax[0])
+        add_common_markers(df, ax[0])
+
         return df['PuellIndex']

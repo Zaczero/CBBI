@@ -1,7 +1,12 @@
+from typing import List
+
 import numpy as np
 import pandas as pd
+import seaborn as sns
+from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 
+from utils import add_common_markers
 from .base_metric import BaseMetric
 
 
@@ -14,7 +19,7 @@ class TwoYearMovingAverageMetric(BaseMetric):
     def description(self) -> str:
         return '2 Year Moving Average'
 
-    def calculate(self, source_df: pd.DataFrame) -> pd.Series:
+    def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         df = source_df.copy()
 
         df['2YMA'] = df['Price'].rolling(365 * 2).mean()
@@ -43,18 +48,12 @@ class TwoYearMovingAverageMetric(BaseMetric):
         lin_model.fit(low_x, low_y)
         df['2YMALogUndershootModel'] = lin_model.predict(x)
 
-        # df['2YMALogOvershootModelValue'] = df['2YMAx5Log'] + df['2YMALogOvershootModel']
-        # df['2YMALogUndershootModelValue'] = df['2YMALog'] - df['2YMALogUndershootModel']
-        # sns.set()
-        # _, ax = plt.subplots()
-        # sns.lineplot(x='Date', y='PriceLog', data=df, ax=ax)
-        # sns.lineplot(x='Date', y='2YMAx5Log', data=df, ax=ax, color='lime')
-        # sns.lineplot(x='Date', y='2YMALog', data=df, ax=ax, color='limegreen')
-        # sns.lineplot(x='Date', y='2YMALogOvershootModelValue', data=df, ax=ax, color='red')
-        # sns.lineplot(x='Date', y='2YMALogUndershootModelValue', data=df, ax=ax, color='orangered')
-        # plt.legend(['Price', '2YMA x5', '2YMA', 'Overshoot', 'Undershoot'])
-        # plt.show()
-
         df['2YMAIndex'] = (df['PriceLog'] - df['2YMALog'] + df['2YMALogUndershootModel']) / \
                           (df['2YMALogOvershootModel'] + df['2YMALogDifference'] + df['2YMALogUndershootModel'])
+
+        df['2YMAIndexNoNa'] = df['2YMAIndex'].fillna(0)
+        ax[0].set_title(self.description)
+        sns.lineplot(data=df, x='Date', y='2YMAIndexNoNa', ax=ax[0])
+        add_common_markers(df, ax[0])
+
         return df['2YMAIndex']

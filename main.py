@@ -57,6 +57,9 @@ def fetch_bitcoin_data() -> pd.DataFrame:
     df['BlockGenerationUSD'] = df['TotalGenerationUSD'] / df['TotalBlocks']
     df['Price'] = df['BlockGenerationUSD'] / df['BlockGeneration']
     df['PriceLog'] = np.log(df['Price'])
+    df['PriceLogInterp'] = np.interp(df['PriceLog'],
+                                     (df['PriceLog'].min(), df['PriceLog'].max()),
+                                     (0, 1))
     df = df[df['Date'] >= '2011-06-27']
     df.reset_index(drop=True, inplace=True)
 
@@ -88,7 +91,7 @@ def get_confidence_score(df: pd.DataFrame, cols: List[str]) -> pd.Series:
     return df[cols].mean(axis=1)
 
 
-def run(file: str) -> None:
+def run(json_file: str, json_simple_file: str) -> None:
     """
     Calculates the current CBBI confidence value alongside all the required metrics.
     Everything gets pretty printed to the current stdout and a clean copy
@@ -106,26 +109,47 @@ def run(file: str) -> None:
     metrics_cols = []
     metrics_descriptions = []
 
-    for metric in metrics:
-        df_bitcoin[metric.name] = metric.calculate(df_bitcoin)
+    sns.set(font_scale=0.15, rc={
+        # 'font.size': 6,
+        'figure.titlesize': 8,
+        'axes.titlesize': 5,
+        'axes.labelsize': 4,
+        'xtick.labelsize': 4,
+        'ytick.labelsize': 4,
+        'lines.linewidth': 0.3,
+        'grid.linewidth': 0.2,
+
+        # 'savefig.dpi': 1000,
+        # 'figure.dpi': 200,
+    })
+
+    fig, axes = plt.subplots(len(metrics), 1, figsize=plt.figaspect(4))
+    axes = axes.reshape(-1, 1)
+    plt.tight_layout(pad=14)
+
+    for metric, ax in zip(metrics, axes):
+        df_bitcoin[metric.name] = metric.calculate(df_bitcoin, ax)
         metrics_cols.append(metric.name)
         metrics_descriptions.append(metric.description)
+
+    cli_ui.info_1('Generating charts')
+    plt.savefig('charts.svg')
 
     confidence_col = 'Confidence'
 
     df_result = pd.DataFrame(df_bitcoin[['Date', 'Price'] + metrics_cols])
     df_result.set_index('Date', inplace=True)
     df_result[confidence_col] = get_confidence_score(df_result, metrics_cols)
-
-    # sns.set()
-    # _, ax = plt.subplots()
-    # sns.lineplot(x='Date', y=confidence_col, data=df_result, ax=ax)
-    # plt.show()
-
-    df_result.to_json(file,
-                      double_precision=4,
-                      date_unit='s',
-                      indent=2)
+    df_result \
+        .to_json(json_file,
+                 double_precision=4,
+                 date_unit='s',
+                 indent=2)
+    df_result[['Price', confidence_col]] \
+        .to_json(json_simple_file,
+                 double_precision=4,
+                 date_unit='s',
+                 indent=2)
 
     df_result_last = df_result.tail(1)
     confidence_details = {description: df_result_last[name][0] for name, description in zip(metrics_cols, metrics_descriptions)}
@@ -142,7 +166,7 @@ def run(file: str) -> None:
     cli_ui.info_3('Source code: https://github.com/Zaczero/CBBI', end='\n\n')
 
 
-def run_and_retry(file: str, max_attempts: int = 10, sleep_seconds_on_error: float = 10) -> None:
+def run_and_retry(json_file: str = "latest.json", json_simple_file: str = "latest_simple.json", max_attempts: int = 10, sleep_seconds_on_error: float = 10) -> None:
     """
     Calculates the current CBBI confidence value alongside all the required metrics.
     Everything gets pretty printed to the current stdout and a clean copy
@@ -162,7 +186,7 @@ def run_and_retry(file: str, max_attempts: int = 10, sleep_seconds_on_error: flo
 
     for _ in range(max_attempts):
         try:
-            run(file)
+            run(json_file, json_simple_file)
             exit(0)
 
         except Exception:

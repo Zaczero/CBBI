@@ -1,8 +1,12 @@
 from datetime import timedelta
+from typing import List
 
 import numpy as np
 import pandas as pd
+import seaborn as sns
+from matplotlib import pyplot as plt
 
+from utils import add_common_markers
 from .base_metric import BaseMetric
 
 
@@ -15,7 +19,7 @@ class StockToFlowMetric(BaseMetric):
     def description(self) -> str:
         return 'Stock-to-Flow Chart'
 
-    def calculate(self, source_df: pd.DataFrame) -> pd.Series:
+    def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         sf_emerge_days = 463
         sf_peak_delay = 60
 
@@ -33,4 +37,10 @@ class StockToFlowMetric(BaseMetric):
 
         df['StockToFlowIndex'] = 1 - np.abs(1 - df['StockToFlow'])
         df.loc[df['PreviousPriceHighDate'] >= df['PreviousHalvingDate'], 'StockToFlowIndex'] = np.nan
+
+        df['StockToFlowIndexNoNa'] = df['StockToFlowIndex'].fillna(0)
+        ax[0].set_title(self.description)
+        sns.lineplot(data=df, x='Date', y='StockToFlowIndexNoNa', ax=ax[0])
+        add_common_markers(df, ax[0])
+
         return df['StockToFlowIndex']

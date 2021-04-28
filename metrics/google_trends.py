@@ -1,12 +1,15 @@
 from datetime import timedelta
+from typing import List
 
 import cli_ui
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from filecache import filecache
+from matplotlib import pyplot as plt
 from pytrends.request import TrendReq
 
-from utils import mark_highs_lows
+from utils import mark_highs_lows, add_common_markers
 from .base_metric import BaseMetric
 
 cli_ui.CONFIG['color'] = 'always'
@@ -28,7 +31,7 @@ class GoogleTrendsMetric(BaseMetric):
     def description(self) -> str:
         return '"Bitcoin" search term (Google Trends)'
 
-    def calculate(self, source_df: pd.DataFrame) -> pd.Series:
+    def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         target_ratio = 7
         drop_off_per_day = 0.015
 
@@ -102,13 +105,12 @@ class GoogleTrendsMetric(BaseMetric):
             .rolling(int(1.2 / drop_off_per_day), min_periods=1) \
             .apply(calculate_drop_off, raw=True)
 
-        # df['GoogleTrends'] = np.log(df['GoogleTrends'])
-        # df['GoogleTrendsIndex'] = np.log(df['GoogleTrendsIndex'])
-        # df = df.loc[(df['Date'] >= '2017-10-01') & (df['Date'] < '2018-03-01')]
-        # sns.set()
-        # _, ax = plt.subplots()
-        # sns.lineplot(x='Date', y='GoogleTrends', data=df, ax=ax)
-        # sns.lineplot(x='Date', y='GoogleTrendsIndex', data=df, ax=ax, color='g', alpha=0.6)
-        # plt.show()
+        # df['GoogleTrendsIndexLog'] = np.log(df['GoogleTrendsIndex'])
+        # df['GoogleTrendsIndexLog'] = np.interp(df['GoogleTrendsIndexLog'],
+        #                                        (df['GoogleTrendsIndexLog'].min(), df['GoogleTrendsIndexLog'].max()),
+        #                                        (0, 1))
+        ax[0].set_title(self.description)
+        sns.lineplot(data=df, x='Date', y='GoogleTrendsIndex', ax=ax[0])
+        add_common_markers(df, ax[0])
 
         return df['GoogleTrendsIndex']

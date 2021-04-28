@@ -1,9 +1,13 @@
+from typing import List
+
 import pandas as pd
 import requests
+import seaborn as sns
+from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 
 from globals import HTTP_TIMEOUT
-from utils import mark_highs_lows
+from utils import mark_highs_lows, add_common_markers
 from .base_metric import BaseMetric
 
 
@@ -16,7 +20,7 @@ class RUPLMetric(BaseMetric):
     def description(self) -> str:
         return 'RUPL/NUPL Chart'
 
-    def calculate(self, source_df: pd.DataFrame) -> pd.Series:
+    def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         df = source_df.copy()
 
         response = requests.get('https://www.lookintobitcoin.com/django_plotly_dash/app/unrealised_profit_loss/_dash-layout', timeout=HTTP_TIMEOUT)
@@ -63,4 +67,9 @@ class RUPLMetric(BaseMetric):
 
         df['RUPLIndex'] = (df['RUPL'] - df['RUPLLowModel']) / \
                           (df['RUPLHighModel'] - df['RUPLLowModel'])
+
+        ax[0].set_title(self.description)
+        sns.lineplot(data=df, x='Date', y='RUPLIndex', ax=ax[0])
+        add_common_markers(df, ax[0])
+
         return df['RUPLIndex']

@@ -115,3 +115,8 @@ dmypy.json
 
 # filecache
 *.cache.*
+
+# generated
+latest.json
+latest_simple.json
+charts.*

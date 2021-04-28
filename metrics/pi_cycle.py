@@ -1,7 +1,11 @@
+from typing import List
+
 import numpy as np
 import pandas as pd
+import seaborn as sns
+from matplotlib import pyplot as plt
 
-from utils import mark_highs_lows
+from utils import mark_highs_lows, add_common_markers
 from .base_metric import BaseMetric
 
 
@@ -14,7 +18,7 @@ class PiCycleMetric(BaseMetric):
     def description(self) -> str:
         return 'Pi Cycle Top Indicator'
 
-    def calculate(self, source_df: pd.DataFrame) -> pd.Series:
+    def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         df = source_df.copy()
 
         df['111DMA'] = df['Price'].rolling(111).mean()
@@ -30,4 +34,10 @@ class PiCycleMetric(BaseMetric):
             df.loc[df.index > row.name, 'PreviousPiCycleDiffHighValue'] = row['PiCycleDiff']
 
         df['PiCycleIndex'] = 1 - (df['PiCycleDiff'] / df['PreviousPiCycleDiffHighValue'])
+
+        df['PiCycleIndexNoNa'] = df['PiCycleIndex'].fillna(0)
+        ax[0].set_title(self.description)
+        sns.lineplot(data=df, x='Date', y='PiCycleIndexNoNa', ax=ax[0])
+        add_common_markers(df, ax[0])
+
         return df['PiCycleIndex']

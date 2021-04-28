@@ -1,7 +1,10 @@
+from datetime import datetime
 from typing import List
 
 import numpy as np
 import pandas as pd
+import seaborn as sns
+from matplotlib import pyplot as plt
 
 
 def mark_highs_lows(df: pd.DataFrame, col: str, begin_with_high: bool, window_size: float, ignore_last_rows: int) -> pd.DataFrame:
@@ -92,6 +95,22 @@ def fix_current_day_data(df: pd.DataFrame) -> pd.DataFrame:
 
     df.iloc[-1] = row
     return df
+
+
+def add_common_markers(df: pd.DataFrame, ax: plt.Axes):
+    sns.lineplot(data=df, x='Date', y='PriceLogInterp', alpha=0.4, color='orange', ax=ax)
+
+    for _, row in df[df['Halving'] == 1].iterrows():
+        days_since_epoch = (row['Date'] - datetime(1970, 1, 1)).days
+        ax.axvline(x=days_since_epoch, color='navy', linestyle=':')
+
+    for _, row in df[df['PriceHigh'] == 1].iterrows():
+        days_since_epoch = (row['Date'] - datetime(1970, 1, 1)).days
+        ax.axvline(x=days_since_epoch, color='red', linestyle=':')
+
+    for _, row in df[df['PriceLow'] == 1].iterrows():
+        days_since_epoch = (row['Date'] - datetime(1970, 1, 1)).days
+        ax.axvline(x=days_since_epoch, color='green', linestyle=':')
 
 
 def format_percentage(val: float, suffix: str = ' %') -> str:

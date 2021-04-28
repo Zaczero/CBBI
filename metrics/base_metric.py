@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
+from typing import List
 
+import matplotlib.pyplot as plt
 import pandas as pd
 
 
@@ -15,5 +17,5 @@ class BaseMetric(ABC):
         pass
 
     @abstractmethod
-    def calculate(self, source_df: pd.DataFrame) -> pd.Series:
+    def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         pass
