@@ -38,12 +38,6 @@ class PuellMetric(BaseMetric):
         lin_model.fit(high_x, high_y)
         df['PuellLogModel'] = lin_model.predict(x)
 
-        # sns.set()
-        # _, ax = plt.subplots()
-        # sns.lineplot(x='Date', y='PuellLog', data=df, ax=ax)
-        # sns.lineplot(x='Date', y='PuellLogModel', data=df, ax=ax, color='lime')
-        # plt.show()
-
         df['PuellIndex'] = (df['PuellLog'] - projected_min) / \
                            (df['PuellLogModel'] - projected_min)
 

@@ -57,14 +57,6 @@ class RUPLMetric(BaseMetric):
         lin_model.fit(high_x, high_y)
         df['RUPLHighModel'] = lin_model.predict(x)
 
-        # sns.set()
-        # _, ax = plt.subplots()
-        # sns.lineplot(x='Date', y='RUPL', data=df, ax=ax)
-        # sns.lineplot(x='Date', y='RUPLHighModel', data=df, ax=ax, color='g')
-        # sns.lineplot(x='Date', y='RUPLLowModel', data=df, ax=ax, color='r')
-        # plt.legend(['RUPL', 'Best high fit', 'Best low fit'])
-        # plt.show()
-
         df['RUPLIndex'] = (df['RUPL'] - df['RUPLLowModel']) / \
                           (df['RUPLHighModel'] - df['RUPLLowModel'])
 
