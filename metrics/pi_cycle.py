@@ -58,6 +58,7 @@ class PiCycleMetric(BaseMetric):
             df.loc[df.index > row.name, 'PreviousPiCycleDiffHighValue'] = row['PiCycleDiff']
 
         df['PiCycleIndex'] = 1 - (df['PiCycleDiff'] / df['PreviousPiCycleDiffHighValue'])
+        df.loc[df['PiCycleIndex'] < 0, 'PiCycleIndex'] = 0
 
         df['PiCycleIndexNoNa'] = df['PiCycleIndex'].fillna(0)
         ax[0].set_title(self.description)
