@@ -20,7 +20,7 @@ from utils import mark_highs_lows, fix_block_halving_data, mark_days_since, form
 cli_ui.CONFIG['color'] = 'always'
 
 
-@filecache(3600 * 2)  # 2 hours cache
+# @filecache(3600 * 2)  # 2 hours cache
 def fetch_bitcoin_data() -> pd.DataFrame:
     """
     Fetches Bitcoin data into a DataFrame for the past ``past_days`` days.

@@ -21,16 +21,16 @@ class GoldenRatioMetric(BaseMetric):
     def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         df = source_df.copy()
 
-        df['DaysBetweenPriceLowAndHalving'] = df['DaysSincePriceLow'] - df['DaysSinceHalving']
+        df['DaysBetweenPriceLowAndLastHalving'] = df['DaysSincePriceLow'] - df['DaysSinceHalving']
+        df['DaysBetweenPriceLowAndNextHalving'] = df['DaysSincePriceLow'] + df['DaysToHalving'].dt.days
+        df['DaysBetweenPriceLowAndHalving'] = df['DaysBetweenPriceLowAndLastHalving'].where(df['DaysBetweenPriceLowAndLastHalving'] >= 0, df['DaysBetweenPriceLowAndNextHalving'])
+
         df['GoldenRatioProjected'] = df['DaysBetweenPriceLowAndHalving'] / 0.51
         df['GoldenRatio'] = df['DaysSincePriceLow'] / df['GoldenRatioProjected']
-
         df['GoldenRatioIndex'] = 1 - np.abs(1 - df['GoldenRatio'])
-        df.loc[df['DaysBetweenPriceLowAndHalving'] < 0, 'GoldenRatioIndex'] = np.nan
 
-        df['GoldenRatioIndexNoNa'] = df['GoldenRatioIndex'].fillna(0)
         ax[0].set_title(self.description)
-        sns.lineplot(data=df, x='Date', y='GoldenRatioIndexNoNa', ax=ax[0])
+        sns.lineplot(data=df, x='Date', y='GoldenRatioIndex', ax=ax[0])
         add_common_markers(df, ax[0])
 
         return df['GoldenRatioIndex']

@@ -31,16 +31,16 @@ class StockToFlowMetric(BaseMetric):
         for _, row in df.loc[df['Halving'] == 1].iterrows():
             df.loc[df.index > row.name, 'PreviousHalvingDate'] = row['Date']
 
+        df.loc[df['PreviousPriceHighDate'] >= df['PreviousHalvingDate'], 'PreviousHalvingDate'] = df['NextHalvingDate']
+
         df['StockToFlowTarget'] = df['PreviousHalvingDate'] + timedelta(sf_emerge_days + sf_peak_delay)
         df['StockToFlow'] = (df['Date'] - df['PreviousPriceHighDate']) / \
                             (df['StockToFlowTarget'] - df['PreviousPriceHighDate'])
 
         df['StockToFlowIndex'] = 1 - np.abs(1 - df['StockToFlow'])
-        df.loc[df['PreviousPriceHighDate'] >= df['PreviousHalvingDate'], 'StockToFlowIndex'] = np.nan
 
-        df['StockToFlowIndexNoNa'] = df['StockToFlowIndex'].fillna(0)
         ax[0].set_title(self.description)
-        sns.lineplot(data=df, x='Date', y='StockToFlowIndexNoNa', ax=ax[0])
+        sns.lineplot(data=df, x='Date', y='StockToFlowIndex', ax=ax[0])
         add_common_markers(df, ax[0])
 
         return df['StockToFlowIndex']

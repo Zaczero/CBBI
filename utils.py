@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List
 
 import numpy as np
@@ -63,24 +63,28 @@ def mark_days_since(df: pd.DataFrame, cols: List[str]) -> pd.DataFrame:
 
 
 def fix_block_halving_data(df: pd.DataFrame) -> pd.DataFrame:
+    reward_halving_every = 210000
+    current_block_halving_id = reward_halving_every
     current_block_production = 50
     df['Halving'] = 0
+    df['NextHalvingBlock'] = current_block_halving_id
 
     while True:
-        current_block_production_min = 0.95 * current_block_production
-        current_block_production_max = 1.05 * current_block_production
+        df.loc[(current_block_halving_id - reward_halving_every) <= df['MaxBlockID'], 'BlockGeneration'] = current_block_production
 
-        df.loc[(current_block_production_min < df['BlockGeneration']) &
-               (df['BlockGeneration'] < current_block_production_max), 'BlockGeneration'] = current_block_production
+        block_halving_row = df[(df['MinBlockID'] <= current_block_halving_id) &
+                               (df['MaxBlockID'] >= current_block_halving_id)].squeeze()
 
-        block_halving_index = np.min(df[df['BlockGeneration'] < current_block_production].index)
-
-        if np.isnan(block_halving_index):
+        if block_halving_row.shape[0] == 0:
             break
 
-        df.loc[block_halving_index, 'Halving'] = 1
+        current_block_halving_id += reward_halving_every
         current_block_production /= 2
+        df.loc[block_halving_row.name, 'Halving'] = 1
+        df.loc[df.index > block_halving_row.name, 'NextHalvingBlock'] = current_block_halving_id
 
+    df['DaysToHalving'] = pd.TimedeltaIndex((df['NextHalvingBlock'] - df['MaxBlockID']) / (24 * 6), unit='D')
+    df['NextHalvingDate'] = df['Date'] + df['DaysToHalving']
     return df
 
 
