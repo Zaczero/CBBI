@@ -91,7 +91,7 @@ def get_confidence_score(df: pd.DataFrame, cols: List[str]) -> pd.Series:
     return df[cols].mean(axis=1)
 
 
-def run(json_file: str, json_simple_file: str) -> None:
+def run(json_file: str, json_simple_file: str, charts_file: str) -> None:
     """
     Calculates the current CBBI confidence value alongside all the required metrics.
     Everything gets pretty printed to the current stdout and a clean copy
@@ -133,7 +133,7 @@ def run(json_file: str, json_simple_file: str) -> None:
         metrics_descriptions.append(metric.description)
 
     cli_ui.info_1('Generating charts')
-    plt.savefig('charts.svg')
+    plt.savefig(charts_file)
 
     confidence_col = 'Confidence'
 
@@ -166,7 +166,7 @@ def run(json_file: str, json_simple_file: str) -> None:
     cli_ui.info_3('Source code: https://github.com/Zaczero/CBBI', end='\n\n')
 
 
-def run_and_retry(json_file: str = "latest.json", json_simple_file: str = "latest_simple.json", max_attempts: int = 10, sleep_seconds_on_error: float = 10) -> None:
+def run_and_retry(json_file: str = "latest.json", json_simple_file: str = "latest_simple.json", charts_file: str = "charts.svg", max_attempts: int = 10, sleep_seconds_on_error: float = 10) -> None:
     """
     Calculates the current CBBI confidence value alongside all the required metrics.
     Everything gets pretty printed to the current stdout and a clean copy
@@ -186,7 +186,7 @@ def run_and_retry(json_file: str = "latest.json", json_simple_file: str = "lates
 
     for _ in range(max_attempts):
         try:
-            run(json_file, json_simple_file)
+            run(json_file, json_simple_file, charts_file)
             exit(0)
 
         except Exception:
