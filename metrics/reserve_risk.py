@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import List
 
 import numpy as np
@@ -12,16 +13,18 @@ from utils import add_common_markers, mark_highs_lows
 from .base_metric import BaseMetric
 
 
-class ReverseRiskMetric(BaseMetric):
+class ReserveRiskMetric(BaseMetric):
     @property
     def name(self) -> str:
-        return 'ReverseRisk'
+        return 'ReserveRisk'
 
     @property
     def description(self) -> str:
-        return 'Reverse Risk'
+        return 'Reserve Risk'
 
     def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
+        days_shift = 2
+
         df = source_df.copy()
 
         response = requests.get('https://www.lookintobitcoin.com/django_plotly_dash/app/reserve_risk/_dash-layout', timeout=HTTP_TIMEOUT)
@@ -35,6 +38,7 @@ class ReverseRiskMetric(BaseMetric):
             'Risk': response_y,
         })
         df_risk['Date'] = pd.to_datetime(df_risk['Date']).dt.tz_localize(None)
+        df_risk['Date'] += timedelta(days_shift)
         df_risk = mark_highs_lows(df_risk, 'Risk', True, round(365 * 2), 365)
 
         df = df.join(df_risk.set_index('Date'), on='Date')

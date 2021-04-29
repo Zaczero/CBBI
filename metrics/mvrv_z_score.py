@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import List
 
 import pandas as pd
@@ -21,6 +22,8 @@ class MVRVMetric(BaseMetric):
         return 'MVRV Z-Score'
 
     def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
+        bull_days_shift = 6
+
         df = source_df.copy()
 
         response = requests.get('https://www.lookintobitcoin.com/django_plotly_dash/app/mvrv_zscore/_dash-layout', timeout=HTTP_TIMEOUT)
@@ -39,6 +42,8 @@ class MVRVMetric(BaseMetric):
         df = df.join(df_mvrv.set_index('Date'), on='Date')
         df.fillna({'MVRVHigh': 0, 'MVRVLow': 0}, inplace=True)
         df['MVRV'].ffill(inplace=True)
+        df['MVRVBull'] = df['MVRV'].shift(bull_days_shift)
+        df.loc[df['DaysSinceHalving'] < df['DaysSincePriceLow'], 'MVRV'] = df['MVRVBull']
 
         high_rows = df.loc[(df['PriceHigh'] == 1) & ~ (df['MVRV'].isna())]
         high_x = high_rows.index.values.reshape(-1, 1)

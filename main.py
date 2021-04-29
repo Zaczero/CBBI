@@ -14,8 +14,7 @@ from pyfiglet import figlet_format
 from termcolor import cprint
 
 from globals import HTTP_TIMEOUT
-from metrics import BaseMetric, GoldenRatioMetric, GoogleTrendsMetric, StockToFlowMetric, PiCycleMetric, TwoYearMovingAverageMetric, TrolololoMetric, RUPLMetric, PuellMetric, MVRVMetric, RHODLMetric, \
-    ReverseRiskMetric
+from metrics import BaseMetric, GoldenRatioMetric, GoogleTrendsMetric, StockToFlowMetric, PiCycleMetric, TwoYearMovingAverageMetric, TrolololoMetric, RUPLMetric, PuellMetric, MVRVMetric, RHODLMetric, ReserveRiskMetric
 from utils import mark_highs_lows, fix_block_halving_data, mark_days_since, format_percentage, get_color, fix_current_day_data
 
 cli_ui.CONFIG['color'] = 'always'
@@ -24,11 +23,8 @@ cli_ui.CONFIG['color'] = 'always'
 @filecache(3600 * 2)  # 2 hours cache
 def fetch_bitcoin_data() -> pd.DataFrame:
     """
-    Fetches Bitcoin data into a DataFrame for the past ``past_days`` days.
-    The current day is skipped as the data for it is often incomplete (e.g. TotalGenerationUSD).
-
-    Args:
-        past_days: Amount of past days to fetch the Bitcoin data of.
+    Fetches historical Bitcoin data into a DataFrame.
+    Very early data is discarded due to high volatility.
 
     Returns:
         DataFrame containing Bitcoin data.
@@ -87,7 +83,7 @@ def load_metrics() -> List[BaseMetric]:
         PuellMetric(),
         MVRVMetric(),
         RHODLMetric(),
-        ReverseRiskMetric(),
+        ReserveRiskMetric(),
     ]
 
 
@@ -95,14 +91,17 @@ def get_confidence_score(df: pd.DataFrame, cols: List[str]) -> pd.Series:
     return df[cols].mean(axis=1)
 
 
-def run(json_file: str, json_simple_file: str, charts_file: str) -> None:
+def run(json_file: str, charts_file: str) -> None:
     """
     Calculates the current CBBI confidence value alongside all the required metrics.
-    Everything gets pretty printed to the current stdout and a clean copy
-    is written to a JSON file specified by the path in the ``file`` argument.
+    Everything gets pretty printed to the current standard output and a clean copy
+    is saved to a JSON file specified by the path in the ``json_file`` argument.
+    A charts image is generated on the path specified by the ``charts_file`` argument
+    which summarizes all individual metrics' historical data in a visual way.
 
     Args:
-        file: File path where the output is stored in the JSON format.
+        json_file: File path where the output is saved in the JSON format.
+        charts_file: File path where the charts image is saved (formats supported by pyplot.savefig).
 
     Returns:
         None
@@ -123,8 +122,8 @@ def run(json_file: str, json_simple_file: str, charts_file: str) -> None:
         'lines.linewidth': 0.3,
         'grid.linewidth': 0.2,
 
-        # 'savefig.dpi': 1000,
-        # 'figure.dpi': 200,
+        'savefig.dpi': 1000,
+        'figure.dpi': 300,
     })
 
     fig, axes = plt.subplots(len(metrics), 1, figsize=plt.figaspect(len(metrics) / 2))
@@ -149,11 +148,6 @@ def run(json_file: str, json_simple_file: str, charts_file: str) -> None:
                  double_precision=4,
                  date_unit='s',
                  indent=2)
-    df_result[['Price', confidence_col]] \
-        .to_json(json_simple_file,
-                 double_precision=4,
-                 date_unit='s',
-                 indent=2)
 
     df_result_last = df_result.tail(1)
     confidence_details = {description: df_result_last[name][0] for name, description in zip(metrics_cols, metrics_descriptions)}
@@ -170,15 +164,18 @@ def run(json_file: str, json_simple_file: str, charts_file: str) -> None:
     cli_ui.info_3('Source code: https://github.com/Zaczero/CBBI', end='\n\n')
 
 
-def run_and_retry(json_file: str = "latest.json", json_simple_file: str = "latest_simple.json", charts_file: str = "charts.svg", max_attempts: int = 10, sleep_seconds_on_error: float = 10) -> None:
+def run_and_retry(json_file: str = "latest.json", charts_file: str = "charts.svg", max_attempts: int = 10, sleep_seconds_on_error: float = 10) -> None:
     """
     Calculates the current CBBI confidence value alongside all the required metrics.
-    Everything gets pretty printed to the current stdout and a clean copy
-    is written to a JSON file specified by the path in the ``file`` argument.
-    The execution will be attempted multiple times in case an error occurs.
+    Everything gets pretty printed to the current standard output and a clean copy
+    is saved to a JSON file specified by the path in the ``json_file`` argument.
+    A charts image is generated on the path specified by the ``charts_file`` argument
+    which summarizes all individual metrics' historical data in a visual way.
+    The execution is attempted multiple times in case an error occurs.
 
     Args:
-        file: File path where the output is stored in the JSON format.
+        json_file: File path where the output is saved in the JSON format.
+        charts_file: File path where the charts image is saved (formats supported by pyplot.savefig).
         max_attempts: Maximum number of attempts before termination. An attempt is counted when an error occurs.
         sleep_seconds_on_error: Duration of the sleep in seconds before attempting again after an error occurs.
 
@@ -190,7 +187,7 @@ def run_and_retry(json_file: str = "latest.json", json_simple_file: str = "lates
 
     for _ in range(max_attempts):
         try:
-            run(json_file, json_simple_file, charts_file)
+            run(json_file, charts_file)
             exit(0)
 
         except Exception:

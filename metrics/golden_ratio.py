@@ -16,7 +16,7 @@ class GoldenRatioMetric(BaseMetric):
 
     @property
     def description(self) -> str:
-        return 'The Golden 51%-49% Ratio'
+        return 'The Golden 50.8%-49.2% Ratio'
 
     def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         df = source_df.copy()
@@ -25,7 +25,7 @@ class GoldenRatioMetric(BaseMetric):
         df['DaysBetweenPriceLowAndNextHalving'] = df['DaysSincePriceLow'] + df['DaysToHalving'].dt.days
         df['DaysBetweenPriceLowAndHalving'] = df['DaysBetweenPriceLowAndLastHalving'].where(df['DaysBetweenPriceLowAndLastHalving'] >= 0, df['DaysBetweenPriceLowAndNextHalving'])
 
-        df['GoldenRatioProjected'] = df['DaysBetweenPriceLowAndHalving'] / 0.51
+        df['GoldenRatioProjected'] = df['DaysBetweenPriceLowAndHalving'] / 0.506
         df['GoldenRatio'] = df['DaysSincePriceLow'] / df['GoldenRatioProjected']
         df['GoldenRatioIndex'] = 1 - np.abs(1 - df['GoldenRatio'])
         df.loc[(0 < df['DaysSincePriceHigh']) & (df['DaysSincePriceHigh'] < df['DaysSincePriceLow']), 'GoldenRatioIndex'] = np.nan

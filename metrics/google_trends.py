@@ -33,7 +33,7 @@ class GoogleTrendsMetric(BaseMetric):
         return '"Bitcoin" search term (Google Trends)'
 
     def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
-        drop_off_per_day = 0.015
+        drop_off_per_day = 0.012
 
         df = source_df.copy()
 
@@ -85,7 +85,8 @@ class GoogleTrendsMetric(BaseMetric):
         df_interest = mark_highs_lows(df_interest, 'Interest', False, round(365 * 1.5), 365)
 
         for _, row in df_interest.loc[df_interest['InterestHigh'] == 1].iterrows():
-            df_interest.loc[df_interest.index > row.name, 'PreviousInterestHigh'] = row['Interest']
+            from_idx = np.min(df_interest.loc[(df_interest.index > row.name) & (df_interest['Interest'] < 10)].index)
+            df_interest.loc[df_interest.index >= from_idx, 'PreviousInterestHigh'] = row['Interest']
 
         df_interest['InterestScaleActual'] = df_interest['Interest'] / df_interest['PreviousInterestHigh']
 

@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 def mark_highs_lows(df: pd.DataFrame, col: str, begin_with_high: bool, window_size: float, ignore_last_rows: int) -> pd.DataFrame:
     """
     Marks highs and lows (peaks) of the column values inside the given DataFrame.
-    Marked points are indicated by the value '1' inside their corresponding, newly added, 'High' and 'Low' columns.
+    Marked points are indicated by the value '1' inside their corresponding, newly added, '``col``High' and '``col``Low' columns.
 
     Args:
         df: DataFrame from which the column values are selected and to which marked points columns are added.
@@ -18,6 +18,7 @@ def mark_highs_lows(df: pd.DataFrame, col: str, begin_with_high: bool, window_si
         begin_with_high: Indicates whether the first peak is high or low.
         window_size: Window size for the algorithm to consider.
                      Too low value will mark too many peaks, whereas, too high value will mark too little peaks.
+        ignore_last_rows: Amount of trailing DataFrame rows for which highs and lows should not be marked.
 
     Returns:
         Modified input DataFrame with columns, indicating the marked points, added.
@@ -138,7 +139,7 @@ def split_df_on_index_gap(df: pd.DataFrame, min_gap: int = 1) -> List[pd.DataFra
 
 def format_percentage(val: float, suffix: str = ' %') -> str:
     """
-    Formats a percentage value (0.0 - 1.0) in a standardized way.
+    Formats a percentage value (0.0 - 1.0) in the standardized way.
     Returned value has a constant width and a trailing '%' sign.
 
     Args:
