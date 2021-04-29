@@ -14,7 +14,8 @@ from pyfiglet import figlet_format
 from termcolor import cprint
 
 from globals import HTTP_TIMEOUT
-from metrics import BaseMetric, GoldenRatioMetric, GoogleTrendsMetric, StockToFlowMetric, PiCycleMetric, TwoYearMovingAverageMetric, TrolololoMetric, RUPLMetric, PuellMetric
+from metrics import BaseMetric, GoldenRatioMetric, GoogleTrendsMetric, StockToFlowMetric, PiCycleMetric, TwoYearMovingAverageMetric, TrolololoMetric, RUPLMetric, PuellMetric, MVRVMetric, RHODLMetric, \
+    ReverseRiskMetric
 from utils import mark_highs_lows, fix_block_halving_data, mark_days_since, format_percentage, get_color, fix_current_day_data
 
 cli_ui.CONFIG['color'] = 'always'
@@ -84,6 +85,9 @@ def load_metrics() -> List[BaseMetric]:
         TrolololoMetric(),
         RUPLMetric(),
         PuellMetric(),
+        MVRVMetric(),
+        RHODLMetric(),
+        ReverseRiskMetric(),
     ]
 
 
@@ -123,7 +127,7 @@ def run(json_file: str, json_simple_file: str, charts_file: str) -> None:
         # 'figure.dpi': 200,
     })
 
-    fig, axes = plt.subplots(len(metrics), 1, figsize=plt.figaspect(4))
+    fig, axes = plt.subplots(len(metrics), 1, figsize=plt.figaspect(len(metrics) / 2))
     axes = axes.reshape(-1, 1)
     plt.tight_layout(pad=14)
 
