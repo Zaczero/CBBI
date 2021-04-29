@@ -20,7 +20,7 @@ from utils import mark_highs_lows, fix_block_halving_data, mark_days_since, form
 cli_ui.CONFIG['color'] = 'always'
 
 
-@filecache(3600 * 2)  # 2 hours cache
+# @filecache(3600 * 2)  # 2 hours cache
 def fetch_bitcoin_data() -> pd.DataFrame:
     """
     Fetches historical Bitcoin data into a DataFrame.
@@ -119,14 +119,14 @@ def run(json_file: str, charts_file: str) -> None:
         'axes.labelsize': 4,
         'xtick.labelsize': 4,
         'ytick.labelsize': 4,
-        'lines.linewidth': 0.3,
-        'grid.linewidth': 0.2,
+        'lines.linewidth': 0.5,
+        'grid.linewidth': 0.3,
 
         'savefig.dpi': 1000,
         'figure.dpi': 300,
     })
 
-    fig, axes = plt.subplots(len(metrics), 1, figsize=plt.figaspect(len(metrics) / 2))
+    fig, axes = plt.subplots(len(metrics), 1, figsize=(4, 3 * len(metrics)))
     axes = axes.reshape(-1, 1)
     plt.tight_layout(pad=14)
 
@@ -157,8 +157,9 @@ def run(json_file: str, charts_file: str) -> None:
     cprint(figlet_format(format_percentage(df_result_last[confidence_col][0], ''), font='univers'), 'cyan', attrs=['bold'], end='')
 
     for description, value in confidence_details.items():
-        cprint(format_percentage(value) + ' ', color=get_color(value), attrs=['reverse'], end='')
-        print(f' - {description}')
+        if not np.isnan(value):
+            cprint(format_percentage(value) + ' ', color=get_color(value), attrs=['reverse'], end='')
+            print(f' - {description}')
 
     print()
     cli_ui.info_3('Source code: https://github.com/Zaczero/CBBI', end='\n\n')

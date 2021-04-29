@@ -43,13 +43,14 @@ class PiCycleMetric(BaseMetric):
             max_divergence_row = df_fluke.iloc[max_divergence_idx]
             df.loc[max_divergence_row.name < df.index, 'PiCycleDiffThreshold'] = max_divergence_row['PiCycleDiff']
 
+            if df_actual is not None:
+                df_actual_above = df_actual[df_actual['PiCycleDiff'] >= max_divergence_row['PiCycleDiff']]
+
+                if df_actual_above.shape[0] > 0:
+                    df.loc[df_actual_above.index.min() <= df.index, 'PiCycleDiffThreshold'] = 0
+
             if df_fluke_next is not None:
                 df.loc[df_fluke_next.index.min() <= df.index, 'PiCycleDiffThreshold'] = 0
-
-            df_actual_above = df_actual[df_actual['PiCycleDiff'] >= max_divergence_row['PiCycleDiff']]
-
-            if df_actual_above.shape[0] > 0:
-                df.loc[df_actual_above.index.min() <= df.index, 'PiCycleDiffThreshold'] = 0
 
         df.loc[df['PiCycleDiff'] < df['PiCycleDiffThreshold'], 'PiCycleDiff'] = df['PiCycleDiffThreshold']
         df = mark_highs_lows(df, 'PiCycleDiff', True, round(365 * 2), 365)
