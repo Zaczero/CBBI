@@ -112,3 +112,11 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# filecache
+*.cache.*
+
+# generated
+latest.json
+latest_simple.json
+charts.*

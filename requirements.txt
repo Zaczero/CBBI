@@ -6,3 +6,7 @@ pytrends~=4.7.3
 termcolor~=1.1.0
 cli_ui~=0.12.0
 fire~=0.4.0
+matplotlib~=3.4.1
+seaborn~=0.11.1
+filecache~=0.81
+scikit-learn~=0.24.1
