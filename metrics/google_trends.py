@@ -13,8 +13,6 @@ from sklearn.linear_model import LinearRegression
 from utils import mark_highs_lows, add_common_markers
 from .base_metric import BaseMetric
 
-cli_ui.CONFIG['color'] = 'always'
-
 
 @filecache(3600 * 24 * 3)  # 3 day cache
 def fetch_google_trends_data(keyword: str, timeframe: str) -> pd.DataFrame:

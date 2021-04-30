@@ -17,8 +17,6 @@ from globals import HTTP_TIMEOUT
 from metrics import BaseMetric, GoldenRatioMetric, GoogleTrendsMetric, StockToFlowMetric, PiCycleMetric, TwoYearMovingAverageMetric, TrolololoMetric, RUPLMetric, PuellMetric, MVRVMetric, RHODLMetric, ReserveRiskMetric
 from utils import mark_highs_lows, fix_block_halving_data, mark_days_since, format_percentage, get_color, fix_current_day_data
 
-cli_ui.CONFIG['color'] = 'always'
-
 
 # @filecache(3600 * 2)  # 2 hours cache
 def fetch_bitcoin_data() -> pd.DataFrame:
