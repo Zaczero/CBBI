@@ -41,7 +41,7 @@ class GoogleTrendsMetric(BaseMetric):
         date_current = date_start
 
         delta_days = 269  # 270 days will cause Google Trends API return weekly format
-        match_window_days = int(np.floor(delta_days / 2)) + 1
+        match_window_days = 200  # int(np.floor(delta_days / 2)) + 1
         iteration_count = int(np.ceil((date_end - date_start) / timedelta(delta_days - match_window_days)))
 
         df_interest = pd.DataFrame()
