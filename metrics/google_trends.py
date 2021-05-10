@@ -113,9 +113,14 @@ class GoogleTrendsMetric(BaseMetric):
 
             return np.max(rows)
 
-        df['GoogleTrendsIndex'] = df['GoogleTrends'] \
+        df['GoogleTrendsDropOff'] = df['GoogleTrends'] \
             .rolling(int(1.2 / drop_off_per_day), min_periods=1) \
             .apply(calculate_drop_off, raw=True)
+
+        df['GoogleTrendsDropOffLog'] = np.log(df['GoogleTrendsDropOff'] * 100 + 1)
+        df['GoogleTrendsIndex'] = np.interp(df['GoogleTrendsDropOffLog'],
+                                            (df['GoogleTrendsDropOffLog'].min(), df['GoogleTrendsDropOffLog'].max()),
+                                            (0, 1))
 
         ax[0].set_title(self.description)
         sns.lineplot(data=df, x='Date', y='GoogleTrendsIndex', ax=ax[0])
