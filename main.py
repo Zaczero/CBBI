@@ -18,7 +18,7 @@ from metrics import BaseMetric, GoldenRatioMetric, GoogleTrendsMetric, StockToFl
 from utils import mark_highs_lows, fix_block_halving_data, mark_days_since, format_percentage, get_color, fix_current_day_data
 
 
-# @filecache(3600 * 2)  # 2 hours cache
+@filecache(3600 * 2)  # 2 hours cache
 def fetch_bitcoin_data() -> pd.DataFrame:
     """
     Fetches historical Bitcoin data into a DataFrame.
