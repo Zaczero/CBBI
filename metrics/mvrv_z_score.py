@@ -26,11 +26,25 @@ class MVRVMetric(BaseMetric):
 
         df = source_df.copy()
 
-        response = requests.get('https://www.lookintobitcoin.com/django_plotly_dash/app/mvrv_zscore/_dash-layout', timeout=HTTP_TIMEOUT)
+        request_data = {
+            'output': 'chart.figure',
+            'changedPropIds': [
+                'url.pathname'
+            ],
+            'inputs': [
+                {
+                    'id': 'url',
+                    'property': 'pathname',
+                    'value': '/charts/mvrv-zscore/'
+                }
+            ]
+        }
+
+        response = requests.post('https://www.lookintobitcoin.com/django_plotly_dash/app/mvrv_zscore/_dash-update-component', json=request_data, timeout=HTTP_TIMEOUT)
         response.raise_for_status()
         response_json = response.json()
-        response_x = response_json['props']['children'][0]['props']['figure']['data'][0]['x']
-        response_y = response_json['props']['children'][0]['props']['figure']['data'][0]['y']
+        response_x = response_json['response']['props']['figure']['data'][0]['x']
+        response_y = response_json['response']['props']['figure']['data'][0]['y']
 
         df_mvrv = pd.DataFrame({
             'Date': response_x[:len(response_y)],
