@@ -86,7 +86,7 @@ def load_metrics() -> List[BaseMetric]:
 
 
 def get_confidence_score(df: pd.DataFrame, cols: List[str]) -> pd.Series:
-    return df[cols].mean(axis=1)
+    return df[cols].mean(axis=1).clip(0, 1)
 
 
 def run(json_file: str, charts_file: str) -> None:
