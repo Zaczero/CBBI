@@ -20,8 +20,6 @@ class PuellMetric(BaseMetric):
         return 'Puell Multiple'
 
     def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
-        projected_min = np.log(0.3)
-
         df = source_df.copy()
 
         df['PuellMA365'] = df['TotalGenerationUSD'].rolling(365).mean()
@@ -29,13 +27,13 @@ class PuellMetric(BaseMetric):
         df['PuellLog'] = np.log(df['Puell'])
         df = mark_highs_lows(df, 'PuellLog', True, round(365 * 2), 365)
 
-        high_rows = df.loc[df['PuellLogHigh'] == 1]
+        high_rows = df.loc[df['PriceHigh'] == 1]
         high_x = high_rows.index.values.reshape(-1, 1)
         high_y = high_rows['PuellLog'].values.reshape(-1, 1)
 
-        # low_rows = df.loc[df['PuellLogLow'] == 1]
-        # low_x = low_rows.index.values.reshape(-1, 1)
-        # low_y = low_rows['PuellLog'].values.reshape(-1, 1)
+        low_rows = df.loc[df['PuellLogLow'] == 1][1:]
+        low_x = low_rows.index.values.reshape(-1, 1)
+        low_y = low_rows['PuellLog'].values.reshape(-1, 1)
 
         x = df.index.values.reshape(-1, 1)
 
@@ -43,11 +41,11 @@ class PuellMetric(BaseMetric):
         lin_model.fit(high_x, high_y)
         df['PuellLogHighModel'] = lin_model.predict(x)
 
-        # lin_model.fit(low_x, low_y)
-        # df['PuellLogLowModel'] = lin_model.predict(x)
+        lin_model.fit(low_x, low_y)
+        df['PuellLogLowModel'] = lin_model.predict(x)
 
-        df['PuellIndex'] = (df['PuellLog'] - projected_min) / \
-                           (df['PuellLogHighModel'] - projected_min)
+        df['PuellIndex'] = (df['PuellLog'] - df['PuellLogLowModel']) / \
+                           (df['PuellLogHighModel'] - df['PuellLogLowModel'])
 
         df['PuellIndexNoNa'] = df['PuellIndex'].fillna(0)
         ax[0].set_title(self.description)

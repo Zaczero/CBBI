@@ -21,8 +21,6 @@ class TrolololoMetric(BaseMetric):
 
     def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         begin_date = pd.to_datetime('2012-01-01')
-        log_diff_line_count = 8
-        log_diff_bottom = 0.5
 
         df = source_df.copy()
 
@@ -33,14 +31,18 @@ class TrolololoMetric(BaseMetric):
         df['TroloBottomPrice'] = np.power(10, 2.788 * np.log(df['TroloDaysSinceBegin'] + 1200) - 19.463)  # Basically a Fire Sale
         df['TroloBottomPriceLog'] = np.log(df['TroloBottomPrice'])
 
-        df['TroloPriceLogDifference'] = (df['TroloTopPriceLog'] - df['TroloBottomPriceLog']) / log_diff_line_count
-        df['TroloBottomPriceLogCorrect'] = df['TroloBottomPriceLog'] - log_diff_bottom * df['TroloPriceLogDifference']
+        df['TroloDifference'] = df['TroloTopPriceLog'] - df['TroloBottomPriceLog']
         df['TroloOvershootActual'] = df['PriceLog'] - df['TroloTopPriceLog']
+        df['TroloUndershootActual'] = df['TroloBottomPriceLog'] - df['PriceLog']
 
         high_rows = df.loc[(df['PriceHigh'] == 1) & (df['Date'] >= begin_date)]
         high_x = high_rows.index.values.reshape(-1, 1)
         high_y = high_rows['TroloOvershootActual'].values.reshape(-1, 1)
         high_y[0] *= 0.6  # the first value seems too high
+
+        low_rows = df.loc[(df['PriceLow'] == 1) & (df['Date'] >= begin_date)]
+        low_x = low_rows.index.values.reshape(-1, 1)
+        low_y = low_rows['TroloUndershootActual'].values.reshape(-1, 1)
 
         x = df.index.values.reshape(-1, 1)
 
@@ -48,8 +50,11 @@ class TrolololoMetric(BaseMetric):
         lin_model.fit(high_x, high_y)
         df['TroloOvershootModel'] = lin_model.predict(x)
 
-        df['TroloIndex'] = (df['PriceLog'] - df['TroloBottomPriceLogCorrect']) / \
-                           (df['TroloTopPriceLog'] + df['TroloOvershootModel'] - df['TroloBottomPriceLogCorrect'])
+        lin_model.fit(low_x, low_y)
+        df['TroloUndershootModel'] = lin_model.predict(x)
+
+        df['TroloIndex'] = (df['PriceLog'] - df['TroloBottomPriceLog'] + df['TroloUndershootModel']) / \
+                           (df['TroloOvershootModel'] + df['TroloDifference'] + df['TroloUndershootModel'])
 
         ax[0].set_title(self.description)
         sns.lineplot(data=df, x='Date', y='TroloIndex', ax=ax[0])

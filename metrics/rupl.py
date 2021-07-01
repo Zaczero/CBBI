@@ -54,22 +54,22 @@ class RUPLMetric(BaseMetric):
         df.fillna({'RUPLHigh': 0, 'RUPLLow': 0}, inplace=True)
         df['RUPL'].ffill(inplace=True)
 
-        low_rows = df.loc[df['RUPLLow'] == 1][1:]
-        low_x = low_rows.index.values.reshape(-1, 1)
-        low_y = low_rows['RUPL'].values.reshape(-1, 1)
-
         high_rows = df.loc[df['RUPLHigh'] == 1]
         high_x = high_rows.index.values.reshape(-1, 1)
         high_y = high_rows['RUPL'].values.reshape(-1, 1)
 
+        low_rows = df.loc[df['RUPLLow'] == 1][1:]
+        low_x = low_rows.index.values.reshape(-1, 1)
+        low_y = low_rows['RUPL'].values.reshape(-1, 1)
+
         x = df.index.values.reshape(-1, 1)
 
         lin_model = LinearRegression()
-        lin_model.fit(low_x, low_y)
-        df['RUPLLowModel'] = lin_model.predict(x)
-
         lin_model.fit(high_x, high_y)
         df['RUPLHighModel'] = lin_model.predict(x)
+
+        lin_model.fit(low_x, low_y)
+        df['RUPLLowModel'] = lin_model.predict(x)
 
         df['RUPLIndex'] = (df['RUPL'] - df['RUPLLowModel']) / \
                           (df['RUPLHighModel'] - df['RUPLLowModel'])

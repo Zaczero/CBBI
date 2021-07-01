@@ -51,19 +51,18 @@ class MVRVMetric(BaseMetric):
             'MVRV': response_y,
         })
         df_mvrv['Date'] = pd.to_datetime(df_mvrv['Date']).dt.tz_localize(None)
-        df_mvrv = mark_highs_lows(df_mvrv, 'MVRV', True, round(365 * 2), 365)
 
         df = df.join(df_mvrv.set_index('Date'), on='Date')
+        df.loc[df['DaysSinceHalving'] < df['DaysSincePriceLow'], 'MVRV'] = df['MVRV'].shift(bull_days_shift)
+        df = mark_highs_lows(df, 'MVRV', True, round(365 * 2), 365)
         df.fillna({'MVRVHigh': 0, 'MVRVLow': 0}, inplace=True)
         df['MVRV'].ffill(inplace=True)
-        df['MVRVBull'] = df['MVRV'].shift(bull_days_shift)
-        df.loc[df['DaysSinceHalving'] < df['DaysSincePriceLow'], 'MVRV'] = df['MVRVBull']
 
-        high_rows = df.loc[(df['PriceHigh'] == 1) & ~ (df['MVRV'].isna())]
+        high_rows = df.loc[df['PriceHigh'] == 1]
         high_x = high_rows.index.values.reshape(-1, 1)
         high_y = high_rows['MVRV'].values.reshape(-1, 1)
 
-        low_rows = df.loc[(df['PriceLow'] == 1) & ~ (df['MVRV'].isna())]
+        low_rows = df.loc[df['MVRVLow'] == 1]
         low_x = low_rows.index.values.reshape(-1, 1)
         low_y = low_rows['MVRV'].values.reshape(-1, 1)
 

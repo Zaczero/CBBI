@@ -64,7 +64,7 @@ class ReserveRiskMetric(BaseMetric):
         high_x = high_rows.index.values.reshape(-1, 1)
         high_y = high_rows['RiskLog'].values.reshape(-1, 1)
 
-        low_rows = df.loc[df['RiskLow'] == 1][1:]
+        low_rows = df.loc[df['PriceLow'] == 1][1:]
         low_x = low_rows.index.values.reshape(-1, 1)
         low_y = low_rows['RiskLog'].values.reshape(-1, 1)
 
