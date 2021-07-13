@@ -60,7 +60,7 @@ def fetch_bitcoin_data() -> pd.DataFrame:
 
     df = fix_current_day_data(df)
     df = fix_block_halving_data(df)
-    df = mark_highs_lows(df, 'Price', False, round(365 * 2), 90)
+    df = mark_highs_lows(df, 'Price', False, round(365 * 2), 365)
     df = mark_days_since(df, ['PriceHigh', 'PriceLow', 'Halving'])
 
     current_price = df['Price'].tail(1).values[0]
