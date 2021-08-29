@@ -23,6 +23,9 @@ class StockToFlowMetric(BaseMetric):
         sf_emerge_days = 463
         sf_peak_delay = 60
 
+        peak_decline_after_days = 30
+        peak_decline_duration = 90
+
         df = source_df.copy()
 
         for _, row in df.loc[df['PriceHigh'] == 1].iterrows():
@@ -37,8 +40,11 @@ class StockToFlowMetric(BaseMetric):
         df['StockToFlow'] = (df['Date'] - df['PreviousPriceHighDate']) / \
                             (df['StockToFlowTarget'] - df['PreviousPriceHighDate'])
 
-        df['StockToFlowIndex'] = 1 - np.abs(1 - df['StockToFlow'])
-        df.loc[(0 < df['DaysSincePriceHigh']) & (df['DaysSincePriceHigh'] < df['DaysSincePriceLow']), 'StockToFlowIndex'] = np.nan
+        df['StockToFlowIndex'] = np.fmin(df['StockToFlow'], 1, where=df['StockToFlow'].notna())
+
+        df.loc[(peak_decline_after_days >= df['DaysSincePriceHigh']) & (df['DaysSincePriceHigh'] < df['DaysSincePriceLow']), 'StockToFlowIndex'] = 1
+        df.loc[(peak_decline_after_days < df['DaysSincePriceHigh']) & (df['DaysSincePriceHigh'] < df['DaysSincePriceLow']), 'StockToFlowIndex'] = 1 - (df['DaysSincePriceHigh'] - peak_decline_after_days) / peak_decline_duration
+        df.loc[(peak_decline_after_days + peak_decline_duration < df['DaysSincePriceHigh']) & (df['DaysSincePriceHigh'] < df['DaysSincePriceLow']), 'StockToFlowIndex'] = 0
 
         df['StockToFlowIndexNoNa'] = df['StockToFlowIndex'].fillna(0)
         ax[0].set_title(self.description)
