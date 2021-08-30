@@ -24,7 +24,7 @@ class StockToFlowMetric(BaseMetric):
         sf_peak_delay = 60
 
         peak_decline_after_days = 30
-        peak_decline_duration = 90
+        peak_decline_duration = 270
 
         df = source_df.copy()
 

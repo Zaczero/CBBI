@@ -20,7 +20,7 @@ class GoldenRatioMetric(BaseMetric):
 
     def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         peak_decline_after_days = 30
-        peak_decline_duration = 90
+        peak_decline_duration = 270
 
         df = source_df.copy()
 
