@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from math import ceil
 from typing import List
 
 import numpy as np
@@ -111,11 +112,11 @@ def add_common_markers(df: pd.DataFrame, ax: plt.Axes):
 
     for _, row in df[df['PriceHigh'] == 1].iterrows():
         days_since_epoch = (row['Date'] - datetime(1970, 1, 1)).days
-        ax.axvline(x=days_since_epoch, color='red', linestyle=':')
+        ax.axvline(x=days_since_epoch, color='green', linestyle=':')
 
     for _, row in df[df['PriceLow'] == 1].iterrows():
         days_since_epoch = (row['Date'] - datetime(1970, 1, 1)).days
-        ax.axvline(x=days_since_epoch, color='green', linestyle=':')
+        ax.axvline(x=days_since_epoch, color='red', linestyle=':')
 
 
 def split_df_on_index_gap(df: pd.DataFrame, min_gap: int = 1) -> List[pd.DataFrame]:
@@ -157,7 +158,7 @@ def format_percentage(val: float, suffix: str = ' %') -> str:
         str('110 %')
     """
 
-    return f'{round(val * 100): >3d}{suffix}'
+    return f'{ceil(val * 100): >3d}{suffix}'
 
 
 def get_color(val: float) -> str:
