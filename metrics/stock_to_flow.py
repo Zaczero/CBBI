@@ -29,22 +29,28 @@ class StockToFlowMetric(BaseMetric):
         df = source_df.copy()
 
         for _, row in df.loc[df['PriceHigh'] == 1].iterrows():
-            df.loc[df.index > row.name, 'PreviousPriceHighDate'] = row['Date']
+            df.loc[df.index >= row.name, 'PreviousPriceHighDate'] = row['Date']
+
+        for _, row in df.loc[df['PriceLow'] == 1].iterrows():
+            df.loc[df.index >= row.name, 'PreviousPriceLowDate'] = row['Date']
 
         for _, row in df.loc[df['Halving'] == 1].iterrows():
-            df.loc[df.index > row.name, 'PreviousHalvingDate'] = row['Date']
+            df.loc[df.index >= row.name, 'PreviousHalvingDate'] = row['Date']
 
         df.loc[df['PreviousPriceHighDate'] >= df['PreviousHalvingDate'], 'PreviousHalvingDate'] = df['NextHalvingDate']
 
         df['StockToFlowTarget'] = df['PreviousHalvingDate'] + timedelta(sf_emerge_days + sf_peak_delay)
-        df['StockToFlow'] = (df['Date'] - df['PreviousPriceHighDate']) / \
-                            (df['StockToFlowTarget'] - df['PreviousPriceHighDate'])
+        df['StockToFlow'] = (df['Date'] - df['PreviousPriceLowDate']) / \
+                            (df['StockToFlowTarget'] - df['PreviousPriceLowDate'])
 
         df['StockToFlowIndex'] = np.fmin(df['StockToFlow'], 1, where=df['StockToFlow'].notna())
 
         df.loc[(peak_decline_after_days >= df['DaysSincePriceHigh']) & (df['DaysSincePriceHigh'] < df['DaysSincePriceLow']), 'StockToFlowIndex'] = 1
         df.loc[(peak_decline_after_days < df['DaysSincePriceHigh']) & (df['DaysSincePriceHigh'] < df['DaysSincePriceLow']), 'StockToFlowIndex'] = 1 - (df['DaysSincePriceHigh'] - peak_decline_after_days) / peak_decline_duration
         df.loc[(peak_decline_after_days + peak_decline_duration < df['DaysSincePriceHigh']) & (df['DaysSincePriceHigh'] < df['DaysSincePriceLow']), 'StockToFlowIndex'] = 0
+
+        # discard pre-2015 metric which is reported incorrectly due to missing previous halving data
+        df.loc[df['Date'] <= '2015-01-01', 'StockToFlowIndex'] = np.nan
 
         df['StockToFlowIndexNoNa'] = df['StockToFlowIndex'].fillna(0)
         ax[0].set_title(self.description)
