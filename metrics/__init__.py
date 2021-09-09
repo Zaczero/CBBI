@@ -7,6 +7,6 @@ from .puell_multiple import *
 from .reserve_risk import *
 from .rhodl_ratio import *
 from .rupl import *
-from .stock_to_flow import *
+from .halving_to_peak import *
 from .trolololo import *
 from .two_year_moving_average import *

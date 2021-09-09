@@ -14,7 +14,7 @@ from pyfiglet import figlet_format
 from termcolor import cprint
 
 from globals import HTTP_TIMEOUT
-from metrics import BaseMetric, GoldenRatioMetric, GoogleTrendsMetric, StockToFlowMetric, PiCycleMetric, TwoYearMovingAverageMetric, TrolololoMetric, RUPLMetric, PuellMetric, MVRVMetric, RHODLMetric, ReserveRiskMetric
+from metrics import BaseMetric, GoldenRatioMetric, GoogleTrendsMetric, HalvingToPeakMetric, PiCycleMetric, TwoYearMovingAverageMetric, TrolololoMetric, RUPLMetric, PuellMetric, MVRVMetric, RHODLMetric, ReserveRiskMetric
 from utils import mark_highs_lows, fix_block_halving_data, mark_days_since, format_percentage, get_color, fix_current_day_data
 
 
@@ -73,7 +73,7 @@ def load_metrics() -> List[BaseMetric]:
     return [
         GoldenRatioMetric(),
         GoogleTrendsMetric(),
-        StockToFlowMetric(),
+        HalvingToPeakMetric(),
         PiCycleMetric(),
         TwoYearMovingAverageMetric(),
         TrolololoMetric(),
