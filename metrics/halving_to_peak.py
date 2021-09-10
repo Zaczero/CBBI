@@ -47,10 +47,10 @@ class HalvingToPeakMetric(BaseMetric):
         df.loc[(peak_decline_after_days >= df['DaysSincePriceHigh']) & (df['DaysSincePriceHigh'] < df['DaysSincePriceLow']), 'HalvingToPeakIndex'] = 1
         df.loc[(peak_decline_after_days < df['DaysSincePriceHigh']) & (df['DaysSincePriceHigh'] < df['DaysSincePriceLow']), 'HalvingToPeakIndex'] = 1 - (df['DaysSincePriceHigh'] - peak_decline_after_days) / peak_decline_duration
         df.loc[(peak_decline_after_days + peak_decline_duration < df['DaysSincePriceHigh']) & (df['DaysSincePriceHigh'] < df['DaysSincePriceLow']), 'HalvingToPeakIndex'] = 0
+        df['HalvingToPeakIndex'] = df['HalvingToPeakIndex'].fillna(0)
 
-        df['HalvingToPeakIndexNoNa'] = df['HalvingToPeakIndex'].fillna(0)
         ax[0].set_title(self.description)
-        sns.lineplot(data=df, x='Date', y='HalvingToPeakIndexNoNa', ax=ax[0])
+        sns.lineplot(data=df, x='Date', y='HalvingToPeakIndex', ax=ax[0])
         add_common_markers(df, ax[0])
 
         return df['HalvingToPeakIndex']
