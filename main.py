@@ -1,21 +1,12 @@
 import time
 import traceback
-from typing import List
 
-import cli_ui
 import fire
-import numpy as np
-import pandas as pd
-import requests
-import seaborn as sns
-from filecache import filecache
-from matplotlib import pyplot as plt
 from pyfiglet import figlet_format
 from termcolor import cprint
 
-from globals import HTTP_TIMEOUT
-from metrics import BaseMetric, GoldenRatioMetric, GoogleTrendsMetric, HalvingToPeakMetric, PiCycleMetric, TwoYearMovingAverageMetric, TrolololoMetric, RUPLMetric, PuellMetric, MVRVMetric, RHODLMetric, ReserveRiskMetric
-from utils import mark_highs_lows, fix_block_halving_data, mark_days_since, format_percentage, get_color, fix_current_day_data
+from metrics import *
+from utils import *
 
 
 @filecache(3600 * 2)  # 2 hours cache
@@ -82,6 +73,7 @@ def load_metrics() -> List[BaseMetric]:
         MVRVMetric(),
         RHODLMetric(),
         ReserveRiskMetric(),
+        WoobullMetric(),
     ]
 
 

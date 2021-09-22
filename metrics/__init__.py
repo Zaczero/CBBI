@@ -10,3 +10,4 @@ from .rupl import *
 from .halving_to_peak import *
 from .trolololo import *
 from .two_year_moving_average import *
+from .woobull_topcap_cvdd import *
