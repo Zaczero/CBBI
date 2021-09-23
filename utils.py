@@ -27,7 +27,7 @@ def mark_highs_lows(df: pd.DataFrame, col: str, begin_with_high: bool, window_si
     col_high = col + 'High'
     col_low = col + 'Low'
 
-    assert col in df.columns, 'The column name (col) could not be found inside the given DataFrame (df)'
+    assert col in df.columns, f'The column name "{col}" (col) could not be found inside the given DataFrame (df)'
     assert col_high not in df.columns, 'The DataFrame (df) already contains the "High" column - bugprone'
     assert col_low not in df.columns, 'The DataFrame (df) already contains the "Low" column - bugprone'
     assert window_size > 0, 'Value of the window_size argument must be at least 1'
