@@ -38,9 +38,9 @@ def _fetch_df() -> pd.DataFrame:
 
     df_top = _extract_metric(response_html, 'top_', 'Top')
     df_cvdd = _extract_metric(response_html, 'cvdd', 'CVDD')
-    df_woobull = df_top.merge(df_cvdd, on='Date')
+    df = df_top.merge(df_cvdd, on='Date')
 
-    return df_woobull
+    return df
 
 
 class WoobullMetric(BaseMetric):

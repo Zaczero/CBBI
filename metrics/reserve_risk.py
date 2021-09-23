@@ -13,6 +13,41 @@ from utils import add_common_markers, mark_highs_lows
 from .base_metric import BaseMetric
 
 
+def _fetch_df() -> pd.DataFrame:
+    request_data = {
+        'output': 'chart.figure',
+        'changedPropIds': [
+            'url.pathname'
+        ],
+        'inputs': [
+            {
+                'id': 'url',
+                'property': 'pathname',
+                'value': '/charts/reserve-risk/'
+            }
+        ]
+    }
+
+    response = requests.post(
+        'https://www.lookintobitcoin.com/django_plotly_dash/app/reserve_risk/_dash-update-component',
+        json=request_data,
+        timeout=HTTP_TIMEOUT
+    )
+
+    response.raise_for_status()
+    response_json = response.json()
+    response_x = response_json['response']['props']['figure']['data'][3]['x']
+    response_y = response_json['response']['props']['figure']['data'][3]['y']
+
+    df = pd.DataFrame({
+        'Date': response_x[:len(response_y)],
+        'Risk': response_y,
+    })
+    df['Date'] = pd.to_datetime(df['Date']).dt.tz_localize(None)
+
+    return df
+
+
 class ReserveRiskMetric(BaseMetric):
     @property
     def name(self) -> str:
@@ -25,35 +60,10 @@ class ReserveRiskMetric(BaseMetric):
     def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         days_shift = 2
 
-        request_data = {
-            'output': 'chart.figure',
-            'changedPropIds': [
-                'url.pathname'
-            ],
-            'inputs': [
-                {
-                    'id': 'url',
-                    'property': 'pathname',
-                    'value': '/charts/reserve-risk/'
-                }
-            ]
-        }
+        df = df.merge(_fetch_df(), on='Date', how='left')
+        df['Risk'] = df['Risk'].shift(days_shift, fill_value=np.nan)
 
-        response = requests.post('https://www.lookintobitcoin.com/django_plotly_dash/app/reserve_risk/_dash-update-component', json=request_data, timeout=HTTP_TIMEOUT)
-        response.raise_for_status()
-        response_json = response.json()
-        response_x = response_json['response']['props']['figure']['data'][3]['x']
-        response_y = response_json['response']['props']['figure']['data'][3]['y']
-
-        df_risk = pd.DataFrame({
-            'Date': response_x[:len(response_y)],
-            'Risk': response_y,
-        })
-        df_risk['Date'] = pd.to_datetime(df_risk['Date']).dt.tz_localize(None)
-        df_risk['Date'] += timedelta(days_shift)
-        df_risk = mark_highs_lows(df_risk, 'Risk', True, round(365 * 2), 365)
-
-        df = df.merge(df_risk, on='Date', how='left')
+        df = mark_highs_lows(df, 'Risk', True, round(365 * 2), 365)
         df.fillna({'RiskHigh': 0, 'RiskLow': 0}, inplace=True)
         df['Risk'].ffill(inplace=True)
         df['RiskLog'] = np.log(df['Risk'])

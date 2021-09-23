@@ -11,6 +11,38 @@ from utils import add_common_markers, mark_highs_lows
 from .base_metric import BaseMetric
 
 
+def _fetch_df() -> pd.DataFrame:
+    request_data = {
+        'output': 'chart.figure',
+        'changedPropIds': [
+            'url.pathname'
+        ],
+        'inputs': [
+            {
+                'id': 'url',
+                'property': 'pathname',
+                'value': '/charts/mvrv-zscore/'
+            }
+        ]
+    }
+
+    response = requests.post(
+        'https://www.lookintobitcoin.com/django_plotly_dash/app/mvrv_zscore/_dash-update-component', json=request_data,
+        timeout=HTTP_TIMEOUT)
+    response.raise_for_status()
+    response_json = response.json()
+    response_x = response_json['response']['props']['figure']['data'][0]['x']
+    response_y = response_json['response']['props']['figure']['data'][0]['y']
+
+    df = pd.DataFrame({
+        'Date': response_x[:len(response_y)],
+        'MVRV': response_y,
+    })
+    df['Date'] = pd.to_datetime(df['Date']).dt.tz_localize(None)
+
+    return df
+
+
 class MVRVMetric(BaseMetric):
     @property
     def name(self) -> str:
@@ -23,34 +55,9 @@ class MVRVMetric(BaseMetric):
     def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         bull_days_shift = 6
 
-        request_data = {
-            'output': 'chart.figure',
-            'changedPropIds': [
-                'url.pathname'
-            ],
-            'inputs': [
-                {
-                    'id': 'url',
-                    'property': 'pathname',
-                    'value': '/charts/mvrv-zscore/'
-                }
-            ]
-        }
-
-        response = requests.post('https://www.lookintobitcoin.com/django_plotly_dash/app/mvrv_zscore/_dash-update-component', json=request_data, timeout=HTTP_TIMEOUT)
-        response.raise_for_status()
-        response_json = response.json()
-        response_x = response_json['response']['props']['figure']['data'][0]['x']
-        response_y = response_json['response']['props']['figure']['data'][0]['y']
-
-        df_mvrv = pd.DataFrame({
-            'Date': response_x[:len(response_y)],
-            'MVRV': response_y,
-        })
-        df_mvrv['Date'] = pd.to_datetime(df_mvrv['Date']).dt.tz_localize(None)
-
-        df = df.merge(df_mvrv, on='Date', how='left')
+        df = df.merge(_fetch_df(), on='Date', how='left')
         df.loc[df['DaysSinceHalving'] < df['DaysSincePriceLow'], 'MVRV'] = df['MVRV'].shift(bull_days_shift)
+
         df = mark_highs_lows(df, 'MVRV', True, round(365 * 2), 365)
         df.fillna({'MVRVHigh': 0, 'MVRVLow': 0}, inplace=True)
         df['MVRV'].ffill(inplace=True)

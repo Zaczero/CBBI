@@ -12,6 +12,41 @@ from utils import add_common_markers, mark_highs_lows
 from .base_metric import BaseMetric
 
 
+def _fetch_df() -> pd.DataFrame:
+    request_data = {
+        'output': 'chart.figure',
+        'changedPropIds': [
+            'url.pathname'
+        ],
+        'inputs': [
+            {
+                'id': 'url',
+                'property': 'pathname',
+                'value': '/charts/rhodl-ratio/'
+            }
+        ]
+    }
+
+    response = requests.post(
+        'https://www.lookintobitcoin.com/django_plotly_dash/app/rhodl_ratio/_dash-update-component',
+        json=request_data,
+        timeout=HTTP_TIMEOUT
+    )
+
+    response.raise_for_status()
+    response_json = response.json()
+    response_x = response_json['response']['props']['figure']['data'][1]['x']
+    response_y = response_json['response']['props']['figure']['data'][1]['y']
+
+    df = pd.DataFrame({
+        'Date': response_x[:len(response_y)],
+        'RHODL': response_y,
+    })
+    df['Date'] = pd.to_datetime(df['Date']).dt.tz_localize(None)
+
+    return df
+
+
 class RHODLMetric(BaseMetric):
     @property
     def name(self) -> str:
@@ -22,34 +57,9 @@ class RHODLMetric(BaseMetric):
         return 'RHODL Ratio'
 
     def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
-        request_data = {
-            'output': 'chart.figure',
-            'changedPropIds': [
-                'url.pathname'
-            ],
-            'inputs': [
-                {
-                    'id': 'url',
-                    'property': 'pathname',
-                    'value': '/charts/rhodl-ratio/'
-                }
-            ]
-        }
+        df = df.merge(_fetch_df(), on='Date', how='left')
 
-        response = requests.post('https://www.lookintobitcoin.com/django_plotly_dash/app/rhodl_ratio/_dash-update-component', json=request_data, timeout=HTTP_TIMEOUT)
-        response.raise_for_status()
-        response_json = response.json()
-        response_x = response_json['response']['props']['figure']['data'][1]['x']
-        response_y = response_json['response']['props']['figure']['data'][1]['y']
-
-        df_rhodl = pd.DataFrame({
-            'Date': response_x[:len(response_y)],
-            'RHODL': response_y,
-        })
-        df_rhodl['Date'] = pd.to_datetime(df_rhodl['Date']).dt.tz_localize(None)
-        df_rhodl = mark_highs_lows(df_rhodl, 'RHODL', True, round(365 * 2), 365)
-
-        df = df.merge(df_rhodl, on='Date', how='left')
+        df = mark_highs_lows(df, 'RHODL', True, round(365 * 2), 365)
         df.fillna({'RHODLHigh': 0, 'RHODLLow': 0}, inplace=True)
         df['RHODL'].ffill(inplace=True)
         df['RHODLLog'] = np.log(df['RHODL'])
