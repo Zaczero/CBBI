@@ -96,7 +96,7 @@ class GoogleTrendsMetric(BaseMetric):
         lin_model.fit(high_x, high_y)
         df_interest['InterestScaleModel'] = lin_model.predict(x)
 
-        df = df.join(df_interest.set_index('Date'), on='Date')
+        df = df.merge(df_interest, on='Date', how='left')
         df.fillna({'InterestHigh': 0, 'InterestLow': 0}, inplace=True)
         df['Interest'].ffill(inplace=True)
         df['PreviousInterestHigh'].ffill(inplace=True)

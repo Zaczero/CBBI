@@ -53,7 +53,7 @@ class ReserveRiskMetric(BaseMetric):
         df_risk['Date'] += timedelta(days_shift)
         df_risk = mark_highs_lows(df_risk, 'Risk', True, round(365 * 2), 365)
 
-        df = df.join(df_risk.set_index('Date'), on='Date')
+        df = df.merge(df_risk, on='Date', how='left')
         df.fillna({'RiskHigh': 0, 'RiskLow': 0}, inplace=True)
         df['Risk'].ffill(inplace=True)
         df['RiskLog'] = np.log(df['Risk'])

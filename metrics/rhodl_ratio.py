@@ -49,7 +49,7 @@ class RHODLMetric(BaseMetric):
         df_rhodl['Date'] = pd.to_datetime(df_rhodl['Date']).dt.tz_localize(None)
         df_rhodl = mark_highs_lows(df_rhodl, 'RHODL', True, round(365 * 2), 365)
 
-        df = df.join(df_rhodl.set_index('Date'), on='Date')
+        df = df.merge(df_rhodl, on='Date', how='left')
         df.fillna({'RHODLHigh': 0, 'RHODLLow': 0}, inplace=True)
         df['RHODL'].ffill(inplace=True)
         df['RHODLLog'] = np.log(df['RHODL'])

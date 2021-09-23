@@ -48,7 +48,7 @@ class RUPLMetric(BaseMetric):
         df_rupl['Date'] = pd.to_datetime(df_rupl['Date']).dt.tz_localize(None)
         df_rupl = mark_highs_lows(df_rupl, 'RUPL', True, round(365 * 2), 365)
 
-        df = df.join(df_rupl.set_index('Date'), on='Date')
+        df = df.merge(df_rupl, on='Date', how='left')
         df.fillna({'RUPLHigh': 0, 'RUPLLow': 0}, inplace=True)
         df['RUPL'].ffill(inplace=True)
 

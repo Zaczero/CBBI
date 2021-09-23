@@ -49,7 +49,7 @@ class MVRVMetric(BaseMetric):
         })
         df_mvrv['Date'] = pd.to_datetime(df_mvrv['Date']).dt.tz_localize(None)
 
-        df = df.join(df_mvrv.set_index('Date'), on='Date')
+        df = df.merge(df_mvrv, on='Date', how='left')
         df.loc[df['DaysSinceHalving'] < df['DaysSincePriceLow'], 'MVRV'] = df['MVRV'].shift(bull_days_shift)
         df = mark_highs_lows(df, 'MVRV', True, round(365 * 2), 365)
         df.fillna({'MVRVHigh': 0, 'MVRVLow': 0}, inplace=True)
