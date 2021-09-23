@@ -108,7 +108,7 @@ class GoogleTrendsMetric(BaseMetric):
         def calculate_drop_off(rows_ref: np.ndarray):
             rows = np.copy(rows_ref)
 
-            for i, drop_off in zip(range(rows.shape[0] - 1), range(rows.shape[0] - 1, 0, -1)):
+            for i, drop_off in enumerate(range(rows.shape[0] - 1, 0, -1)):
                 rows[i] -= drop_off * drop_off_per_day
 
             return np.max(rows)
