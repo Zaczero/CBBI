@@ -51,7 +51,7 @@ The current CBBI version *(October 2021)* includes the following metrics:
 | MVRV Z-Score | [Visit page](https://www.lookintobitcoin.com/charts/mvrv-zscore/) |
 | RHODL Ratio | [Visit page](https://www.lookintobitcoin.com/charts/rhodl-ratio/) |
 | Reserve Risk | [Visit page](https://www.lookintobitcoin.com/charts/reserve-risk/) |
-| Woobull Top Cap - CVDD | [Visit page](https://charts.woobull.com/bitcoin-price-models/) |
+| Woobull Top Cap vs CVDD | [Visit page](https://charts.woobull.com/bitcoin-price-models/) |
 
 ## Footer
 
