@@ -98,6 +98,7 @@ def run(json_file: str, charts_file: str) -> None:
     """
 
     df_bitcoin = fetch_bitcoin_data()
+    df_bitcoin_org = df_bitcoin.copy()
     metrics = load_metrics()
     metrics_cols = []
     metrics_descriptions = []
@@ -121,7 +122,7 @@ def run(json_file: str, charts_file: str) -> None:
     plt.tight_layout(pad=14)
 
     for metric, ax in zip(metrics, axes):
-        df_bitcoin[metric.name] = metric.calculate(df_bitcoin, ax)
+        df_bitcoin[metric.name] = metric.calculate(df_bitcoin_org.copy(), ax)
         metrics_cols.append(metric.name)
         metrics_descriptions.append(metric.description)
 

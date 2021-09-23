@@ -19,11 +19,9 @@ class HalvingToPeakMetric(BaseMetric):
     def description(self) -> str:
         return 'Halving-to-Peak Days'
 
-    def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
+    def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         peak_decline_after_days = 30
         peak_decline_duration = 270
-
-        df = source_df.copy()
 
         for _, row in df.loc[df['Halving'] == 1].iterrows():
             df.loc[df.index >= row.name, 'PreviousHalvingDate'] = row['Date']

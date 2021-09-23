@@ -19,9 +19,7 @@ class PuellMetric(BaseMetric):
     def description(self) -> str:
         return 'Puell Multiple'
 
-    def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
-        df = source_df.copy()
-
+    def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         df['PuellMA365'] = df['TotalGenerationUSD'].rolling(365).mean()
         df['Puell'] = df['TotalGenerationUSD'] / df['PuellMA365']
         df['PuellLog'] = np.log(df['Puell'])

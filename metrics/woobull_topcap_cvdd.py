@@ -52,8 +52,7 @@ class WoobullMetric(BaseMetric):
     def description(self) -> str:
         return 'Woobull Top Cap vs CVDD'
 
-    def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
-        df = source_df.copy()
+    def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         df = df.merge(_fetch_df(), on='Date', how='left')
 
         df['Woobull'] = (df['Price'] - df['CVDD']) / \

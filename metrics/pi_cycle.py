@@ -19,9 +19,7 @@ class PiCycleMetric(BaseMetric):
     def description(self) -> str:
         return 'Pi Cycle Top Indicator'
 
-    def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
-        df = source_df.copy()
-
+    def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         df['111DMA'] = df['Price'].rolling(111).mean()
         df['350DMAx2'] = df['Price'].rolling(350).mean() * 2
 

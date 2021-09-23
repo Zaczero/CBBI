@@ -20,9 +20,7 @@ class RUPLMetric(BaseMetric):
     def description(self) -> str:
         return 'RUPL/NUPL Chart'
 
-    def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
-        df = source_df.copy()
-
+    def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         request_data = {
             'output': 'chart.figure',
             'changedPropIds': [

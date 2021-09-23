@@ -22,10 +22,8 @@ class ReserveRiskMetric(BaseMetric):
     def description(self) -> str:
         return 'Reserve Risk'
 
-    def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
+    def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         days_shift = 2
-
-        df = source_df.copy()
 
         request_data = {
             'output': 'chart.figure',

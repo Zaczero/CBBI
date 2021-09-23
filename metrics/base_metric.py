@@ -17,5 +17,5 @@ class BaseMetric(ABC):
         pass
 
     @abstractmethod
-    def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
+    def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         pass

@@ -18,11 +18,9 @@ class GoldenRatioMetric(BaseMetric):
     def description(self) -> str:
         return 'The Golden 50.8%-49.2% Ratio'
 
-    def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
+    def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         peak_decline_after_days = 30
         peak_decline_duration = 270
-
-        df = source_df.copy()
 
         df['DaysBetweenPriceLowAndLastHalving'] = df['DaysSincePriceLow'] - df['DaysSinceHalving']
         df['DaysBetweenPriceLowAndNextHalving'] = df['DaysSincePriceLow'] + df['DaysToHalving'].dt.days

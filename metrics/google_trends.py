@@ -30,10 +30,8 @@ class GoogleTrendsMetric(BaseMetric):
     def description(self) -> str:
         return '"Bitcoin" search term (Google Trends)'
 
-    def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
+    def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         drop_off_per_day = 0.012
-
-        df = source_df.copy()
 
         keyword = 'Bitcoin'
         date_start = df.iloc[0]['Date'] - timedelta(90)

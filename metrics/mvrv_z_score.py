@@ -20,10 +20,8 @@ class MVRVMetric(BaseMetric):
     def description(self) -> str:
         return 'MVRV Z-Score'
 
-    def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
+    def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         bull_days_shift = 6
-
-        df = source_df.copy()
 
         request_data = {
             'output': 'chart.figure',

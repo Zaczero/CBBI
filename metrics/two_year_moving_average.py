@@ -19,9 +19,7 @@ class TwoYearMovingAverageMetric(BaseMetric):
     def description(self) -> str:
         return '2 Year Moving Average'
 
-    def calculate(self, source_df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
-        df = source_df.copy()
-
+    def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         df['2YMA'] = df['Price'].rolling(365 * 2).mean()
         df['2YMALog'] = np.log(df['2YMA'])
         df['2YMAx5'] = df['2YMA'] * 5
