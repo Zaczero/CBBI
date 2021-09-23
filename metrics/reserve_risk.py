@@ -58,7 +58,7 @@ class ReserveRiskMetric(BaseMetric):
         return 'Reserve Risk'
 
     def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
-        days_shift = 2
+        days_shift = 1
 
         df = df.merge(_fetch_df(), on='Date', how='left')
         df['Risk'] = df['Risk'].shift(days_shift, fill_value=np.nan)
