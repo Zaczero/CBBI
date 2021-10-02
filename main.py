@@ -5,62 +5,12 @@ import fire
 from pyfiglet import figlet_format
 from termcolor import cprint
 
+from fetch_bitcoin_data import fetch_bitcoin_data
 from metrics import *
 from utils import *
 
 
-@filecache(3600 * 2)  # 2 hours cache
-def fetch_bitcoin_data() -> pd.DataFrame:
-    """
-    Fetches historical Bitcoin data into a DataFrame.
-    Very early data is discarded due to high volatility.
-
-    Returns:
-        DataFrame containing Bitcoin data.
-    """
-    cli_ui.info_2('Requesting historical Bitcoin data')
-
-    response = requests.get('https://api.blockchair.com/bitcoin/blocks', {
-        'a': 'date,count(),min(id),max(id),sum(generation),sum(generation_usd)',
-        's': 'date(desc)',
-    }, timeout=HTTP_TIMEOUT)
-    response.raise_for_status()
-    response_json = response.json()
-
-    df = pd.DataFrame(response_json['data'][::-1])
-    df.rename(columns={
-        'date': 'Date',
-        'count()': 'TotalBlocks',
-        'min(id)': 'MinBlockID',
-        'max(id)': 'MaxBlockID',
-        'sum(generation)': 'TotalGeneration',
-        'sum(generation_usd)': 'TotalGenerationUSD'
-    }, inplace=True)
-
-    df['Date'] = pd.to_datetime(df['Date'])
-    df['TotalGeneration'] /= 1e8
-    df['BlockGeneration'] = df['TotalGeneration'] / df['TotalBlocks']
-    df['BlockGenerationUSD'] = df['TotalGenerationUSD'] / df['TotalBlocks']
-    df['Price'] = df['BlockGenerationUSD'] / df['BlockGeneration']
-    df['PriceLog'] = np.log(df['Price'])
-    df['PriceLogInterp'] = np.interp(df['PriceLog'],
-                                     (df['PriceLog'].min(), df['PriceLog'].max()),
-                                     (0, 1))
-    df = df[df['Date'] >= '2011-06-27']
-    df.reset_index(drop=True, inplace=True)
-
-    df = fix_current_day_data(df)
-    df = fix_block_halving_data(df)
-    df = mark_highs_lows(df, 'Price', False, round(365 * 2), 365)
-    df = mark_days_since(df, ['PriceHigh', 'PriceLow', 'Halving'])
-
-    current_price = df['Price'].tail(1).values[0]
-    cli_ui.info_1(f'Current Bitcoin price: ${round(current_price):,}')
-
-    return df
-
-
-def load_metrics() -> List[BaseMetric]:
+def get_metrics() -> List[BaseMetric]:
     return [
         GoldenRatioMetric(),
         GoogleTrendsMetric(),
@@ -77,7 +27,7 @@ def load_metrics() -> List[BaseMetric]:
     ]
 
 
-def get_confidence_score(df: pd.DataFrame, cols: List[str]) -> pd.Series:
+def calculate_confidence_score(df: pd.DataFrame, cols: List[str]) -> pd.Series:
     return df[cols].mean(axis=1).clip(0, 1)
 
 
@@ -99,7 +49,7 @@ def run(json_file: str, charts_file: str) -> None:
 
     df_bitcoin = fetch_bitcoin_data()
     df_bitcoin_org = df_bitcoin.copy()
-    metrics = load_metrics()
+    metrics = get_metrics()
     metrics_cols = []
     metrics_descriptions = []
 
@@ -133,7 +83,7 @@ def run(json_file: str, charts_file: str) -> None:
 
     df_result = pd.DataFrame(df_bitcoin[['Date', 'Price'] + metrics_cols])
     df_result.set_index('Date', inplace=True)
-    df_result[confidence_col] = get_confidence_score(df_result, metrics_cols)
+    df_result[confidence_col] = calculate_confidence_score(df_result, metrics_cols)
     df_result \
         .to_json(json_file,
                  double_precision=4,

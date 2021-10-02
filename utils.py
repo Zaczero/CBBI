@@ -64,45 +64,6 @@ def mark_days_since(df: pd.DataFrame, cols: List[str]) -> pd.DataFrame:
     return df
 
 
-def fix_block_halving_data(df: pd.DataFrame) -> pd.DataFrame:
-    reward_halving_every = 210000
-    current_block_halving_id = reward_halving_every
-    current_block_production = 50
-    df['Halving'] = 0
-    df['NextHalvingBlock'] = current_block_halving_id
-
-    while True:
-        df.loc[(current_block_halving_id - reward_halving_every) <= df['MaxBlockID'], 'BlockGeneration'] = current_block_production
-
-        block_halving_row = df[(df['MinBlockID'] <= current_block_halving_id) &
-                               (df['MaxBlockID'] >= current_block_halving_id)].squeeze()
-
-        if block_halving_row.shape[0] == 0:
-            break
-
-        current_block_halving_id += reward_halving_every
-        current_block_production /= 2
-        df.loc[block_halving_row.name, 'Halving'] = 1
-        df.loc[df.index > block_halving_row.name, 'NextHalvingBlock'] = current_block_halving_id
-
-    df['DaysToHalving'] = pd.TimedeltaIndex((df['NextHalvingBlock'] - df['MaxBlockID']) / (24 * 6), unit='D')
-    df['NextHalvingDate'] = df['Date'] + df['DaysToHalving']
-    return df
-
-
-def fix_current_day_data(df: pd.DataFrame) -> pd.DataFrame:
-    row = df.iloc[-1].copy()
-
-    target_total_blocks = 24 * 6
-    target_scale = target_total_blocks / row['TotalBlocks']
-
-    for col_name in ['TotalBlocks', 'TotalGeneration', 'TotalGenerationUSD']:
-        row[col_name] *= target_scale
-
-    df.iloc[-1] = row
-    return df
-
-
 def add_common_markers(df: pd.DataFrame, ax: plt.Axes):
     sns.lineplot(data=df, x='Date', y='PriceLogInterp', alpha=0.4, color='orange', ax=ax)
 
