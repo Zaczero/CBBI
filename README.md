@@ -23,7 +23,7 @@ Bookmark it and receive the most recent updates with just a single click. The co
 
 ## Usage
 
-*Recommended Python version: 3.7*
+*Recommended Python version: 3.9*
 
 ### Install required packages
 
