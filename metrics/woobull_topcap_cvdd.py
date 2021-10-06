@@ -55,13 +55,16 @@ class WoobullMetric(BaseMetric):
     def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         df = df.merge(_fetch_df(), on='Date', how='left')
 
-        df['Woobull'] = (df['Price'] - df['CVDD']) / \
-                        (df['Top'] - df['CVDD'])
+        df['TopLog'] = np.log(df['Top'])
+        df['CVDDLog'] = np.log(df['CVDD'])
+
+        df['Woobull'] = (df['PriceLog'] - df['CVDDLog']) / \
+                        (df['TopLog'] - df['CVDDLog'])
 
         df = mark_highs_lows(df, 'Woobull', False, round(365 * 0.5), 365)
         df.loc[df['Woobull'] < 0.75, 'WoobullHigh'] = 0
 
-        high_rows = df.loc[df['WoobullHigh'] == 1]
+        high_rows = df.loc[df['WoobullHigh'] == 1][1:]
         high_x = high_rows.index.values.reshape(-1, 1)
         high_y = high_rows['Woobull'].values.reshape(-1, 1)
 
@@ -70,10 +73,7 @@ class WoobullMetric(BaseMetric):
         lin_model = LinearRegression()
         lin_model.fit(high_x, high_y)
         df['WoobullModelMax'] = lin_model.predict(x)
-
-        df['WoobullModel'] = df['Woobull'] / df['WoobullModelMax']
-        df['WoobullModelScaled'] = df['WoobullModel'] * (np.exp(1) - 1) + 1
-        df['WoobullIndex'] = np.log(df['WoobullModelScaled'])
+        df['WoobullIndex'] = df['Woobull'] / df['WoobullModelMax']
 
         ax[0].set_title(self.description)
         sns.lineplot(data=df, x='Date', y='WoobullIndex', ax=ax[0])
