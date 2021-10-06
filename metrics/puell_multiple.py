@@ -50,4 +50,9 @@ class PuellMetric(BaseMetric):
         sns.lineplot(data=df, x='Date', y='PuellIndexNoNa', ax=ax[0])
         add_common_markers(df, ax[0])
 
+        sns.lineplot(data=df, x='Date', y='PuellLog', ax=ax[1])
+        sns.lineplot(data=df, x='Date', y='PuellLogHighModel', ax=ax[1])
+        sns.lineplot(data=df, x='Date', y='PuellLogLowModel', ax=ax[1])
+        add_common_markers(df, ax[1], price_line=False)
+
         return df['PuellIndex']

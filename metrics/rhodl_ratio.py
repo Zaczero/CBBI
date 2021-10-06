@@ -89,4 +89,9 @@ class RHODLMetric(BaseMetric):
         sns.lineplot(data=df, x='Date', y='RHODLIndexNoNa', ax=ax[0])
         add_common_markers(df, ax[0])
 
+        sns.lineplot(data=df, x='Date', y='RHODLLog', ax=ax[1])
+        sns.lineplot(data=df, x='Date', y='RHODLLogHighModel', ax=ax[1])
+        sns.lineplot(data=df, x='Date', y='RHODLLogLowModel', ax=ax[1])
+        add_common_markers(df, ax[1], price_line=False)
+
         return df['RHODLIndex']

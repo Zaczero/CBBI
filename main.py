@@ -67,8 +67,9 @@ def run(json_file: str, charts_file: str) -> None:
         'figure.dpi': 300,
     })
 
-    fig, axes = plt.subplots(len(metrics), 1, figsize=(4, 3 * len(metrics)))
-    axes = axes.reshape(-1, 1)
+    axes_per_metric = 2
+    fig, axes = plt.subplots(len(metrics), axes_per_metric, figsize=(4 * axes_per_metric, 3 * len(metrics)))
+    axes = axes.reshape(-1, axes_per_metric)
     plt.tight_layout(pad=14)
 
     for metric, ax in zip(metrics, axes):

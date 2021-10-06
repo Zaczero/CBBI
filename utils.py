@@ -64,8 +64,9 @@ def mark_days_since(df: pd.DataFrame, cols: List[str]) -> pd.DataFrame:
     return df
 
 
-def add_common_markers(df: pd.DataFrame, ax: plt.Axes):
-    sns.lineplot(data=df, x='Date', y='PriceLogInterp', alpha=0.4, color='orange', ax=ax)
+def add_common_markers(df: pd.DataFrame, ax: plt.Axes, price_line: bool = True):
+    if price_line:
+        sns.lineplot(data=df, x='Date', y='PriceLogInterp', alpha=0.4, color='orange', ax=ax)
 
     for _, row in df[df['Halving'] == 1].iterrows():
         days_since_epoch = (row['Date'] - datetime(1970, 1, 1)).days

@@ -92,4 +92,9 @@ class ReserveRiskMetric(BaseMetric):
         sns.lineplot(data=df, x='Date', y='RiskIndexNoNa', ax=ax[0])
         add_common_markers(df, ax[0])
 
+        sns.lineplot(data=df, x='Date', y='RiskLog', ax=ax[1])
+        sns.lineplot(data=df, x='Date', y='RiskLogHighModel', ax=ax[1])
+        sns.lineplot(data=df, x='Date', y='RiskLogLowModel', ax=ax[1])
+        add_common_markers(df, ax[1], price_line=False)
+
         return df['RiskIndex']

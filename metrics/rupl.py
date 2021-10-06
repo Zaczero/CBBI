@@ -86,4 +86,9 @@ class RUPLMetric(BaseMetric):
         sns.lineplot(data=df, x='Date', y='RUPLIndex', ax=ax[0])
         add_common_markers(df, ax[0])
 
+        sns.lineplot(data=df, x='Date', y='RUPL', ax=ax[1])
+        sns.lineplot(data=df, x='Date', y='RUPLHighModel', ax=ax[1])
+        sns.lineplot(data=df, x='Date', y='RUPLLowModel', ax=ax[1])
+        add_common_markers(df, ax[1], price_line=False)
+
         return df['RUPLIndex']
