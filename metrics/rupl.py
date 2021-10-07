@@ -66,7 +66,7 @@ class RUPLMetric(BaseMetric):
         high_x = high_rows.index.values.reshape(-1, 1)
         high_y = high_rows['RUPL'].values.reshape(-1, 1)
 
-        low_rows = df.loc[df['RUPLLow'] == 1][1:]
+        low_rows = df.loc[df['RUPLLow'] == 1]
         low_x = low_rows.index.values.reshape(-1, 1)
         low_y = low_rows['RUPL'].values.reshape(-1, 1)
 
