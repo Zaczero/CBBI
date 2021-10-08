@@ -61,26 +61,33 @@ class WoobullMetric(BaseMetric):
         df['Woobull'] = (df['PriceLog'] - df['CVDDLog']) / \
                         (df['TopLog'] - df['CVDDLog'])
 
-        df = mark_highs_lows(df, 'Woobull', True, round(365 * 2), 365)
-        df.loc[df['Woobull'] < 0.8, 'WoobullHigh'] = 0
-
-        high_rows = df.loc[df['WoobullHigh'] == 1]
+        high_rows = df.loc[df['PriceHigh'] == 1]
         high_x = high_rows.index.values.reshape(-1, 1)
         high_y = high_rows['Woobull'].values.reshape(-1, 1)
+
+        low_rows = df.loc[df['PriceLow'] == 1][1:]
+        low_x = low_rows.index.values.reshape(-1, 1)
+        low_y = low_rows['Woobull'].values.reshape(-1, 1)
 
         x = df.index.values.reshape(-1, 1)
 
         lin_model = LinearRegression()
         lin_model.fit(high_x, high_y)
-        df['WoobullModelMax'] = lin_model.predict(x)
-        df['WoobullIndex'] = df['Woobull'] / df['WoobullModelMax']
+        df['WoobullHighModel'] = lin_model.predict(x)
+
+        lin_model.fit(low_x, low_y)
+        df['WoobullLowModel'] = lin_model.predict(x)
+
+        df['WoobullIndex'] = (df['Woobull'] - df['WoobullLowModel']) / \
+                             (df['WoobullHighModel'] - df['WoobullLowModel'])
 
         ax[0].set_title(self.description)
         sns.lineplot(data=df, x='Date', y='WoobullIndex', ax=ax[0])
         add_common_markers(df, ax[0])
 
         sns.lineplot(data=df, x='Date', y='Woobull', ax=ax[1])
-        sns.lineplot(data=df, x='Date', y='WoobullModelMax', ax=ax[1])
+        sns.lineplot(data=df, x='Date', y='WoobullHighModel', ax=ax[1])
+        sns.lineplot(data=df, x='Date', y='WoobullLowModel', ax=ax[1])
         add_common_markers(df, ax[1], price_line=False)
 
         return df['WoobullIndex']

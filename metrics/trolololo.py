@@ -31,7 +31,7 @@ class TrolololoMetric(BaseMetric):
 
         df['TroloDifference'] = df['TroloTopPriceLog'] - df['TroloBottomPriceLog']
         df['TroloOvershootActual'] = df['PriceLog'] - df['TroloTopPriceLog']
-        df['TroloUndershootActual'] = df['TroloBottomPriceLog'] - df['PriceLog']
+        df['TroloUndershootActual'] = df['PriceLog'] - df['TroloBottomPriceLog']
 
         high_rows = df.loc[(df['PriceHigh'] == 1) & (df['Date'] >= begin_date)]
         high_x = high_rows.index.values.reshape(-1, 1)
@@ -51,11 +51,19 @@ class TrolololoMetric(BaseMetric):
         lin_model.fit(low_x, low_y)
         df['TroloUndershootModel'] = lin_model.predict(x)
 
-        df['TroloIndex'] = (df['PriceLog'] - df['TroloBottomPriceLog'] + df['TroloUndershootModel']) / \
-                           (df['TroloOvershootModel'] + df['TroloDifference'] + df['TroloUndershootModel'])
+        df['TroloHighModel'] = df['TroloTopPriceLog'] + df['TroloOvershootModel']
+        df['TroloLowModel'] = df['TroloBottomPriceLog'] + df['TroloUndershootModel']
+
+        df['TroloIndex'] = (df['PriceLog'] - df['TroloLowModel']) / \
+                           (df['TroloHighModel'] - df['TroloLowModel'])
 
         ax[0].set_title(self.description)
         sns.lineplot(data=df, x='Date', y='TroloIndex', ax=ax[0])
         add_common_markers(df, ax[0])
+
+        sns.lineplot(data=df, x='Date', y='PriceLog', ax=ax[1])
+        sns.lineplot(data=df, x='Date', y='TroloHighModel', ax=ax[1])
+        sns.lineplot(data=df, x='Date', y='TroloLowModel', ax=ax[1])
+        add_common_markers(df, ax[1], price_line=False)
 
         return df['TroloIndex']

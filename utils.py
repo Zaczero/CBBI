@@ -40,10 +40,15 @@ def mark_highs_lows(df: pd.DataFrame, col: str, begin_with_high: bool, window_si
 
     while True:
         window = df.loc[current_index:current_index + window_size, col]
-        window_index = window.idxmax() if searching_high else window.idxmin()
+
+        if sum(~np.isnan(window)) == 0 and window.shape[0] > 1:
+            current_index += window.shape[0]
+            continue
 
         if window.shape[0] <= 1:
             break
+
+        window_index = window.idxmax() if searching_high else window.idxmin()
 
         if window_index == current_index:
             df.loc[window_index, col_high if searching_high else col_low] = 1

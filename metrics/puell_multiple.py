@@ -23,13 +23,16 @@ class PuellMetric(BaseMetric):
         df['PuellMA365'] = df['TotalGenerationUSD'].rolling(365).mean()
         df['Puell'] = df['TotalGenerationUSD'] / df['PuellMA365']
         df['PuellLog'] = np.log(df['Puell'])
-        df = mark_highs_lows(df, 'PuellLog', True, round(365 * 2), 365)
 
-        high_rows = df.loc[df['PriceHigh'] == 1]
+        df = mark_highs_lows(df, 'PuellLog', True, 120, 120)
+        df.fillna({'PuellLogHigh': 0, 'PuellLogLow': 0}, inplace=True)
+        df.loc[df['PuellLog'] < 1.1, 'PuellLogHigh'] = 0
+
+        high_rows = df.loc[df['PuellLogHigh'] == 1]
         high_x = high_rows.index.values.reshape(-1, 1)
         high_y = high_rows['PuellLog'].values.reshape(-1, 1)
 
-        low_rows = df.loc[df['PuellLogLow'] == 1][1:]
+        low_rows = df.loc[df['PriceLow'] == 1][1:]
         low_x = low_rows.index.values.reshape(-1, 1)
         low_y = low_rows['PuellLog'].values.reshape(-1, 1)
 

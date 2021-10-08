@@ -27,7 +27,7 @@ class TwoYearMovingAverageMetric(BaseMetric):
 
         df['2YMALogDifference'] = df['2YMAx5Log'] - df['2YMALog']
         df['2YMALogOvershootActual'] = df['PriceLog'] - df['2YMAx5Log']
-        df['2YMALogUndershootActual'] = df['2YMALog'] - df['PriceLog']
+        df['2YMALogUndershootActual'] = df['PriceLog'] - df['2YMALog']
 
         high_rows = df.loc[(df['PriceHigh'] == 1) & ~ (df['2YMA'].isna())]
         high_x = high_rows.index.values.reshape(-1, 1)
@@ -46,12 +46,20 @@ class TwoYearMovingAverageMetric(BaseMetric):
         lin_model.fit(low_x, low_y)
         df['2YMALogUndershootModel'] = lin_model.predict(x)
 
-        df['2YMAIndex'] = (df['PriceLog'] - df['2YMALog'] + df['2YMALogUndershootModel']) / \
-                          (df['2YMALogOvershootModel'] + df['2YMALogDifference'] + df['2YMALogUndershootModel'])
+        df['2YMAHighModel'] = df['2YMAx5Log'] + df['2YMALogOvershootModel']
+        df['2YMALowModel'] = df['2YMALog'] + df['2YMALogUndershootModel']
+
+        df['2YMAIndex'] = (df['PriceLog'] - df['2YMALowModel']) / \
+                          (df['2YMAHighModel'] - df['2YMALowModel'])
 
         df['2YMAIndexNoNa'] = df['2YMAIndex'].fillna(0)
         ax[0].set_title(self.description)
         sns.lineplot(data=df, x='Date', y='2YMAIndexNoNa', ax=ax[0])
         add_common_markers(df, ax[0])
+
+        sns.lineplot(data=df, x='Date', y='PriceLog', ax=ax[1])
+        sns.lineplot(data=df, x='Date', y='2YMAHighModel', ax=ax[1])
+        sns.lineplot(data=df, x='Date', y='2YMALowModel', ax=ax[1])
+        add_common_markers(df, ax[1], price_line=False)
 
         return df['2YMAIndex']

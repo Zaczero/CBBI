@@ -59,16 +59,14 @@ class RHODLMetric(BaseMetric):
     def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         df = df.merge(_fetch_df(), on='Date', how='left')
 
-        df = mark_highs_lows(df, 'RHODL', True, round(365 * 2), 365)
-        df.fillna({'RHODLHigh': 0, 'RHODLLow': 0}, inplace=True)
         df['RHODL'].ffill(inplace=True)
         df['RHODLLog'] = np.log(df['RHODL'])
 
-        high_rows = df.loc[df['RHODLHigh'] == 1]
+        high_rows = df.loc[df['PriceHigh'] == 1]
         high_x = high_rows.index.values.reshape(-1, 1)
         high_y = high_rows['RHODLLog'].values.reshape(-1, 1)
 
-        low_rows = df.loc[df['RHODLLow'] == 1][1:]
+        low_rows = df.loc[df['PriceLow'] == 1][1:]
         low_x = low_rows.index.values.reshape(-1, 1)
         low_y = low_rows['RHODLLog'].values.reshape(-1, 1)
 

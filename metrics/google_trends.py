@@ -81,7 +81,7 @@ class GoogleTrendsMetric(BaseMetric):
         df_interest = mark_highs_lows(df_interest, 'Interest', False, round(365 * 1.5), 365)
 
         for _, row in df_interest.loc[df_interest['InterestHigh'] == 1].iterrows():
-            from_idx = np.min(df_interest.loc[(df_interest.index > row.name) & (df_interest['Interest'] < 10)].index)
+            from_idx = np.min(df_interest.loc[(df_interest.index > row.name) & (df_interest['Interest'] < row['Interest'] / 3)].index)
             df_interest.loc[df_interest.index >= from_idx, 'PreviousInterestHigh'] = row['Interest']
 
         df_interest['InterestScaleActual'] = df_interest['Interest'] / df_interest['PreviousInterestHigh']
@@ -123,5 +123,11 @@ class GoogleTrendsMetric(BaseMetric):
         ax[0].set_title(self.description)
         sns.lineplot(data=df, x='Date', y='GoogleTrendsIndex', ax=ax[0])
         add_common_markers(df, ax[0])
+
+        sns.lineplot(data=df, x='Date', y='Interest', ax=ax[1])
+        sns.lineplot(data=df, x='Date', y='PreviousInterestHigh', ax=ax[1])
+        sns.lineplot(data=df, x='Date', y='InterestScaleActual', ax=ax[1])
+        sns.lineplot(data=df, x='Date', y='InterestScaleModel', ax=ax[1])
+        add_common_markers(df, ax[1], price_line=False)
 
         return df['GoogleTrendsIndex']

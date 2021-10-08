@@ -58,15 +58,17 @@ class MVRVMetric(BaseMetric):
         df = df.merge(_fetch_df(), on='Date', how='left')
         df.loc[df['DaysSinceHalving'] < df['DaysSincePriceLow'], 'MVRV'] = df['MVRV'].shift(bull_days_shift)
 
-        df = mark_highs_lows(df, 'MVRV', True, round(365 * 2), 365)
+        df = mark_highs_lows(df, 'MVRV', True, 120, 120)
         df.fillna({'MVRVHigh': 0, 'MVRVLow': 0}, inplace=True)
         df['MVRV'].ffill(inplace=True)
 
-        high_rows = df.loc[df['PriceHigh'] == 1]
+        df.loc[df['MVRV'] < 6, 'MVRVHigh'] = 0
+
+        high_rows = df.loc[df['MVRVHigh'] == 1]
         high_x = high_rows.index.values.reshape(-1, 1)
         high_y = high_rows['MVRV'].values.reshape(-1, 1)
 
-        low_rows = df.loc[df['MVRVLow'] == 1]
+        low_rows = df.loc[df['PriceLow'] == 1]
         low_x = low_rows.index.values.reshape(-1, 1)
         low_y = low_rows['MVRV'].values.reshape(-1, 1)
 

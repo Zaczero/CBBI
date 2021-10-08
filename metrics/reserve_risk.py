@@ -62,12 +62,10 @@ class ReserveRiskMetric(BaseMetric):
         df = df.merge(_fetch_df(), on='Date', how='left')
         df['Risk'] = df['Risk'].shift(days_shift, fill_value=np.nan)
 
-        df = mark_highs_lows(df, 'Risk', True, round(365 * 2), 365)
-        df.fillna({'RiskHigh': 0, 'RiskLow': 0}, inplace=True)
         df['Risk'].ffill(inplace=True)
         df['RiskLog'] = np.log(df['Risk'])
 
-        high_rows = df.loc[df['RiskHigh'] == 1]
+        high_rows = df.loc[df['PriceHigh'] == 1]
         high_x = high_rows.index.values.reshape(-1, 1)
         high_y = high_rows['RiskLog'].values.reshape(-1, 1)
 
