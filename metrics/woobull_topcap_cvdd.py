@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 
 from globals import HTTP_TIMEOUT
-from utils import add_common_markers, mark_highs_lows
+from utils import add_common_markers
 from .base_metric import BaseMetric
 
 
