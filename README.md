@@ -1,21 +1,18 @@
-# Colin Talks Crypto Bitcoin Bull Run Index (CBBI)
+# ColinTalksCrypto Bitcoin Bull Run Index (CBBI)
 
-This is a Python implementation of the **Colin Talks Crypto Bitcoin Bull Run Index** (CBBI). It makes use of multiple metrics to evaluate the confidence that we are at the peak of the current Bitcoin's bull run.
+An official Python implementation of the **ColinTalksCrypto Bitcoin Bull Run Index** (CBBI).
 
-If you want to learn more on that topic, [watch this video](https://www.youtube.com/watch?v=ZFQG59ZMSU0).
+The CBBI is a Bitcoin index that utilizes advanced, real-time analysis of 12 metrics to help us understand what stage of the Bitcoin bull run and bear market cycles we are in.
+The CBBI is time-independent and price-independent.
+It simply indicates whether it believes we are approaching the top/bottom of a Bitcoin cycle.
 
-<details>
-  <summary>View an example output</summary>
+If you want to learn more, [watch this video](https://www.youtube.com/watch?v=bq7djf1n0j4).
 
-  ![preview image](https://github.com/Zaczero/CBBI/blob/main/resources/preview.png)
-</details>
+## Visit our website
 
-## Visit the project's website
+Bookmark it to receive latest CBBI updates.
 
-Bookmark it and receive the most recent updates with just a single click. The confidence value is updated a few times a day. No installation required.
-
-- [cbbi.info](https://cbbi.info/) (official)
-- [cbbi.monicz.pl](https://cbbi.monicz.pl/) (mirror)
+- [CBBI.info](https://cbbi.info/)
 
 ## Check out this demo
 
@@ -53,27 +50,17 @@ The current CBBI version *(October 2021)* includes the following metrics:
 | Reserve Risk | [Visit page](https://www.lookintobitcoin.com/charts/reserve-risk/) |
 | Woobull Top Cap vs CVDD | [Visit page](https://charts.woobull.com/bitcoin-price-models/) |
 
-## Footer
+## Environment variables
 
-### Contact
+This project supports `.env` files which provide a convenient way of setting environment variables.
 
-- Email: [kamil@monicz.pl](mailto:kamil@monicz.pl)
-- PGP: [0x9D7BC5B97BB0A707](https://gist.github.com/Zaczero/158da01bfd5b6d236f2b8ceb62dd9698)
+### GOOGLE_PROXY
 
-### Donate
+Defines a requests-supported proxy string used during Google Trends metric calculation.
+If unset or empty, a direct connection will be made.
+May be used to resolve the `Google returned a response with code 429` issue.
 
-#### Bitcoin
+#### Example usage
 
-`bc1ql3gx9swg5zsn8ax8w34jw85juc5nqtprcdxrje`
-
-#### Bitcoin Cash
-
-`qrvqsfz2vj6p0zdpg7w7zfah7qag2ygpju7yqh05hu`
-
-#### Litecoin
-
-`ltc1qpjz5rhaas0lxf90re0u65sy5jujxhtuqwwerkd`
-
-#### Monero
-
-`4ABpPJchKYS8Nq9dPb8mr1NEEAHbKDr5aK777QZh2aSD7BJHdhkQn4RFQ3zNW2kytSXHXpimt57L9X9iin3uJjw93pCpKaJ`
+* GOOGLE_PROXY=https://host:port
+* GOOGLE_PROXY=https://user:pass@host:port
