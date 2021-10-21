@@ -1,11 +1,11 @@
+import os
 from datetime import timedelta
 from typing import List
 
-import cli_ui
+import filecache
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from filecache import filecache
 from matplotlib import pyplot as plt
 from pytrends.request import TrendReq
 from sklearn.linear_model import LinearRegression
@@ -14,10 +14,15 @@ from tqdm import tqdm
 from utils import mark_highs_lows, add_common_markers
 from .base_metric import BaseMetric
 
+pytrends: TrendReq
 
-@filecache(3600 * 24 * 3)  # cache for 3 days
-def _fetch_google_trends_data(keyword: str, timeframe: str) -> pd.DataFrame:
-    pytrends = TrendReq(retries=5, backoff_factor=1)
+
+@filecache.filecache(3 * filecache.DAY)
+def _fetch_google_trends(keyword: str, timeframe: str) -> pd.DataFrame:
+    return _fetch_google_trends_nocache(keyword, timeframe)
+
+
+def _fetch_google_trends_nocache(keyword: str, timeframe: str) -> pd.DataFrame:
     pytrends.build_payload(kw_list=[keyword], timeframe=timeframe)
 
     df = pytrends.interest_over_time()
@@ -67,7 +72,7 @@ def _fetch_df(keyword: str, date_from: pd.Timestamp, date_to: pd.Timestamp) -> p
         date_current -= timedelta(overlap_days - 1)
 
         timeframe = f'{timeframe_from} {timeframe_to}'
-        df_fetch = _fetch_google_trends_data(keyword, timeframe)
+        df_fetch = _fetch_google_trends(keyword, timeframe)
         df_fetch = _normalize(df, df_fetch)
 
         df = df.append(df_fetch)
@@ -89,7 +94,7 @@ def _set_last_week_from_hourly(df: pd.DataFrame, keyword: str) -> pd.DataFrame:
 
 def _fetch_last_week(keyword: str) -> pd.DataFrame:
     timeframe = f'now 7-d'
-    df_fetch = _fetch_google_trends_data(keyword, timeframe)
+    df_fetch = _fetch_google_trends_nocache(keyword, timeframe)
 
     return df_fetch
 
@@ -102,6 +107,14 @@ class GoogleTrendsMetric(BaseMetric):
     @property
     def description(self) -> str:
         return '"Bitcoin" search term (Google Trends)'
+
+    def __init__(self):
+        global pytrends
+
+        proxy = os.environ.get('GOOGLE_PROXY')
+        proxies = [proxy] if proxy else []
+
+        pytrends = TrendReq(retries=5, backoff_factor=1, proxies=proxies)
 
     def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         keyword = 'Bitcoin'

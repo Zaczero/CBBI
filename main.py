@@ -1,7 +1,9 @@
 import time
 import traceback
 
+import cli_ui
 import fire
+from dotenv import load_dotenv
 from pyfiglet import figlet_format
 from termcolor import cprint
 
@@ -92,11 +94,19 @@ def run(json_file: str, charts_file: str) -> None:
                  indent=2)
 
     df_result_last = df_result.tail(1)
-    confidence_details = {description: df_result_last[name][0] for name, description in zip(metrics_cols, metrics_descriptions)}
+    confidence_details = {description: df_result_last[name][0]
+                          for name, description in
+                          zip(metrics_cols, metrics_descriptions)}
 
     print('\n')
     cli_ui.info_3('Confidence we are at the peak:')
-    cprint(figlet_format(format_percentage(df_result_last[confidence_col][0], ''), font='univers'), 'cyan', attrs=['bold'], end='')
+    cprint(
+        figlet_format(
+            format_percentage(df_result_last[confidence_col][0], ''),
+            font='univers'),
+        'cyan',
+        attrs=['bold'],
+        end='')
 
     for description, value in confidence_details.items():
         if not np.isnan(value):
@@ -107,7 +117,10 @@ def run(json_file: str, charts_file: str) -> None:
     cli_ui.info_3('Source code: https://github.com/Zaczero/CBBI', end='\n\n')
 
 
-def run_and_retry(json_file: str = "latest.json", charts_file: str = "charts.svg", max_attempts: int = 10, sleep_seconds_on_error: float = 10) -> None:
+def run_and_retry(json_file: str = "latest.json",
+                  charts_file: str = "charts.svg",
+                  max_attempts: int = 10,
+                  sleep_seconds_on_error: float = 10) -> None:
     """
     Calculates the current CBBI confidence value alongside all the required metrics.
     Everything gets pretty printed to the current standard output and a clean copy
@@ -146,4 +159,6 @@ def run_and_retry(json_file: str = "latest.json", charts_file: str = "charts.svg
 
 
 if __name__ == '__main__':
+    load_dotenv()
+
     fire.Fire(run_and_retry)
