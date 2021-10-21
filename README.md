@@ -64,3 +64,10 @@ May be used to resolve the `Google returned a response with code 429` issue.
 
 * GOOGLE_PROXY=https://host:port
 * GOOGLE_PROXY=https://user:pass@host:port
+
+## Footer
+
+### Contact
+
+* Email - [kamil@monicz.pl](mailto:kamil@monicz.pl)
+* LinkedIn - [linkedin.com/in/kamil-monicz](https://www.linkedin.com/in/kamil-monicz/)
