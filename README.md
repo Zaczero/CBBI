@@ -1,6 +1,6 @@
 # ColinTalksCrypto Bitcoin Bull Run Index (CBBI)
 
-An official Python implementation of the **ColinTalksCrypto Bitcoin Bull Run Index** (CBBI).
+The official Python implementation of the **ColinTalksCrypto Bitcoin Bull Run Index** (CBBI).
 
 The CBBI is a Bitcoin index that utilizes advanced, real-time analysis of 12 metrics to help us understand what stage of the Bitcoin bull run and bear market cycles we are in.
 The CBBI is time-independent and price-independent.
