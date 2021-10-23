@@ -120,6 +120,8 @@ class GoogleTrendsMetric(BaseMetric):
         keyword = 'Bitcoin'
         days_shift = 1
         drop_off_per_day = 0.012
+        change_skip_head = 1000
+        change_max = 5  # 500%
 
         df_start_date = df.iloc[0]['Date']
         date_from = df_start_date - timedelta(90)
@@ -127,6 +129,9 @@ class GoogleTrendsMetric(BaseMetric):
 
         df = df.merge(_fetch_df(keyword, date_from, date_to), on='Date', how='right')
         df['Interest'] = df['Interest'].shift(days_shift, fill_value=np.nan)
+
+        if df['Interest'].pct_change()[change_skip_head:].max() >= change_max:
+            raise Exception('Interest change is too high')
 
         df = mark_highs_lows(df, 'Interest', False, round(365 * 1.5), 365)
         df.fillna({'InterestHigh': 0, 'InterestLow': 0}, inplace=True)
