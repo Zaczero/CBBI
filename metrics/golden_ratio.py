@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import List
 
 import numpy as np
@@ -32,6 +33,11 @@ class GoldenRatioMetric(BaseMetric):
 
         df.loc[(peak_decline_after_days < df['DaysSincePriceHigh']) & (df['DaysSincePriceHigh'] < df['DaysSincePriceLow']), 'GoldenRatioIndex'] = 1 - (df['DaysSincePriceHigh'] - peak_decline_after_days) / peak_decline_duration
         df.loc[(peak_decline_after_days + peak_decline_duration < df['DaysSincePriceHigh']) & (df['DaysSincePriceHigh'] < df['DaysSincePriceLow']), 'GoldenRatioIndex'] = 0
+
+        # force decline until the metric averages out with the CBBI score to be later removed
+        force_decline_start = pd.to_datetime('2021-10-24')
+        force_decline_duration = timedelta(days=30)
+        df.loc[force_decline_start <= df['Date'], 'GoldenRatioIndex'] = 1 - (df['Date'] - force_decline_start) / force_decline_duration
 
         df['GoldenRatioIndexNoNa'] = df['GoldenRatioIndex'].fillna(0)
         ax[0].set_title(self.description)
