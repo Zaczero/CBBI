@@ -120,18 +120,20 @@ class GoogleTrendsMetric(BaseMetric):
         keyword = 'Bitcoin'
         days_shift = 1
         drop_off_per_day = 0.012
-        change_skip_head = 1000
-        change_max = 5  # 500%
+        max_change_skip_head = 1000
+        max_change_interest_valid = 5  # 500%
 
-        df_start_date = df.iloc[0]['Date']
-        date_from = df_start_date - timedelta(90)
-        date_to = df.iloc[-1]['Date']
+        date_start = df.iloc[0]['Date']
+        date_start_fetch = date_start - timedelta(90)
+        date_end = df.iloc[-1]['Date']
 
-        df = df.merge(_fetch_df(keyword, date_from, date_to), on='Date', how='right')
+        df = df.merge(_fetch_df(keyword, date_start_fetch, date_end), on='Date', how='outer', sort=True)
         df['Interest'] = df['Interest'].shift(days_shift, fill_value=np.nan)
+        df['Interest'].ffill(inplace=True)
 
-        if df['Interest'].pct_change()[change_skip_head:].max() >= change_max:
-            raise Exception('Interest change is too high')
+        max_change_interest = df['Interest'].pct_change()[max_change_skip_head:].max()
+        if max_change_interest > max_change_interest_valid:
+            raise Exception(f'Interest change is too high: {max_change_interest:%}')
 
         df = mark_highs_lows(df, 'Interest', False, round(365 * 1.5), 365)
         df.fillna({'InterestHigh': 0, 'InterestLow': 0}, inplace=True)
@@ -152,8 +154,8 @@ class GoogleTrendsMetric(BaseMetric):
         lin_model.fit(high_x, high_y)
         df['InterestScaleModel'] = lin_model.predict(x)
 
-        df = df.loc[df['Date'] >= df_start_date]
-        df.reset_index(inplace=True)
+        df = df.loc[(date_start <= df['Date']) & (df['Date'] <= date_end)]
+        df.reset_index(drop=True, inplace=True)
 
         df['GoogleTrends'] = df['Interest'] / (df['InterestScaleModel'] * df['PreviousInterest'])
 
