@@ -60,20 +60,15 @@ class TwoYearMovingAverageMetric(BaseMetric):
         df = df.merge(_fetch_df(), on='Date', how='left')
         df['2YMA'].ffill(inplace=True)
         df['2YMALog'] = np.log(df['2YMA'])
-        df['2YMAx5'] = df['2YMA'] * 5
-        df['2YMAx5Log'] = np.log(df['2YMAx5'])
-
-        df['2YMALogDifference'] = df['2YMAx5Log'] - df['2YMALog']
-        df['2YMALogOvershootActual'] = df['PriceLog'] - df['2YMAx5Log']
-        df['2YMALogUndershootActual'] = df['PriceLog'] - df['2YMALog']
+        df['2YMALogDiff'] = df['PriceLog'] - df['2YMALog']
 
         high_rows = df.loc[df['PriceHigh'] == 1]
         high_x = high_rows.index.values.reshape(-1, 1)
-        high_y = high_rows['2YMALogOvershootActual'].values.reshape(-1, 1)
+        high_y = high_rows['2YMALogDiff'].values.reshape(-1, 1)
 
         low_rows = df.loc[df['PriceLow'] == 1]
         low_x = low_rows.index.values.reshape(-1, 1)
-        low_y = low_rows['2YMALogUndershootActual'].values.reshape(-1, 1)
+        low_y = low_rows['2YMALogDiff'].values.reshape(-1, 1)
 
         x = df.index.values.reshape(-1, 1)
 
@@ -84,8 +79,8 @@ class TwoYearMovingAverageMetric(BaseMetric):
         lin_model.fit(low_x, low_y)
         df['2YMALogUndershootModel'] = lin_model.predict(x)
 
-        df['2YMAHighModel'] = df['2YMAx5Log'] + df['2YMALogOvershootModel']
-        df['2YMALowModel'] = df['2YMALog'] + df['2YMALogUndershootModel']
+        df['2YMAHighModel'] = df['2YMALogOvershootModel'] + df['2YMALog']
+        df['2YMALowModel'] = df['2YMALogUndershootModel'] + df['2YMALog']
 
         df['2YMAIndex'] = (df['PriceLog'] - df['2YMALowModel']) / \
                           (df['2YMAHighModel'] - df['2YMALowModel'])
