@@ -57,10 +57,10 @@ class RUPLMetric(BaseMetric):
 
     def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         df = df.merge(_fetch_df(), on='Date', how='left')
+        df['RUPL'].ffill(inplace=True)
 
         df = mark_highs_lows(df, 'RUPL', False, 120, 120)
         df.fillna({'RUPLHigh': 0, 'RUPLLow': 0}, inplace=True)
-        df['RUPL'].ffill(inplace=True)
 
         df.loc[df['RUPL'] < 0.75, 'RUPLHigh'] = 0
 

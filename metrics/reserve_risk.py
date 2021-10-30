@@ -61,7 +61,6 @@ class ReserveRiskMetric(BaseMetric):
 
         df = df.merge(_fetch_df(), on='Date', how='left')
         df['Risk'] = df['Risk'].shift(days_shift, fill_value=np.nan)
-
         df['Risk'].ffill(inplace=True)
         df['RiskLog'] = np.log(df['Risk'])
 

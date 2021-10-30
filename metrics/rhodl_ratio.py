@@ -58,7 +58,6 @@ class RHODLMetric(BaseMetric):
 
     def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         df = df.merge(_fetch_df(), on='Date', how='left')
-
         df['RHODL'].ffill(inplace=True)
         df['RHODLLog'] = np.log(df['RHODL'])
 
