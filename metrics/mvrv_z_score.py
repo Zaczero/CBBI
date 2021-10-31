@@ -1,5 +1,6 @@
 from typing import List
 
+import numpy as np
 import pandas as pd
 import requests
 import seaborn as sns
@@ -58,6 +59,7 @@ class MVRVMetric(BaseMetric):
         df = df.merge(_fetch_df(), on='Date', how='left')
         df.loc[df['DaysSinceHalving'] < df['DaysSincePriceLow'], 'MVRV'] = df['MVRV'].shift(bull_days_shift)
         df['MVRV'].ffill(inplace=True)
+        df['MVRV'] = np.log(1 + df['MVRV'])
 
         df = mark_highs_lows(df, 'MVRV', True, round(365 * 2), 365)
         df.fillna({'MVRVHigh': 0, 'MVRVLow': 0}, inplace=True)
