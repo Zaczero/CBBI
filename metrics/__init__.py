@@ -1,5 +1,4 @@
 from .base_metric import *
-from .golden_ratio import *
 from .google_trends import *
 from .mvrv_z_score import *
 from .pi_cycle import *

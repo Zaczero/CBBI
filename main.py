@@ -14,7 +14,6 @@ from utils import *
 
 def get_metrics() -> List[BaseMetric]:
     return [
-        GoldenRatioMetric(),
         GoogleTrendsMetric(),
         HalvingToPeakMetric(),
         PiCycleMetric(),
