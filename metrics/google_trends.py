@@ -118,8 +118,8 @@ class GoogleTrendsMetric(BaseMetric):
 
     def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         keyword = 'Bitcoin'
-        days_shift = 1
-        drop_off_per_day = 0.012
+        days_shift = ma_days = 5
+        log_intensity = 2
         max_change_skip_head = 1000
         max_change_interest_valid = 5  # 500%
 
@@ -128,53 +128,26 @@ class GoogleTrendsMetric(BaseMetric):
         date_end = df.iloc[-1]['Date']
 
         df = df.merge(_fetch_df(keyword, date_start_fetch, date_end), on='Date', how='outer', sort=True)
-        df['Interest'] = df['Interest'].shift(days_shift, fill_value=np.nan)
-        df['Interest'].ffill(inplace=True)
 
         max_change_interest = df['Interest'].pct_change()[max_change_skip_head:].max()
         if max_change_interest > max_change_interest_valid:
             raise Exception(f'Interest change is too high: {max_change_interest:%}')
 
+        df['Interest'] = df['Interest'].shift(days_shift, fill_value=np.nan).rolling(ma_days).mean()
+        df['Interest'].ffill(inplace=True)
+
         df = mark_highs_lows(df, 'Interest', False, round(365 * 1.5), 365)
         df.fillna({'InterestHigh': 0, 'InterestLow': 0}, inplace=True)
 
         for _, row in df.loc[df['InterestHigh'] == 1].iterrows():
-            from_idx = np.min(df.loc[(df.index > row.name) & (df['Interest'] < row['Interest'] / 3)].index)
-            df.loc[df.index >= from_idx, 'PreviousInterest'] = row['Interest']
+            df.loc[df.index > row.name, 'PreviousInterest'] = row['Interest']
 
         df['InterestScale'] = df['Interest'] / df['PreviousInterest']
+        df['InterestScaleInterp'] = np.interp(df['InterestScale'],
+                                              (df['InterestScale'].min(), 1),
+                                              (0, 1))
 
-        high_rows = df.loc[(df['InterestHigh'] == 1) & ~ (df['PreviousInterest'].isna())]
-        high_x = high_rows.index.values.reshape(-1, 1)
-        high_y = high_rows['InterestScale'].values.reshape(-1, 1)
-
-        x = df.index.values.reshape(-1, 1)
-
-        lin_model = LinearRegression()
-        lin_model.fit(high_x, high_y)
-        df['InterestScaleModel'] = lin_model.predict(x)
-
-        df = df.loc[(date_start <= df['Date']) & (df['Date'] <= date_end)]
-        df.reset_index(drop=True, inplace=True)
-
-        df['GoogleTrends'] = df['Interest'] / (df['InterestScaleModel'] * df['PreviousInterest'])
-
-        def calculate_drop_off(rows_ref: np.ndarray):
-            rows = np.copy(rows_ref)
-
-            for i, drop_off in enumerate(range(rows.shape[0] - 1, 0, -1)):
-                rows[i] -= drop_off * drop_off_per_day
-
-            return np.max(rows)
-
-        df['GoogleTrendsDropOff'] = df['GoogleTrends'] \
-            .rolling(int(1.2 / drop_off_per_day), min_periods=1) \
-            .apply(calculate_drop_off, raw=True)
-
-        df['GoogleTrendsDropOffLog'] = np.log(df['GoogleTrendsDropOff'] * 100 + 1)
-        df['GoogleTrendsIndex'] = np.interp(df['GoogleTrendsDropOffLog'],
-                                            (df['GoogleTrendsDropOffLog'].min(), df['GoogleTrendsDropOffLog'].max()),
-                                            (0, 1))
+        df['GoogleTrendsIndex'] = np.log(df['InterestScaleInterp'] * log_intensity + 1) / np.log(log_intensity + 1)
 
         ax[0].set_title(self.description)
         sns.lineplot(data=df, x='Date', y='GoogleTrendsIndex', ax=ax[0])
@@ -182,8 +155,6 @@ class GoogleTrendsMetric(BaseMetric):
 
         sns.lineplot(data=df, x='Date', y='Interest', ax=ax[1])
         sns.lineplot(data=df, x='Date', y='PreviousInterest', ax=ax[1])
-        sns.lineplot(data=df, x='Date', y='InterestScale', ax=ax[1])
-        sns.lineplot(data=df, x='Date', y='InterestScaleModel', ax=ax[1])
         add_common_markers(df, ax[1], price_line=False)
 
         return df['GoogleTrendsIndex']
