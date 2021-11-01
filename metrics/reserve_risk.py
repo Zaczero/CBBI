@@ -56,7 +56,7 @@ class ReserveRiskMetric(BaseMetric):
     def description(self) -> str:
         return 'Reserve Risk'
 
-    def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
+    def _calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         days_shift = 1
 
         df = df.merge(_fetch_df(), on='Date', how='left')

@@ -116,7 +116,7 @@ class GoogleTrendsMetric(BaseMetric):
 
         pytrends = TrendReq(retries=5, backoff_factor=1, proxies=proxies)
 
-    def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
+    def _calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         keyword = 'Bitcoin'
         days_shift = ma_days = 5
         log_intensity = 2

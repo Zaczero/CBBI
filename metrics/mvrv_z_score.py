@@ -28,7 +28,8 @@ def _fetch_df() -> pd.DataFrame:
     }
 
     response = requests.post(
-        'https://www.lookintobitcoin.com/django_plotly_dash/app/mvrv_zscore/_dash-update-component', json=request_data,
+        'https://www.lookintobitcoin.com/django_plotly_dash/app/mvrv_zscore/_dash-update-component',
+        json=request_data,
         timeout=HTTP_TIMEOUT)
     response.raise_for_status()
     response_json = response.json()
@@ -53,7 +54,7 @@ class MVRVMetric(BaseMetric):
     def description(self) -> str:
         return 'MVRV Z-Score'
 
-    def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
+    def _calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         bull_days_shift = 6
         low_model_adjust = 0.26
 
