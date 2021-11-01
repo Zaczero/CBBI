@@ -19,7 +19,7 @@ class TrolololoMetric(BaseMetric):
     def description(self) -> str:
         return 'Bitcoin Trolololo Trend Line'
 
-    def _calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
+    def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         begin_date = pd.to_datetime('2012-01-01')
 
         df['TroloDaysSinceBegin'] = (df['Date'] - begin_date).dt.days

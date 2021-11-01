@@ -8,11 +8,10 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 from pytrends.request import TrendReq
-from sklearn.linear_model import LinearRegression
 from tqdm import tqdm
 
 from utils import mark_highs_lows, add_common_markers
-from .base_metric import BaseMetric
+from . import CBBIInfoFallbackMetric
 
 pytrends: TrendReq
 
@@ -99,7 +98,7 @@ def _fetch_last_week(keyword: str) -> pd.DataFrame:
     return df_fetch
 
 
-class GoogleTrendsMetric(BaseMetric):
+class GoogleTrendsMetric(CBBIInfoFallbackMetric):
     @property
     def name(self) -> str:
         return 'GoogleTrends'

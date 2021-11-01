@@ -10,7 +10,7 @@ from sklearn.linear_model import LinearRegression
 
 from globals import HTTP_TIMEOUT
 from utils import add_common_markers
-from .base_metric import BaseMetric
+from . import CBBIInfoFallbackMetric
 
 
 def _extract_metric(html: str, html_name: str, df_name: str) -> pd.DataFrame:
@@ -43,7 +43,7 @@ def _fetch_df() -> pd.DataFrame:
     return df
 
 
-class WoobullMetric(BaseMetric):
+class WoobullMetric(CBBIInfoFallbackMetric):
     @property
     def name(self) -> str:
         return 'Woobull'
