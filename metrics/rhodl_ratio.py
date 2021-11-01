@@ -10,6 +10,7 @@ from sklearn.linear_model import LinearRegression
 from globals import HTTP_TIMEOUT
 from utils import add_common_markers
 from .base_metric import BaseMetric
+from .cbbiinfo_fallback_metric import CBBIInfoFallbackMetric
 
 
 def _fetch_df() -> pd.DataFrame:
@@ -47,7 +48,7 @@ def _fetch_df() -> pd.DataFrame:
     return df
 
 
-class RHODLMetric(BaseMetric):
+class RHODLMetric(CBBIInfoFallbackMetric):
     @property
     def name(self) -> str:
         return 'RHODL'
@@ -56,7 +57,7 @@ class RHODLMetric(BaseMetric):
     def description(self) -> str:
         return 'RHODL Ratio'
 
-    def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
+    def _calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         df = df.merge(_fetch_df(), on='Date', how='left')
         df['RHODL'].ffill(inplace=True)
         df['RHODLLog'] = np.log(df['RHODL'])
