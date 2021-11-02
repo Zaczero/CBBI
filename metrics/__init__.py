@@ -1,4 +1,5 @@
 from .base_metric import *
+from .cbbiinfo_fallback_metric import *
 from .google_trends import *
 from .mvrv_z_score import *
 from .pi_cycle import *
