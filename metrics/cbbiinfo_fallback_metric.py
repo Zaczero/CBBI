@@ -41,7 +41,6 @@ class CBBIInfoFallbackMetric(BaseMetric, ABC):
     def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         try:
             return self._calculate(df, ax)
-
         except Exception:
             traceback.print_exc()
             cli_ui.warning(f'Requesting fallback values for {self.name}')
