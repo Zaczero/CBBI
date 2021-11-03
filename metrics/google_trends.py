@@ -109,7 +109,7 @@ class GoogleTrendsMetric(CBBIInfoFallbackMetric):
 
     _log_intensity = 2
     _hybrid_separator = 0.85
-    _hybrid_scale_target = 3
+    _hybrid_scale_target = 3.5
 
     def __init__(self):
         global pytrends
