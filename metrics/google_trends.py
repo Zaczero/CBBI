@@ -167,9 +167,11 @@ class GoogleTrendsMetric(CBBIInfoFallbackMetric):
         df['InterpAccuracy'] = self._calculate_for_accuracy(df)
         df['InterpPeaks'] = self._calculate_for_peaks(df)
 
-        df['Result'] = 0
+        df['Result'] = np.nan
         df.loc[df['InterestScale'] < self._hybrid_separator, 'Result'] = df['InterpAccuracy']
         df.loc[df['InterestScale'] >= self._hybrid_separator, 'Result'] = df['InterpPeaks']
+
+        df = df.loc[(date_start <= df['Date']) & (df['Date'] <= date_end)]
 
         ax[0].set_title(self.description)
         sns.lineplot(data=df, x='Date', y='Result', ax=ax[0])
