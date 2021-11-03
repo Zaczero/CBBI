@@ -172,6 +172,7 @@ class GoogleTrendsMetric(CBBIInfoFallbackMetric):
         df.loc[df['InterestScale'] >= self._hybrid_separator, 'Result'] = df['InterpPeaks']
 
         df = df.loc[(date_start <= df['Date']) & (df['Date'] <= date_end)]
+        df.reset_index(drop=True, inplace=True)
 
         ax[0].set_title(self.description)
         sns.lineplot(data=df, x='Date', y='Result', ax=ax[0])
