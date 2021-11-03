@@ -10,7 +10,7 @@ from sklearn.linear_model import LinearRegression
 
 from globals import HTTP_TIMEOUT
 from utils import add_common_markers
-from .base_metric import BaseMetric
+from . import CBBIInfoFallbackMetric
 
 
 def _extract_metric(html: str, html_name: str, df_name: str) -> pd.DataFrame:
@@ -43,7 +43,7 @@ def _fetch_df() -> pd.DataFrame:
     return df
 
 
-class WoobullMetric(BaseMetric):
+class WoobullMetric(CBBIInfoFallbackMetric):
     @property
     def name(self) -> str:
         return 'Woobull'
@@ -52,7 +52,7 @@ class WoobullMetric(BaseMetric):
     def description(self) -> str:
         return 'Woobull Top Cap vs CVDD'
 
-    def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
+    def _calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         df = df.merge(_fetch_df(), on='Date', how='left')
         df['Top'].ffill(inplace=True)
         df['TopLog'] = np.log(df['Top'])

@@ -9,7 +9,7 @@ from sklearn.linear_model import LinearRegression
 
 from globals import HTTP_TIMEOUT
 from utils import add_common_markers
-from .base_metric import BaseMetric
+from . import CBBIInfoFallbackMetric
 
 
 def _fetch_df() -> pd.DataFrame:
@@ -28,7 +28,8 @@ def _fetch_df() -> pd.DataFrame:
     }
 
     response = requests.post(
-        'https://www.lookintobitcoin.com/django_plotly_dash/app/puell_multiple/_dash-update-component', json=request_data,
+        'https://www.lookintobitcoin.com/django_plotly_dash/app/puell_multiple/_dash-update-component',
+        json=request_data,
         timeout=HTTP_TIMEOUT)
     response.raise_for_status()
     response_json = response.json()
@@ -44,7 +45,7 @@ def _fetch_df() -> pd.DataFrame:
     return df
 
 
-class PuellMetric(BaseMetric):
+class PuellMetric(CBBIInfoFallbackMetric):
     @property
     def name(self) -> str:
         return 'Puell'
@@ -53,7 +54,7 @@ class PuellMetric(BaseMetric):
     def description(self) -> str:
         return 'Puell Multiple'
 
-    def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
+    def _calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         df = df.merge(_fetch_df(), on='Date', how='left')
         df['Puell'].ffill(inplace=True)
         df['PuellLog'] = np.log(df['Puell'])

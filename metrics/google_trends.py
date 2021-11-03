@@ -8,11 +8,10 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 from pytrends.request import TrendReq
-from sklearn.linear_model import LinearRegression
 from tqdm import tqdm
 
+from metrics import CBBIInfoFallbackMetric
 from utils import mark_highs_lows, add_common_markers
-from .base_metric import BaseMetric
 
 pytrends: TrendReq
 
@@ -99,7 +98,7 @@ def _fetch_last_week(keyword: str) -> pd.DataFrame:
     return df_fetch
 
 
-class GoogleTrendsMetric(BaseMetric):
+class GoogleTrendsMetric(CBBIInfoFallbackMetric):
     @property
     def name(self) -> str:
         return 'GoogleTrends'
@@ -107,6 +106,10 @@ class GoogleTrendsMetric(BaseMetric):
     @property
     def description(self) -> str:
         return '"Bitcoin" search term (Google Trends)'
+
+    _log_intensity = 2
+    _hybrid_separator = 0.85
+    _hybrid_scale_target = 3
 
     def __init__(self):
         global pytrends
@@ -116,10 +119,28 @@ class GoogleTrendsMetric(BaseMetric):
 
         pytrends = TrendReq(retries=5, backoff_factor=1, proxies=proxies)
 
-    def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
+    def _calculate_for_accuracy(self, df: pd.DataFrame) -> pd.Series:
+        series = np.interp(df['InterestScale'],
+                           (df['InterestScale'].min(), self._hybrid_separator),
+                           (0, 1))
+
+        scaled = np.log(series * self._log_intensity + 1) / \
+                 np.log(self._log_intensity + 1)
+
+        return np.interp(scaled, (0, 1), (0, self._hybrid_separator))
+
+    def _calculate_for_peaks(self, df: pd.DataFrame) -> pd.Series:
+        series = (df['InterestScale'] - self._hybrid_separator) / \
+                 (self._hybrid_scale_target - self._hybrid_separator)
+
+        scaled = np.log(series * self._log_intensity + 1) / \
+                 np.log(self._log_intensity + 1)
+
+        return np.interp(scaled, (0, 1), (self._hybrid_separator, 1))
+
+    def _calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         keyword = 'Bitcoin'
-        days_shift = 1
-        drop_off_per_day = 0.012
+        days_shift = ma_days = 5
         max_change_skip_head = 1000
         max_change_interest_valid = 5  # 500%
 
@@ -128,62 +149,34 @@ class GoogleTrendsMetric(BaseMetric):
         date_end = df.iloc[-1]['Date']
 
         df = df.merge(_fetch_df(keyword, date_start_fetch, date_end), on='Date', how='outer', sort=True)
-        df['Interest'] = df['Interest'].shift(days_shift, fill_value=np.nan)
-        df['Interest'].ffill(inplace=True)
 
         max_change_interest = df['Interest'].pct_change()[max_change_skip_head:].max()
         if max_change_interest > max_change_interest_valid:
             raise Exception(f'Interest change is too high: {max_change_interest:%}')
 
+        df['Interest'] = df['Interest'].shift(days_shift, fill_value=np.nan).rolling(ma_days).mean()
+        df['Interest'].ffill(inplace=True)
+
         df = mark_highs_lows(df, 'Interest', False, round(365 * 1.5), 365)
         df.fillna({'InterestHigh': 0, 'InterestLow': 0}, inplace=True)
 
         for _, row in df.loc[df['InterestHigh'] == 1].iterrows():
-            from_idx = np.min(df.loc[(df.index > row.name) & (df['Interest'] < row['Interest'] / 3)].index)
-            df.loc[df.index >= from_idx, 'PreviousInterest'] = row['Interest']
+            df.loc[df.index > row.name, 'PreviousInterest'] = row['Interest']
 
         df['InterestScale'] = df['Interest'] / df['PreviousInterest']
+        df['InterpAccuracy'] = self._calculate_for_accuracy(df)
+        df['InterpPeaks'] = self._calculate_for_peaks(df)
 
-        high_rows = df.loc[(df['InterestHigh'] == 1) & ~ (df['PreviousInterest'].isna())]
-        high_x = high_rows.index.values.reshape(-1, 1)
-        high_y = high_rows['InterestScale'].values.reshape(-1, 1)
-
-        x = df.index.values.reshape(-1, 1)
-
-        lin_model = LinearRegression()
-        lin_model.fit(high_x, high_y)
-        df['InterestScaleModel'] = lin_model.predict(x)
-
-        df = df.loc[(date_start <= df['Date']) & (df['Date'] <= date_end)]
-        df.reset_index(drop=True, inplace=True)
-
-        df['GoogleTrends'] = df['Interest'] / (df['InterestScaleModel'] * df['PreviousInterest'])
-
-        def calculate_drop_off(rows_ref: np.ndarray):
-            rows = np.copy(rows_ref)
-
-            for i, drop_off in enumerate(range(rows.shape[0] - 1, 0, -1)):
-                rows[i] -= drop_off * drop_off_per_day
-
-            return np.max(rows)
-
-        df['GoogleTrendsDropOff'] = df['GoogleTrends'] \
-            .rolling(int(1.2 / drop_off_per_day), min_periods=1) \
-            .apply(calculate_drop_off, raw=True)
-
-        df['GoogleTrendsDropOffLog'] = np.log(df['GoogleTrendsDropOff'] * 100 + 1)
-        df['GoogleTrendsIndex'] = np.interp(df['GoogleTrendsDropOffLog'],
-                                            (df['GoogleTrendsDropOffLog'].min(), df['GoogleTrendsDropOffLog'].max()),
-                                            (0, 1))
+        df['Result'] = 0
+        df.loc[df['InterestScale'] < self._hybrid_separator, 'Result'] = df['InterpAccuracy']
+        df.loc[df['InterestScale'] >= self._hybrid_separator, 'Result'] = df['InterpPeaks']
 
         ax[0].set_title(self.description)
-        sns.lineplot(data=df, x='Date', y='GoogleTrendsIndex', ax=ax[0])
+        sns.lineplot(data=df, x='Date', y='Result', ax=ax[0])
         add_common_markers(df, ax[0])
 
-        sns.lineplot(data=df, x='Date', y='Interest', ax=ax[1])
-        sns.lineplot(data=df, x='Date', y='PreviousInterest', ax=ax[1])
-        sns.lineplot(data=df, x='Date', y='InterestScale', ax=ax[1])
-        sns.lineplot(data=df, x='Date', y='InterestScaleModel', ax=ax[1])
+        sns.lineplot(data=df, x='Date', y='InterpAccuracy', ax=ax[1])
+        sns.lineplot(data=df, x='Date', y='InterpPeaks', ax=ax[1])
         add_common_markers(df, ax[1], price_line=False)
 
-        return df['GoogleTrendsIndex']
+        return df['Result']

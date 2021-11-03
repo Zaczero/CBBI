@@ -9,7 +9,7 @@ from sklearn.linear_model import LinearRegression
 
 from globals import HTTP_TIMEOUT
 from utils import add_common_markers
-from .base_metric import BaseMetric
+from . import CBBIInfoFallbackMetric
 
 
 def _fetch_df() -> pd.DataFrame:
@@ -47,7 +47,7 @@ def _fetch_df() -> pd.DataFrame:
     return df
 
 
-class TwoYearMovingAverageMetric(BaseMetric):
+class TwoYearMovingAverageMetric(CBBIInfoFallbackMetric):
     @property
     def name(self) -> str:
         return '2YMA'
@@ -56,7 +56,7 @@ class TwoYearMovingAverageMetric(BaseMetric):
     def description(self) -> str:
         return '2 Year Moving Average'
 
-    def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
+    def _calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         df = df.merge(_fetch_df(), on='Date', how='left')
         df['2YMA'].ffill(inplace=True)
         df['2YMALog'] = np.log(df['2YMA'])

@@ -28,15 +28,15 @@ class CBBIInfoFallbackMetric(BaseMetric, ABC):
 
         return df
 
+    @abstractmethod
+    def _calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
+        pass
+
     def _fallback(self, df: pd.DataFrame) -> pd.Series:
         df = df.merge(self._fetch_df_fallback(), on='Date', how='left')
         df['Value'].ffill(inplace=True)
 
         return df['Value']
-
-    @abstractmethod
-    def _calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
-        pass
 
     def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         try:
