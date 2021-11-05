@@ -29,7 +29,7 @@ def get_metrics() -> List[BaseMetric]:
 
 
 def calculate_confidence_score(df: pd.DataFrame, cols: List[str]) -> pd.Series:
-    return df[cols].clip(0, 1).mean(axis=1)
+    return df[cols].mean(axis=1)
 
 
 def run(json_file: str, charts_file: str) -> None:
@@ -74,7 +74,7 @@ def run(json_file: str, charts_file: str) -> None:
     plt.tight_layout(pad=14)
 
     for metric, ax in zip(metrics, axes):
-        df_bitcoin[metric.name] = metric.calculate(df_bitcoin_org.copy(), ax)
+        df_bitcoin[metric.name] = metric.calculate(df_bitcoin_org.copy(), ax).clip(0, 1)
         metrics_cols.append(metric.name)
         metrics_descriptions.append(metric.description)
 
