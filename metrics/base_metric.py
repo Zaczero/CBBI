@@ -34,5 +34,5 @@ class BaseMetric(ABC):
             return self._calculate(df, ax)
         except Exception:
             traceback.print_exc()
-            cli_ui.warning(f'Requesting fallback values for {self.name}')
+            cli_ui.warning(f'Requesting fallback values for {self.name} (from CBBI.info)')
             return self._fallback(df)

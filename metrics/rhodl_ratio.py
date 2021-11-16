@@ -1,12 +1,16 @@
+import traceback
+
+import cli_ui
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 
+from api.glassnode_api import gn_fetch
 from api.lookintobitcoin_api import lib_fetch
-from utils import add_common_markers
 from metrics.base_metric import BaseMetric
+from utils import add_common_markers
 
 
 class RHODLMetric(BaseMetric):
@@ -19,12 +23,24 @@ class RHODLMetric(BaseMetric):
         return 'RHODL Ratio'
 
     def _calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
-        df = df.merge(lib_fetch(
-            url_selector='rhodl_ratio',
-            post_selector='rhodl-ratio',
-            chart_idx=1,
-            col_name='RHODL'
-        ), on='Date', how='left')
+        try:
+            remote_df = lib_fetch(
+                url_selector='rhodl_ratio',
+                post_selector='rhodl-ratio',
+                chart_idx=1,
+                col_name='RHODL'
+            )
+        except Exception:
+            traceback.print_exc()
+            cli_ui.warning(f'Requesting fallback values for {self.name} (from GlassNode)')
+
+            remote_df = gn_fetch(
+                url_selector='rhodl_ratio',
+                col_name='RHODL',
+                a='BTC'
+            )
+
+        df = df.merge(remote_df, on='Date', how='left')
         df['RHODL'].ffill(inplace=True)
         df['RHODLLog'] = np.log(df['RHODL'])
 
