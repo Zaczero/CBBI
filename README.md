@@ -64,6 +64,11 @@ May be used to resolve the `Google returned a response with code 429` issue.
 * GOOGLE_PROXY=https://host:port
 * GOOGLE_PROXY=https://user:pass@host:port
 
+### GLASSNODE_API_KEY
+
+Defines an API key to be used during GlassNode fallback requests.
+If unset or empty, a cache fallback will be used instead (free CBBI.info API).
+
 ## Footer
 
 ### Contact
