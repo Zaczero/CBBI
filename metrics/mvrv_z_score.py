@@ -9,7 +9,7 @@ from sklearn.linear_model import LinearRegression
 
 from globals import HTTP_TIMEOUT
 from utils import add_common_markers, mark_highs_lows
-from . import CBBIInfoFallbackMetric
+from . import BaseMetric
 
 
 def _fetch_df() -> pd.DataFrame:
@@ -45,7 +45,7 @@ def _fetch_df() -> pd.DataFrame:
     return df
 
 
-class MVRVMetric(CBBIInfoFallbackMetric):
+class MVRVMetric(BaseMetric):
     @property
     def name(self) -> str:
         return 'MVRV'

@@ -8,7 +8,7 @@ from sklearn.linear_model import LinearRegression
 
 from globals import HTTP_TIMEOUT
 from utils import mark_highs_lows, add_common_markers
-from . import CBBIInfoFallbackMetric
+from . import BaseMetric
 
 
 def _fetch_df() -> pd.DataFrame:
@@ -46,7 +46,7 @@ def _fetch_df() -> pd.DataFrame:
     return df
 
 
-class RUPLMetric(CBBIInfoFallbackMetric):
+class RUPLMetric(BaseMetric):
     @property
     def name(self) -> str:
         return 'RUPL'

@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 from pytrends.request import TrendReq
 from tqdm import tqdm
 
-from metrics import CBBIInfoFallbackMetric
+from metrics import BaseMetric
 from utils import mark_highs_lows, add_common_markers
 
 pytrends: TrendReq
@@ -98,7 +98,7 @@ def _fetch_last_week(keyword: str) -> pd.DataFrame:
     return df_fetch
 
 
-class GoogleTrendsMetric(CBBIInfoFallbackMetric):
+class GoogleTrendsMetric(BaseMetric):
     @property
     def name(self) -> str:
         return 'GoogleTrends'

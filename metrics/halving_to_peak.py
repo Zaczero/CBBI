@@ -19,7 +19,7 @@ class HalvingToPeakMetric(BaseMetric):
     def description(self) -> str:
         return 'Halving-to-Peak Days'
 
-    def calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
+    def _calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
         peak_decline_after_days = 30
         peak_decline_duration = 270
 
