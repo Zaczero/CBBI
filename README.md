@@ -20,7 +20,7 @@ Bookmark it to receive latest CBBI updates.
 
 ## Usage
 
-*Recommended Python version: 3.9*
+*Recommended Python version: 3.10*
 
 ### Install required packages
 
