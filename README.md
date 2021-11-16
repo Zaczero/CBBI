@@ -67,7 +67,7 @@ May be used to resolve the `Google returned a response with code 429` issue.
 ### GLASSNODE_API_KEY
 
 Defines an API key to be used during GlassNode fallback requests.
-If unset or empty, a cache fallback will be used instead (free CBBI.info API).
+If unset or empty, a cache fallback will be used instead (via CBBI.info).
 
 ## Footer
 
