@@ -1,50 +1,12 @@
-from typing import List
-
 import numpy as np
 import pandas as pd
-import requests
 import seaborn as sns
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 
-from globals import HTTP_TIMEOUT
-from metrics import BaseMetric
+from api.lookintobitcoin_api import lib_fetch
+from metrics.base_metric import BaseMetric
 from utils import add_common_markers
-
-
-def _fetch_df() -> pd.DataFrame:
-    request_data = {
-        'output': 'chart.figure',
-        'changedPropIds': [
-            'url.pathname'
-        ],
-        'inputs': [
-            {
-                'id': 'url',
-                'property': 'pathname',
-                'value': '/charts/bitcoin-investor-tool/'
-            }
-        ]
-    }
-
-    response = requests.post(
-        'https://www.lookintobitcoin.com/django_plotly_dash/app/market_cycle_ma/_dash-update-component',
-        json=request_data,
-        timeout=HTTP_TIMEOUT
-    )
-
-    response.raise_for_status()
-    response_json = response.json()
-    response_x = response_json['response']['props']['figure']['data'][2]['x']
-    response_y = response_json['response']['props']['figure']['data'][2]['y']
-
-    df = pd.DataFrame({
-        'Date': response_x[:len(response_y)],
-        '2YMA': response_y,
-    })
-    df['Date'] = pd.to_datetime(df['Date']).dt.tz_localize(None)
-
-    return df
 
 
 class TwoYearMovingAverageMetric(BaseMetric):
@@ -56,8 +18,13 @@ class TwoYearMovingAverageMetric(BaseMetric):
     def description(self) -> str:
         return '2 Year Moving Average'
 
-    def _calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
-        df = df.merge(_fetch_df(), on='Date', how='left')
+    def _calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
+        df = df.merge(lib_fetch(
+            url_selector='market_cycle_ma',
+            post_selector='bitcoin-investor-tool',
+            chart_idx=2,
+            col_name='2YMA'
+        ), on='Date', how='left')
         df['2YMA'].ffill(inplace=True)
         df['2YMALog'] = np.log(df['2YMA'])
         df['2YMALogDiff'] = df['PriceLog'] - df['2YMALog']

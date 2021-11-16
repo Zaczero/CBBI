@@ -1,50 +1,12 @@
-from typing import List
-
 import numpy as np
 import pandas as pd
-import requests
 import seaborn as sns
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 
-from globals import HTTP_TIMEOUT
+from api.lookintobitcoin_api import lib_fetch
 from utils import add_common_markers
-from .base_metric import BaseMetric
-
-
-def _fetch_df() -> pd.DataFrame:
-    request_data = {
-        'output': 'chart.figure',
-        'changedPropIds': [
-            'url.pathname'
-        ],
-        'inputs': [
-            {
-                'id': 'url',
-                'property': 'pathname',
-                'value': '/charts/rhodl-ratio/'
-            }
-        ]
-    }
-
-    response = requests.post(
-        'https://www.lookintobitcoin.com/django_plotly_dash/app/rhodl_ratio/_dash-update-component',
-        json=request_data,
-        timeout=HTTP_TIMEOUT
-    )
-
-    response.raise_for_status()
-    response_json = response.json()
-    response_x = response_json['response']['props']['figure']['data'][1]['x']
-    response_y = response_json['response']['props']['figure']['data'][1]['y']
-
-    df = pd.DataFrame({
-        'Date': response_x[:len(response_y)],
-        'RHODL': response_y,
-    })
-    df['Date'] = pd.to_datetime(df['Date']).dt.tz_localize(None)
-
-    return df
+from metrics.base_metric import BaseMetric
 
 
 class RHODLMetric(BaseMetric):
@@ -56,8 +18,13 @@ class RHODLMetric(BaseMetric):
     def description(self) -> str:
         return 'RHODL Ratio'
 
-    def _calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
-        df = df.merge(_fetch_df(), on='Date', how='left')
+    def _calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
+        df = df.merge(lib_fetch(
+            url_selector='rhodl_ratio',
+            post_selector='rhodl-ratio',
+            chart_idx=1,
+            col_name='RHODL'
+        ), on='Date', how='left')
         df['RHODL'].ffill(inplace=True)
         df['RHODLLog'] = np.log(df['RHODL'])
 

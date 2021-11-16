@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 from math import ceil
-from typing import List
 
 import numpy as np
 import pandas as pd
@@ -61,7 +60,7 @@ def mark_highs_lows(df: pd.DataFrame, col: str, begin_with_high: bool, window_si
     return df
 
 
-def mark_days_since(df: pd.DataFrame, cols: List[str]) -> pd.DataFrame:
+def mark_days_since(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
     for col in cols:
         indexes = df.loc[df[col] == 1].index
         df[f'DaysSince{col}'] = df.index.to_series().apply(lambda v: min([v - index if index <= v else np.nan for index in indexes]))
@@ -86,7 +85,7 @@ def add_common_markers(df: pd.DataFrame, ax: plt.Axes, price_line: bool = True):
         ax.axvline(x=days_since_epoch, color='red', linestyle=':')
 
 
-def split_df_on_index_gap(df: pd.DataFrame, min_gap: int = 1) -> List[pd.DataFrame]:
+def split_df_on_index_gap(df: pd.DataFrame, min_gap: int = 1) -> list[pd.DataFrame]:
     begin_idx = None
     end_idx = None
 

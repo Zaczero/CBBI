@@ -3,15 +3,30 @@ import traceback
 
 import cli_ui
 import fire
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from matplotlib import pyplot as plt
 from pyfiglet import figlet_format
 from termcolor import cprint
 
 from fetch_bitcoin_data import fetch_bitcoin_data
-from metrics import *
-from utils import *
+from metrics.base_metric import BaseMetric
+from metrics.google_trends import GoogleTrendsMetric
+from metrics.halving_to_peak import HalvingToPeakMetric
+from metrics.mvrv_z_score import MVRVMetric
+from metrics.pi_cycle import PiCycleMetric
+from metrics.puell_multiple import PuellMetric
+from metrics.reserve_risk import ReserveRiskMetric
+from metrics.rhodl_ratio import RHODLMetric
+from metrics.rupl import RUPLMetric
+from metrics.trolololo import TrolololoMetric
+from metrics.two_year_moving_average import TwoYearMovingAverageMetric
+from metrics.woobull_topcap_cvdd import WoobullMetric
+from utils import format_percentage, get_color
 
 
-def get_metrics() -> List[BaseMetric]:
+def get_metrics() -> list[BaseMetric]:
     return [
         GoogleTrendsMetric(),
         HalvingToPeakMetric(),
@@ -27,7 +42,7 @@ def get_metrics() -> List[BaseMetric]:
     ]
 
 
-def calculate_confidence_score(df: pd.DataFrame, cols: List[str]) -> pd.Series:
+def calculate_confidence_score(df: pd.DataFrame, cols: list[str]) -> pd.Series:
     return df[cols].mean(axis=1)
 
 

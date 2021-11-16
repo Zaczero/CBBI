@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -7,7 +5,7 @@ from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 
 from utils import add_common_markers
-from .base_metric import BaseMetric
+from metrics.base_metric import BaseMetric
 
 
 class HalvingToPeakMetric(BaseMetric):
@@ -19,7 +17,7 @@ class HalvingToPeakMetric(BaseMetric):
     def description(self) -> str:
         return 'Halving-to-Peak Days'
 
-    def _calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
+    def _calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
         peak_decline_after_days = 30
         peak_decline_duration = 270
 

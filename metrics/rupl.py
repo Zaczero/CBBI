@@ -1,49 +1,11 @@
-from typing import List
-
 import pandas as pd
-import requests
 import seaborn as sns
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 
-from globals import HTTP_TIMEOUT
+from api.lookintobitcoin_api import lib_fetch
 from utils import mark_highs_lows, add_common_markers
-from . import BaseMetric
-
-
-def _fetch_df() -> pd.DataFrame:
-    request_data = {
-        'output': 'chart.figure',
-        'changedPropIds': [
-            'url.pathname'
-        ],
-        'inputs': [
-            {
-                'id': 'url',
-                'property': 'pathname',
-                'value': '/charts/relative-unrealized-profit--loss/'
-            }
-        ]
-    }
-
-    response = requests.post(
-        'https://www.lookintobitcoin.com/django_plotly_dash/app/unrealised_profit_loss/_dash-update-component',
-        json=request_data,
-        timeout=HTTP_TIMEOUT
-    )
-
-    response.raise_for_status()
-    response_json = response.json()
-    response_x = response_json['response']['props']['figure']['data'][0]['x']
-    response_y = response_json['response']['props']['figure']['data'][0]['y']
-
-    df = pd.DataFrame({
-        'Date': response_x[:len(response_y)],
-        'RUPL': response_y,
-    })
-    df['Date'] = pd.to_datetime(df['Date']).dt.tz_localize(None)
-
-    return df
+from metrics.base_metric import BaseMetric
 
 
 class RUPLMetric(BaseMetric):
@@ -55,8 +17,13 @@ class RUPLMetric(BaseMetric):
     def description(self) -> str:
         return 'RUPL/NUPL Chart'
 
-    def _calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
-        df = df.merge(_fetch_df(), on='Date', how='left')
+    def _calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
+        df = df.merge(lib_fetch(
+            url_selector='unrealised_profit_loss',
+            post_selector='relative-unrealized-profit--loss',
+            chart_idx=0,
+            col_name='RUPL'
+        ), on='Date', how='left')
         df['RUPL'].ffill(inplace=True)
 
         df = mark_highs_lows(df, 'RUPL', False, 120, 120)

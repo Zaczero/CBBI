@@ -1,6 +1,5 @@
 import os
 from datetime import timedelta
-from typing import List
 
 import filecache
 import numpy as np
@@ -10,7 +9,7 @@ from matplotlib import pyplot as plt
 from pytrends.request import TrendReq
 from tqdm import tqdm
 
-from metrics import BaseMetric
+from metrics.base_metric import BaseMetric
 from utils import mark_highs_lows, add_common_markers
 
 pytrends: TrendReq
@@ -114,7 +113,7 @@ class GoogleTrendsMetric(BaseMetric):
     def __init__(self):
         global pytrends
 
-        proxy = os.environ.get('GOOGLE_PROXY')
+        proxy = os.getenv('GOOGLE_PROXY')
         proxies = [proxy] if proxy else []
 
         pytrends = TrendReq(retries=5, backoff_factor=1, proxies=proxies)
@@ -138,7 +137,7 @@ class GoogleTrendsMetric(BaseMetric):
 
         return np.interp(scaled, (0, 1), (self._hybrid_separator, 1))
 
-    def _calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
+    def _calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
         keyword = 'Bitcoin'
         days_shift = ma_days = 5
         max_change_skip_head = 1000

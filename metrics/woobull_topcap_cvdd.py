@@ -1,5 +1,4 @@
 import re
-from typing import List
 
 import numpy as np
 import pandas as pd
@@ -9,7 +8,7 @@ from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 
 from globals import HTTP_TIMEOUT
-from metrics import BaseMetric
+from metrics.base_metric import BaseMetric
 from utils import add_common_markers
 
 
@@ -52,7 +51,7 @@ class WoobullMetric(BaseMetric):
     def description(self) -> str:
         return 'Woobull Top Cap vs CVDD'
 
-    def _calculate(self, df: pd.DataFrame, ax: List[plt.Axes]) -> pd.Series:
+    def _calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
         df = df.merge(_fetch_df(), on='Date', how='left')
         df['Top'].ffill(inplace=True)
         df['TopLog'] = np.log(df['Top'])
