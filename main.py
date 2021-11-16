@@ -3,7 +3,6 @@ import traceback
 
 import cli_ui
 import fire
-from dotenv import load_dotenv
 from pyfiglet import figlet_format
 from termcolor import cprint
 
@@ -158,6 +157,4 @@ def run_and_retry(json_file: str = "latest.json",
 
 
 if __name__ == '__main__':
-    load_dotenv()
-
     fire.Fire(run_and_retry)
