@@ -28,17 +28,17 @@ from utils import format_percentage, get_color
 
 def get_metrics() -> list[BaseMetric]:
     return [
-        GoogleTrendsMetric(),
-        HalvingToPeakMetric(),
         PiCycleMetric(),
+        RUPLMetric(),
+        RHODLMetric(),
+        PuellMetric(),
         TwoYearMovingAverageMetric(),
         TrolololoMetric(),
-        RUPLMetric(),
-        PuellMetric(),
         MVRVMetric(),
-        RHODLMetric(),
         ReserveRiskMetric(),
         WoobullMetric(),
+        HalvingToPeakMetric(),
+        GoogleTrendsMetric(),
     ]
 
 
