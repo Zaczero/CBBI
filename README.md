@@ -22,14 +22,26 @@ Bookmark it to receive latest CBBI updates.
 
 *Recommended Python version: 3.9*
 
+### Install pipenv
+
+[Pipenv: Python Dev Workflow for Humans](https://pipenv.pypa.io/en/latest/#install-pipenv-today)
+
 ### Install required packages
 
-`$ pip install -r requirements.txt`
+**NOTE:** The `pipenv` commands shall be executed within the project directory.
+
+`$ pipenv install`
 
 ### Execute the script
 
-`$ py main.py --help`  
-`$ py main.py`
+`$ pipenv run python main.py --help`  
+`$ pipenv run python main.py`
+
+#### or
+
+`$ pipenv shell`  
+`$> python main.py --help`  
+`$> python main.py`
 
 ## Metrics
 
