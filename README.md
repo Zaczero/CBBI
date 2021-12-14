@@ -62,19 +62,19 @@ Bookmark it to receive latest CBBI updates.
 
 The current CBBI version *(November 2021)* includes the following metrics:
 
-| Name | Link |
-|---------------|------|
-| Pi Cycle Top Indicator | [Visit page](https://www.lookintobitcoin.com/charts/pi-cycle-top-indicator/) |
-| RUPL/NUPL Chart | [Visit page](https://www.lookintobitcoin.com/charts/relative-unrealized-profit--loss/) |
-| RHODL Ratio | [Visit page](https://www.lookintobitcoin.com/charts/rhodl-ratio/) |
-| Puell Multiple | [Visit page](https://www.lookintobitcoin.com/charts/puell-multiple/) |
-| 2 Year Moving Average | [Visit page](https://www.lookintobitcoin.com/charts/bitcoin-investor-tool/) |
-| Bitcoin Trolololo Trend Line | [Visit page](https://www.blockchaincenter.net/bitcoin-rainbow-chart/) |
-| MVRV Z-Score | [Visit page](https://www.lookintobitcoin.com/charts/mvrv-zscore/) |
-| Reserve Risk | [Visit page](https://www.lookintobitcoin.com/charts/reserve-risk/) |
-| Woobull Top Cap vs CVDD | [Visit page](https://charts.woobull.com/bitcoin-price-models/) |
-| Halving-to-Peak Days | [Visit page](https://www.youtube.com/watch?v=oxR_0njPht8&t=290s) |
-| Google Trends for "Bitcoin" | [Visit page](https://trends.google.com/trends/explore?date=today%205-y&q=bitcoin) |
+| Name                         | Link                                                                                   |
+|------------------------------|----------------------------------------------------------------------------------------|
+| Pi Cycle Top Indicator       | [Visit page](https://www.lookintobitcoin.com/charts/pi-cycle-top-indicator/)           |
+| RUPL/NUPL Chart              | [Visit page](https://www.lookintobitcoin.com/charts/relative-unrealized-profit--loss/) |
+| RHODL Ratio                  | [Visit page](https://www.lookintobitcoin.com/charts/rhodl-ratio/)                      |
+| Puell Multiple               | [Visit page](https://www.lookintobitcoin.com/charts/puell-multiple/)                   |
+| 2 Year Moving Average        | [Visit page](https://www.lookintobitcoin.com/charts/bitcoin-investor-tool/)            |
+| Bitcoin Trolololo Trend Line | [Visit page](https://www.blockchaincenter.net/bitcoin-rainbow-chart/)                  |
+| MVRV Z-Score                 | [Visit page](https://www.lookintobitcoin.com/charts/mvrv-zscore/)                      |
+| Reserve Risk                 | [Visit page](https://www.lookintobitcoin.com/charts/reserve-risk/)                     |
+| Woobull Top Cap vs CVDD      | [Visit page](https://charts.woobull.com/bitcoin-price-models/)                         |
+| Halving-to-Peak Days         | [Visit page](https://www.youtube.com/watch?v=oxR_0njPht8&t=290s)                       |
+| Google Trends for "Bitcoin"  | [Visit page](https://trends.google.com/trends/explore?date=today%205-y&q=bitcoin)      |
 
 ## Environment variables
 
