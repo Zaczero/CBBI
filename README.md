@@ -10,7 +10,7 @@ The CBBI is a Bitcoin index that utilizes advanced, real-time analysis of 11 met
 The CBBI is time-independent and price-independent.
 It simply indicates whether it believes we are approaching the top/bottom of a Bitcoin cycle.
 
-If you want to learn more, [watch this video](https://www.youtube.com/watch?v=bq7djf1n0j4).
+If you want to learn more, [check out this video](https://www.youtube.com/watch?v=bq7djf1n0j4).
 
 ## Visit our website
 
@@ -18,11 +18,22 @@ Bookmark it to receive latest CBBI updates.
 
 - [CBBI.info](https://cbbi.info/)
 
-## Check out this demo
+## Script demo
 
 [![asciicast](https://asciinema.org/a/6oYLls2F1nCz6Sv6KyMKLL0n7.svg)](https://asciinema.org/a/6oYLls2F1nCz6Sv6KyMKLL0n7)
 
-## Usage
+## Docker usage
+
+### Install image
+
+`$ docker pull zaczero/cbbi`
+
+### Execute the script
+
+`$ docker run zaczero/cbbi --help`  
+`$ docker run zaczero/cbbi`
+
+## Manual usage
 
 *Recommended Python version: 3.9*
 
@@ -47,7 +58,7 @@ Bookmark it to receive latest CBBI updates.
 `$> python main.py --help`  
 `$> python main.py`
 
-## Metrics
+## Metrics table
 
 The current CBBI version *(November 2021)* includes the following metrics:
 
@@ -85,9 +96,13 @@ May be used to resolve the `Google returned a response with code 429` issue.
 Defines an API key to be used during GlassNode fallback requests.
 If unset or empty, a cache fallback will be used instead (via CBBI.info).
 
+#### Example usage
+
+* GLASSNODE_API_KEY=REPLACE_ME
+
 ## Footer
 
 ### Contact
 
-* Email - [kamil@monicz.pl](mailto:kamil@monicz.pl)
-* LinkedIn - [linkedin.com/in/kamil-monicz](https://www.linkedin.com/in/kamil-monicz/)
+* Email: [kamil@monicz.pl](mailto:kamil@monicz.pl)
+* LinkedIn: [linkedin.com/in/kamil-monicz](https://www.linkedin.com/in/kamil-monicz/)
