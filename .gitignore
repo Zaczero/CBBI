@@ -191,7 +191,6 @@ fabric.properties
 # filecache
 *.cache.*
 
-# generated
+# application specific
 latest.json
-latest_simple.json
-charts.*
+charts.svg
