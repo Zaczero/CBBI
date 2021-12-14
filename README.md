@@ -1,5 +1,9 @@
 # ColinTalksCrypto Bitcoin Bull Run Index (CBBI)
 
+![GitHub Pipenv locked Python version](https://img.shields.io/github/pipenv/locked/python-version/Zaczero/CBBI)
+![GitHub](https://img.shields.io/github/license/Zaczero/CBBI)
+![GitHub Repo stars](https://img.shields.io/github/stars/Zaczero/CBBI?style=social)
+
 The official Python implementation of the **ColinTalksCrypto Bitcoin Bull Run Index** (CBBI).
 
 The CBBI is a Bitcoin index that utilizes advanced, real-time analysis of 11 metrics to help us understand what stage of the Bitcoin bull run and bear market cycles we are in.
