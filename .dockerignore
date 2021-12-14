@@ -199,6 +199,5 @@ charts.svg
 **/__pycache__
 **/*.cache.*
 **/.*
-resources/
 asciinema.txt
 Dockerfile
