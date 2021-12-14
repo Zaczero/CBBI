@@ -1,18 +1,16 @@
-FROM ubuntu:focal
+FROM python:3.9
 
-ENV DEBIAN_FRONTEND=noninteractive
-ENV SHELL=/bin/bash
+ENV LANG C.UTF-8
+ENV LC_ALL C.UTF-8
+ENV PYTHONDONTWRITEBYTECODE 1
 
-RUN apt update
-RUN apt install -yq software-properties-common
-RUN add-apt-repository -y ppa:deadsnakes/ppa
-RUN apt install -yq python3.9 pipenv
+RUN mkdir /app
+WORKDIR /app
 
-RUN mkdir -p /cbbi
-COPY . /cbbi
+RUN pip install pipenv
 
-WORKDIR /cbbi
-RUN pipenv install
+COPY . .
+RUN pipenv install --deploy --ignore-pipfile
 
-ENTRYPOINT [ "pipenv" ] 
-CMD [ "run", "python", "main.py" ]
+ENTRYPOINT ["pipenv", "run", "python", "main.py"] 
+CMD []
