@@ -1,8 +1,8 @@
 # ColinTalksCrypto Bitcoin Bull Run Index (CBBI)
 
 ![GitHub Pipenv locked Python version](https://img.shields.io/github/pipenv/locked/python-version/Zaczero/CBBI)
-![GitHub](https://img.shields.io/github/license/Zaczero/CBBI)
-![GitHub Repo stars](https://img.shields.io/github/stars/Zaczero/CBBI?style=social)
+[![GitHub](https://img.shields.io/github/license/Zaczero/CBBI)](https://github.com/Zaczero/CBBI/blob/main/LICENSE)
+[![GitHub Repo stars](https://img.shields.io/github/stars/Zaczero/CBBI?style=social)](https://github.com/Zaczero/CBBI)
 
 The official Python implementation of the **ColinTalksCrypto Bitcoin Bull Run Index** (CBBI).
 
