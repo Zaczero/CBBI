@@ -1,12 +1,12 @@
 import cli_ui
 import requests
-from filecache import filecache
+import filecache
 
 from globals import *
 from utils import *
 
 
-@filecache(3600 * 2)  # 2 hours cache
+@filecache.filecache(2 * filecache.HOUR)
 def fetch_bitcoin_data() -> pd.DataFrame:
     """
     Fetches historical Bitcoin data into a DataFrame.
