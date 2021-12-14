@@ -84,7 +84,7 @@ This project supports `.env` files which provide a convenient way of setting env
 
 Defines a requests-supported proxy string used during Google Trends metric calculation.
 If unset or empty, a direct connection will be made.
-May be used to resolve the `Google returned a response with code 429` issue.
+It may be used to resolve the `Google returned a response with code 429` issue.
 
 #### Example usage
 
