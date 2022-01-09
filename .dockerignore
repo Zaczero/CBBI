@@ -196,8 +196,8 @@ latest.json
 charts.svg
 
 # docker ignore
+Dockerfile
+asciinema/
 **/__pycache__
 **/*.cache.*
 **/.*
-asciinema.txt
-Dockerfile

@@ -20,7 +20,7 @@ Bookmark it to receive latest CBBI updates.
 
 ## Script demo
 
-[![asciicast](https://asciinema.org/a/6oYLls2F1nCz6Sv6KyMKLL0n7.svg)](https://asciinema.org/a/6oYLls2F1nCz6Sv6KyMKLL0n7)
+[![asciicast](https://raw.githubusercontent.com/Zaczero/CBBI/main/asciinema/thumbnail.webp)](https://asciinema.org/a/KFkbKPULf9PGvY8Fmh4QLn0FE)
 
 ## Docker usage
 
