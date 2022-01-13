@@ -9,14 +9,14 @@ fire = "*"
 pandas = "*"
 matplotlib = "*"
 seaborn = "*"
-cli-ui = "*"
 pyfiglet = "*"
-termcolor = "*"
 requests = "*"
 filecache = "*"
 pytrends = "*"
 tqdm = "*"
 scikit-learn = "*"
+colorama = "*"
+sty = "*"
 
 [dev-packages]
 

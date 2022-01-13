@@ -1,14 +1,14 @@
 import time
 import traceback
 
-import cli_ui
 import fire
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 from pyfiglet import figlet_format
-from termcolor import cprint
+from sty import fg, bg, rs, ef
+from tqdm import tqdm
 
 from fetch_bitcoin_data import fetch_bitcoin_data
 from metrics.base_metric import BaseMetric
@@ -64,6 +64,10 @@ def run(json_file: str, charts_file: str) -> None:
 
     df_bitcoin = fetch_bitcoin_data()
     df_bitcoin_org = df_bitcoin.copy()
+
+    current_price = df_bitcoin['Price'].tail(1).values[0]
+    print(f'Current Bitcoin price: ' + ef.b + fg.li_green + bg.da_green + f' $ {round(current_price):,} ' + rs.all)
+
     metrics = get_metrics()
     metrics_cols = []
     metrics_descriptions = []
@@ -92,7 +96,7 @@ def run(json_file: str, charts_file: str) -> None:
         metrics_cols.append(metric.name)
         metrics_descriptions.append(metric.description)
 
-    cli_ui.info_1('Generating charts')
+    print('Generating charts…')
     plt.savefig(charts_file)
 
     confidence_col = 'Confidence'
@@ -111,29 +115,26 @@ def run(json_file: str, charts_file: str) -> None:
                           for name, description in
                           zip(metrics_cols, metrics_descriptions)}
 
-    print('\n')
-    cli_ui.info_3('Confidence we are at the peak:')
-    cprint(
+    print('\n' + ef.b + ':: Confidence we are at the peak ::' + rs.all)
+    print(
+        fg.cyan + ef.bold +
         figlet_format(
             format_percentage(df_result_last[confidence_col][0], ''),
-            font='univers'),
-        'cyan',
-        attrs=['bold'],
+            font='univers') + rs.all,
         end='')
 
     for description, value in confidence_details.items():
         if not np.isnan(value):
-            cprint(format_percentage(value) + ' ', color=get_color(value), attrs=['reverse'], end='')
+            print(fg.white + get_color(value) + f'{format_percentage(value)} ' + rs.all, end='')
             print(f' - {description}')
 
-    print()
-    cli_ui.info_3('Source code: https://github.com/Zaczero/CBBI', end='\n\n')
+    print('\nSource code: ' + ef.u + fg.li_blue + 'https://github.com/Zaczero/CBBI' + rs.all + '\n')
 
 
-def run_and_retry(json_file: str = "latest.json",
-                  charts_file: str = "charts.svg",
+def run_and_retry(json_file: str = 'latest.json',
+                  charts_file: str = 'charts.svg',
                   max_attempts: int = 10,
-                  sleep_seconds_on_error: float = 10) -> None:
+                  sleep_seconds_on_error: int = 10) -> None:
     """
     Calculates the current CBBI confidence value alongside all the required metrics.
     Everything gets pretty printed to the current standard output and a clean copy
@@ -151,8 +152,8 @@ def run_and_retry(json_file: str = "latest.json",
     Returns:
         None
     """
-    assert max_attempts > 0, 'Value of the max_attempts argument must be at least 1'
-    assert sleep_seconds_on_error >= 0, 'Value of the sleep_seconds_on_error argument must be positive'
+    assert max_attempts > 0, 'Value of the max_attempts argument must be positive'
+    assert sleep_seconds_on_error >= 0, 'Value of the sleep_seconds_on_error argument must be non-negative'
 
     for _ in range(max_attempts):
         try:
@@ -160,14 +161,15 @@ def run_and_retry(json_file: str = "latest.json",
             exit(0)
 
         except Exception:
-            cli_ui.error('An error occurred!')
+            print(fg.black + bg.yellow + ' An error occurred! ', + rs.all)
             traceback.print_exc()
 
-            print()
-            cli_ui.info_1(f'Retrying in {sleep_seconds_on_error} seconds...')
-            time.sleep(sleep_seconds_on_error)
+            print(f'\nRetrying in {sleep_seconds_on_error} seconds…', flush=True)
+            for _ in tqdm(range(sleep_seconds_on_error)):
+                time.sleep(1)
 
-    cli_ui.info_1(f'Max attempts limit has been reached ({max_attempts}). Better luck next time!')
+    print(f'Max attempts limit has been reached ({max_attempts}).')
+    print(f'Better luck next time!')
     exit(-1)
 
 

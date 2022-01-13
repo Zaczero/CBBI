@@ -1,4 +1,3 @@
-import cli_ui
 import requests
 import filecache
 
@@ -15,7 +14,7 @@ def fetch_bitcoin_data() -> pd.DataFrame:
     Returns:
         DataFrame containing Bitcoin data.
     """
-    cli_ui.info_2('Requesting historical Bitcoin data')
+    print('📈 Requesting historical Bitcoin data…')
 
     response = requests.get('https://api.blockchair.com/bitcoin/blocks', {
         'a': 'date,count(),min(id),max(id),sum(generation),sum(generation_usd)',
@@ -53,9 +52,6 @@ def fetch_bitcoin_data() -> pd.DataFrame:
     df = add_block_halving_data(df)
     df = mark_highs_lows(df, 'Price', False, round(365 * 2), 365)
     df = mark_days_since(df, ['PriceHigh', 'PriceLow', 'Halving'])
-
-    current_price = df['Price'].tail(1).values[0]
-    cli_ui.info_1(f'Current Bitcoin price: ${round(current_price):,}')
 
     return df
 

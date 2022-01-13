@@ -1,9 +1,9 @@
 import traceback
 from abc import ABC, abstractmethod
 
-import cli_ui
 import matplotlib.pyplot as plt
 import pandas as pd
+from sty import fg, bg, rs
 
 from api.cbbinfo_api import cbbi_fetch
 
@@ -34,5 +34,5 @@ class BaseMetric(ABC):
             return self._calculate(df, ax)
         except Exception:
             traceback.print_exc()
-            cli_ui.warning(f'Requesting fallback values for {self.name} (from CBBI.info)')
+            print(fg.black + bg.yellow + f' Requesting fallback values for {self.name} (from CBBI.info) ' + rs.all)
             return self._fallback(df)

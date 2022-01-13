@@ -1,11 +1,11 @@
 import traceback
 
-import cli_ui
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
+from sty import fg, bg, rs
 
 from api.glassnode_api import gn_fetch
 from api.lookintobitcoin_api import lib_fetch
@@ -32,7 +32,7 @@ class RHODLMetric(BaseMetric):
             )
         except Exception:
             traceback.print_exc()
-            cli_ui.warning(f'Requesting fallback values for {self.name} (from GlassNode)')
+            print(fg.black + bg.yellow + f' Requesting fallback values for {self.name} (from GlassNode) ' + rs.all)
 
             remote_df = gn_fetch(
                 url_selector='rhodl_ratio',

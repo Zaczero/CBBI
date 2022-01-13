@@ -63,7 +63,8 @@ def _fetch_df(keyword: str, date_from: pd.Timestamp, date_to: pd.Timestamp) -> p
     date_current = date_from
     iter_count = int(np.ceil((date_to - date_from) / timedelta(delta_days - overlap_days)))
 
-    for _ in tqdm(range(iter_count), desc='Fetching daily Google Trends'):
+    print('📈 Fetching historical Google Trends data…', flush=True)
+    for _ in tqdm(range(iter_count)):
         timeframe_from = date_current.strftime('%Y-%m-%d')
         date_current = min(date_current + timedelta(delta_days), date_to)
         timeframe_to = date_current.strftime('%Y-%m-%d')

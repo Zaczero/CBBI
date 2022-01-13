@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
+from sty import bg
 
 
 def mark_highs_lows(df: pd.DataFrame, col: str, begin_with_high: bool, window_size: float, ignore_last_rows: int) -> pd.DataFrame:
@@ -131,25 +132,25 @@ def get_color(val: float) -> str:
     """
     Maps a percentage value (0.0 - 1.0) to its corresponding color.
     The color is used to indicate whether the value is low (0.0) or high (1.0).
-    Returned value is a valid termcolor-package color string.
+    Returned value is a valid sty-package color string.
 
     Args:
         val: Percentage value to be mapped into a color.
 
     Returns:
-        Valid termcolor-package color string.
+        Valid sty-package color string.
     """
 
     config = [
-        'red',
+        bg.da_red,
         .3,
-        'yellow',
+        bg.da_yellow,
         .65,
-        'green',
+        bg.da_green,
         .85,
-        'cyan',
+        bg.da_cyan,
         .97,
-        'magenta',
+        bg.da_magenta,
     ]
 
     bin_index = np.digitize([round(val, 2)], config[1::2])[0]
