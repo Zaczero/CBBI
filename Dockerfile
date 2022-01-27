@@ -1,21 +1,21 @@
-FROM python:3.9
+FROM python:3.9-slim
 
-ENV LANG C.UTF-8
-ENV LC_ALL C.UTF-8
+RUN pip install \
+    --no-cache-dir \
+    --disable-pip-version-check \
+    pipenv
 
-RUN python -m pip install --upgrade pip
-RUN pip install pipenv
-RUN python -m compileall
-
-RUN groupadd --gid 1000 appuser
-RUN useradd --gid 1000 --uid 1000 --create-home appuser
+RUN groupadd --gid 1000 appuser && \
+    useradd --gid 1000 --uid 1000 --create-home appuser
 
 USER 1000:1000
 WORKDIR /home/appuser
 
-COPY --chown=1000:1000 . .
+COPY --chown=1000:1000 Pipfile* .
+RUN pipenv install --deploy --ignore-pipfile && \
+    pipenv --clear
 
-RUN pipenv install --deploy --ignore-pipfile
+COPY --chown=1000:1000 . .
 RUN python -m compileall .
 
 ENTRYPOINT ["pipenv", "run", "python", "main.py"] 
