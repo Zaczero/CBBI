@@ -6,7 +6,7 @@ RUN pip install \
     pipenv
 
 RUN groupadd --gid 1000 appuser && \
-    useradd --gid 1000 --uid 1000 --create-home appuser
+    useradd --gid 1000 --uid 1000 --create-home --no-log-init appuser
 
 USER 1000:1000
 WORKDIR /home/appuser
