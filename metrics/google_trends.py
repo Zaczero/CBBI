@@ -74,7 +74,7 @@ def _fetch_df(keyword: str, date_from: pd.Timestamp, date_to: pd.Timestamp) -> p
         df_fetch = _fetch_google_trends(keyword, timeframe)
         df_fetch = _normalize(df, df_fetch)
 
-        df = df.append(df_fetch)
+        df = pd.concat([df, df_fetch])
 
     df = _set_last_week_from_hourly(df, keyword)
 
@@ -88,7 +88,7 @@ def _set_last_week_from_hourly(df: pd.DataFrame, keyword: str) -> pd.DataFrame:
     df_fetch.reset_index(inplace=True)
     df_fetch = _normalize(df, df_fetch)
 
-    return df.append(df_fetch)
+    return pd.concat([df, df_fetch])
 
 
 def _fetch_last_week(keyword: str) -> pd.DataFrame:
