@@ -15,7 +15,6 @@ filecache = "*"
 pytrends = "*"
 tqdm = "*"
 scikit-learn = "*"
-colorama = "*"
 sty = "*"
 
 [dev-packages]
