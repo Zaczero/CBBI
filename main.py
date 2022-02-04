@@ -161,7 +161,7 @@ def run_and_retry(json_file: str = 'latest.json',
             exit(0)
 
         except Exception:
-            print(fg.black + bg.yellow + ' An error occurred! ', + rs.all)
+            print(fg.black + bg.yellow + ' An error has occurred! ' + rs.all)
             traceback.print_exc()
 
             print(f'\nRetrying in {sleep_seconds_on_error} seconds…', flush=True)
