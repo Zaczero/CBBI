@@ -24,7 +24,7 @@ Bookmark it to receive latest CBBI updates.
 
 ## Docker usage
 
-### Install image
+### Pull the image
 
 `$ docker pull zaczero/cbbi`
 
