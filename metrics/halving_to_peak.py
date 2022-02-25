@@ -48,8 +48,8 @@ class HalvingToPeakMetric(BaseMetric):
         df['HalvingToPeakIndex'] = df['HalvingToPeakIndex'].fillna(0)
 
         # force decline until the metric averages out with the CBBI score to be later removed
-        force_decline_start = pd.to_datetime('2022-02-23')
-        force_decline_duration = timedelta(days=12)
+        force_decline_start = pd.to_datetime('2022-02-20')
+        force_decline_duration = timedelta(days=30)
         df.loc[force_decline_start <= df['Date'], 'HalvingToPeakIndex'] = \
             df['HalvingToPeakIndex'] * np.maximum(1 - (df['Date'] - force_decline_start) / force_decline_duration, 0)
 
