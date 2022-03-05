@@ -13,7 +13,6 @@ from tqdm import tqdm
 from fetch_bitcoin_data import fetch_bitcoin_data
 from metrics.base_metric import BaseMetric
 from metrics.google_trends import GoogleTrendsMetric
-from metrics.halving_to_peak import HalvingToPeakMetric
 from metrics.mvrv_z_score import MVRVMetric
 from metrics.pi_cycle import PiCycleMetric
 from metrics.puell_multiple import PuellMetric
@@ -37,7 +36,6 @@ def get_metrics() -> list[BaseMetric]:
         MVRVMetric(),
         ReserveRiskMetric(),
         WoobullMetric(),
-        HalvingToPeakMetric(),
         GoogleTrendsMetric(),
     ]
 

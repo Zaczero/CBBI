@@ -73,7 +73,6 @@ The current CBBI version *(November 2021)* includes the following metrics:
 | MVRV Z-Score                 | [Visit page](https://www.lookintobitcoin.com/charts/mvrv-zscore/)                      |
 | Reserve Risk                 | [Visit page](https://www.lookintobitcoin.com/charts/reserve-risk/)                     |
 | Woobull Top Cap vs CVDD      | [Visit page](https://charts.woobull.com/bitcoin-price-models/)                         |
-| Halving-to-Peak Days         | [Visit page](https://www.youtube.com/watch?v=oxR_0njPht8&t=290s)                       |
 | Google Trends for "Bitcoin"  | [Visit page](https://trends.google.com/trends/explore?date=today%205-y&q=bitcoin)      |
 
 ## Environment variables
