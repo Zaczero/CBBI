@@ -192,5 +192,4 @@ fabric.properties
 *.cache.*
 
 # application specific
-latest.json
-charts.svg
+output
