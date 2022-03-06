@@ -19,7 +19,10 @@ COPY --chown=1000:1000 Pipfile* .
 RUN pipenv install --deploy --ignore-pipfile && \
     pipenv --clear
 
-COPY --chown=1000:1000 . .
+COPY --chown=1000:1000 LICENSE *.py ./
+COPY --chown=1000:1000 api/*.py ./api/
+COPY --chown=1000:1000 metrics/*.py ./metrics/
+
 RUN python -m compileall .
 
 ENTRYPOINT ["pipenv", "run", "python", "main.py"] 
