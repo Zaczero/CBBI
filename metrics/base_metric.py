@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from sty import fg, bg, rs
 
-from api.cbbinfo_api import cbbi_fetch
+from api.cbbiinfo_api import cbbi_fetch
 
 
 class BaseMetric(ABC):
