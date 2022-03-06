@@ -1,5 +1,7 @@
 import time
 import traceback
+from pathlib import Path
+from typing import Optional
 
 import fire
 import numpy as np
@@ -44,21 +46,19 @@ def calculate_confidence_score(df: pd.DataFrame, cols: list[str]) -> pd.Series:
     return df[cols].mean(axis=1)
 
 
-def run(json_file: str, charts_file: str) -> None:
-    """
-    Calculates the current CBBI confidence value alongside all the required metrics.
-    Everything gets pretty printed to the current standard output and a clean copy
-    is saved to a JSON file specified by the path in the ``json_file`` argument.
-    A charts image is generated on the path specified by the ``charts_file`` argument
-    which summarizes all individual metrics' historical data in a visual way.
+def run(json_file: str,
+        charts_file: str,
+        output_dir: Optional[str]) -> None:
+    if output_dir is None:
+        output_dir_path = Path.cwd()
+    else:
+        output_dir_path = Path(output_dir)
 
-    Args:
-        json_file: File path where the output is saved in the JSON format.
-        charts_file: File path where the charts image is saved (formats supported by pyplot.savefig).
+    json_file_path = output_dir_path / Path(json_file)
+    charts_file_path = output_dir_path / Path(charts_file)
 
-    Returns:
-        None
-    """
+    if not output_dir_path.exists():
+        output_dir_path.mkdir(mode=0o755, parents=True)
 
     df_bitcoin = fetch_bitcoin_data()
     df_bitcoin_org = df_bitcoin.copy()
@@ -95,7 +95,7 @@ def run(json_file: str, charts_file: str) -> None:
         metrics_descriptions.append(metric.description)
 
     print('Generating charts…')
-    plt.savefig(charts_file)
+    plt.savefig(charts_file_path)
 
     confidence_col = 'Confidence'
 
@@ -103,7 +103,7 @@ def run(json_file: str, charts_file: str) -> None:
     df_result.set_index('Date', inplace=True)
     df_result[confidence_col] = calculate_confidence_score(df_result, metrics_cols)
     df_result \
-        .to_json(json_file,
+        .to_json(json_file_path,
                  double_precision=4,
                  date_unit='s',
                  indent=2)
@@ -131,6 +131,7 @@ def run(json_file: str, charts_file: str) -> None:
 
 def run_and_retry(json_file: str = 'latest.json',
                   charts_file: str = 'charts.svg',
+                  output_dir: Optional[str] = 'output',
                   max_attempts: int = 10,
                   sleep_seconds_on_error: int = 10) -> None:
     """
@@ -144,6 +145,9 @@ def run_and_retry(json_file: str = 'latest.json',
     Args:
         json_file: File path where the output is saved in the JSON format.
         charts_file: File path where the charts image is saved (formats supported by pyplot.savefig).
+        output_dir: Directory path where the output is stored.
+            If set to ``None`` then use the current working directory.
+            If the directory does not exist, it will be created.
         max_attempts: Maximum number of attempts before termination. An attempt is counted when an error occurs.
         sleep_seconds_on_error: Duration of the sleep in seconds before attempting again after an error occurs.
 
@@ -155,7 +159,7 @@ def run_and_retry(json_file: str = 'latest.json',
 
     for _ in range(max_attempts):
         try:
-            run(json_file, charts_file)
+            run(json_file, charts_file, output_dir)
             exit(0)
 
         except Exception:
