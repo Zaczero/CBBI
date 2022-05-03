@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM python:3.10-slim
 
 ENV PYTHONUNBUFFERED=1
 
@@ -28,5 +28,5 @@ RUN python -m compileall .
 
 VOLUME ["/app/output"]
 
-ENTRYPOINT ["pipenv", "run", "python", "main.py"] 
+ENTRYPOINT ["pipenv", "run", "python", "main.py"]
 CMD []

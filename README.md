@@ -30,12 +30,12 @@ Bookmark it to receive latest CBBI updates.
 
 ### Execute the script
 
-`$ docker run zaczero/cbbi --help`  
-`$ docker run zaczero/cbbi`
+`$ docker run --rm zaczero/cbbi --help`  
+`$ docker run --rm zaczero/cbbi`
 
 ## Manual usage
 
-*Recommended Python version: 3.9*
+*Recommended Python version: 3.10*
 
 ### Install pipenv
 
