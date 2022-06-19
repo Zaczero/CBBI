@@ -11,7 +11,6 @@ def lib_fetch(
         col_name: str
 ) -> pd.DataFrame:
     request_data = {
-        'output': 'chart.figure',
         'changedPropIds': [
             'url.pathname'
         ],
@@ -21,7 +20,12 @@ def lib_fetch(
                 'property': 'pathname',
                 'value': f'/charts/{post_selector}/'
             }
-        ]
+        ],
+        'output': 'chart.figure',
+        'outputs': {
+            'id': 'chart',
+            'property': 'figure',
+        },
     }
 
     response = requests.post(
@@ -30,8 +34,8 @@ def lib_fetch(
         timeout=HTTP_TIMEOUT)
     response.raise_for_status()
     response_json = response.json()
-    response_x = response_json['response']['props']['figure']['data'][chart_idx]['x']
-    response_y = response_json['response']['props']['figure']['data'][chart_idx]['y']
+    response_x = response_json['response']['chart']['figure']['data'][chart_idx]['x']
+    response_y = response_json['response']['chart']['figure']['data'][chart_idx]['y']
 
     df = pd.DataFrame({
         'Date': response_x[:len(response_y)],
