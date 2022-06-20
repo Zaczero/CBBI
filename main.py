@@ -126,7 +126,10 @@ def run(json_file: str,
             print(fg.white + get_color(value) + f'{format_percentage(value)} ' + rs.all, end='')
             print(f' - {description}')
 
-    print('\nSource code: ' + ef.u + fg.li_blue + 'https://github.com/Zaczero/CBBI' + rs.all + '\n')
+    print()
+    print('Source code: ' + ef.u + fg.li_blue + 'https://github.com/Zaczero/CBBI' + rs.all)
+    print('License: ' + ef.b + 'AGPL-3.0' + rs.all)
+    print()
 
 
 def run_and_retry(json_file: str = 'latest.json',
