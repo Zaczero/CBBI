@@ -6,6 +6,7 @@ import pandas as pd
 from sty import fg, bg, rs
 
 from api.cbbiinfo_api import cbbi_fetch
+from utils import send_error_notification
 
 
 class BaseMetric(ABC):
@@ -32,7 +33,10 @@ class BaseMetric(ABC):
     def calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
         try:
             return self._calculate(df, ax)
-        except Exception:
+        except Exception as ex:
             traceback.print_exc()
+
+            send_error_notification(ex)
+
             print(fg.black + bg.yellow + f' Requesting fallback values for {self.name} (from CBBI.info) ' + rs.all)
             return self._fallback(df)

@@ -16,6 +16,7 @@ pytrends = "*"
 tqdm = "*"
 scikit-learn = "*"
 sty = "*"
+python-telegram-bot = "*"
 
 [dev-packages]
 

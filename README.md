@@ -30,8 +30,9 @@ Bookmark it to receive latest CBBI updates.
 
 ### Execute the script
 
-`$ docker run --rm zaczero/cbbi --help`  
-`$ docker run --rm zaczero/cbbi`
+`$ docker run --rm --pull=always zaczero/cbbi --help`
+
+`$ docker run --rm --pull=always zaczero/cbbi`
 
 ## Manual usage
 
@@ -49,13 +50,16 @@ Bookmark it to receive latest CBBI updates.
 
 ### Execute the script
 
-`$ pipenv run python main.py --help`  
+`$ pipenv run python main.py --help`
+
 `$ pipenv run python main.py`
 
 #### or
 
-`$ pipenv shell`  
-`$> python main.py --help`  
+`$ pipenv shell`
+
+`$> python main.py --help`
+
 `$> python main.py`
 
 ## Metrics table
@@ -83,7 +87,7 @@ This project supports `.env` files which provide a convenient way of setting env
 
 Defines a requests-supported proxy string used during Google Trends metric calculation.
 If unset or empty, a direct connection will be made.
-It may be used to resolve the `Google returned a response with code 429` issue.
+It can be used to resolve the `Google returned a response with code 429` issue.
 
 #### Example usage
 
@@ -98,6 +102,15 @@ If unset or empty, a cache fallback will be used instead (via CBBI.info).
 #### Example usage
 
 * GLASSNODE_API_KEY=REPLACE_ME
+
+### TELEGRAM_TOKEN, TELEGRAM_CHAT_ID
+
+Define both variables to receive Telegram notifications about metric errors that occur during the execution.
+
+#### Example usage
+
+* TELEGRAM_TOKEN=REPLACE_ME
+* TELEGRAM_CHAT_ID=123456
 
 ## Footer
 

@@ -1,14 +1,24 @@
-from datetime import datetime, timedelta
+import os
+import traceback
+from datetime import datetime
 from math import ceil
 
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import telegram
 from matplotlib import pyplot as plt
 from sty import bg
+from telegram import ParseMode
 
 
-def mark_highs_lows(df: pd.DataFrame, col: str, begin_with_high: bool, window_size: float, ignore_last_rows: int) -> pd.DataFrame:
+def mark_highs_lows(
+        df: pd.DataFrame,
+        col: str,
+        begin_with_high: bool,
+        window_size: float,
+        ignore_last_rows: int
+) -> pd.DataFrame:
     """
     Marks highs and lows (peaks) of the column values inside the given DataFrame.
     Marked points are indicated by the value '1' inside their corresponding, newly added, '``col``High' and '``col``Low' columns.
@@ -67,7 +77,9 @@ def mark_highs_lows(df: pd.DataFrame, col: str, begin_with_high: bool, window_si
 def mark_days_since(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
     for col in cols:
         indexes = df.loc[df[col] == 1].index
-        df[f'DaysSince{col}'] = df.index.to_series().apply(lambda v: min([v - index if index <= v else np.nan for index in indexes]))
+        df[f'DaysSince{col}'] = df.index \
+            .to_series() \
+            .apply(lambda v: min([v - index if index <= v else np.nan for index in indexes]))
 
     return df
 
@@ -158,3 +170,20 @@ def get_color(val: float) -> str:
 
     bin_index = np.digitize([round(val, 2)], config[1::2])[0]
     return config[::2][bin_index]
+
+
+def send_error_notification(exception: Exception) -> bool:
+    telegram_token = os.getenv('TELEGRAM_TOKEN')
+    telegram_chat_id = os.getenv('TELEGRAM_CHAT_ID')
+
+    if not telegram_token or not telegram_chat_id:
+        return False
+
+    bot = telegram.Bot(telegram_token)
+
+    bot.send_message(telegram_chat_id, f'🚨 An error has occurred: <b>{str(exception)}</b>\n'
+                                       f'\n'
+                                       f'🔍️ <b>Stack trace</b>\n'
+                                       f'<pre>{"".join(traceback.format_exception(exception))}</pre>',
+                     parse_mode=ParseMode.HTML)
+    return True
