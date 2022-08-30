@@ -60,7 +60,7 @@ Bookmark it to receive latest CBBI updates.
 
 ## Metrics table
 
-The current CBBI version *(March 2022)* includes the following metrics:
+The current CBBI version *(September 2022)* includes the following metrics:
 
 | Name                         | Link                                                                                   |
 |------------------------------|----------------------------------------------------------------------------------------|
@@ -73,7 +73,6 @@ The current CBBI version *(March 2022)* includes the following metrics:
 | MVRV Z-Score                 | [Visit page](https://www.lookintobitcoin.com/charts/mvrv-zscore/)                      |
 | Reserve Risk                 | [Visit page](https://www.lookintobitcoin.com/charts/reserve-risk/)                     |
 | Woobull Top Cap vs CVDD      | [Visit page](https://charts.woobull.com/bitcoin-price-models/)                         |
-| Google Trends for "Bitcoin"  | [Visit page](https://trends.google.com/trends/explore?date=today%205-y&q=bitcoin)      |
 
 ## Environment variables
 

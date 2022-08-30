@@ -38,7 +38,6 @@ def get_metrics() -> list[BaseMetric]:
         MVRVMetric(),
         ReserveRiskMetric(),
         WoobullMetric(),
-        GoogleTrendsMetric(),
     ]
 
 
