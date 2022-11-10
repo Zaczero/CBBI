@@ -42,8 +42,9 @@ class PuellMetric(BaseMetric):
         lin_model.fit(high_x, high_y)
         df['PuellLogHighModel'] = lin_model.predict(x)
 
-        lin_model.fit(low_x, low_y)
-        df['PuellLogLowModel'] = lin_model.predict(x)
+        # lin_model.fit(low_x, low_y)
+        # df['PuellLogLowModel'] = lin_model.predict(x)
+        df['PuellLogLowModel'] = -1
 
         df['PuellIndex'] = (df['PuellLog'] - df['PuellLogLowModel']) / \
                            (df['PuellLogHighModel'] - df['PuellLogLowModel'])

@@ -60,7 +60,7 @@ Bookmark it to receive latest CBBI updates.
 
 ## Metrics table
 
-The current CBBI version *(September 2022)* includes the following metrics:
+The current CBBI version *(November 2022)* includes the following metrics:
 
 | Name                         | Link                                                                                   |
 |------------------------------|----------------------------------------------------------------------------------------|
