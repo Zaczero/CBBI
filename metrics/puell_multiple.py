@@ -22,7 +22,7 @@ class PuellMetric(BaseMetric):
         df = df.merge(lib_fetch(
             url_selector='puell_multiple',
             post_selector='puell_multiple',
-            chart_idx=1,
+            chart_idx='Puell Multiple',
             col_name='Puell'
         ), on='Date', how='left')
         df['Puell'].ffill(inplace=True)

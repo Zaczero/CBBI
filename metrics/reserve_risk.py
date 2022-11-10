@@ -24,7 +24,7 @@ class ReserveRiskMetric(BaseMetric):
         df = df.merge(lib_fetch(
             url_selector='reserve_risk',
             post_selector='reserve-risk',
-            chart_idx=3,
+            chart_idx='Reserve Risk',
             col_name='Risk'
         ), on='Date', how='left')
         df['Risk'] = df['Risk'].shift(days_shift, fill_value=np.nan)

@@ -22,7 +22,7 @@ class TwoYearMovingAverageMetric(BaseMetric):
         df = df.merge(lib_fetch(
             url_selector='market_cycle_ma',
             post_selector='bitcoin-investor-tool',
-            chart_idx=2,
+            chart_idx='2 Year Moving Average',
             col_name='2YMA'
         ), on='Date', how='left')
         df['2YMA'].ffill(inplace=True)

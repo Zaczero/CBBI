@@ -21,7 +21,7 @@ class RUPLMetric(BaseMetric):
         df = df.merge(lib_fetch(
             url_selector='unrealised_profit_loss',
             post_selector='relative-unrealized-profit--loss',
-            chart_idx=0,
+            chart_idx='Net Unrealised Profit / Loss (NUPL)',
             col_name='RUPL'
         ), on='Date', how='left')
         df['RUPL'].ffill(inplace=True)

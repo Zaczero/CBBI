@@ -25,7 +25,7 @@ class MVRVMetric(BaseMetric):
         df = df.merge(lib_fetch(
             url_selector='mvrv_zscore',
             post_selector='mvrv-zscore',
-            chart_idx=0,
+            chart_idx='Z-Score',
             col_name='MVRV'
         ), on='Date', how='left')
         df.loc[df['DaysSinceHalving'] < df['DaysSincePriceLow'], 'MVRV'] = df['MVRV'].shift(bull_days_shift)

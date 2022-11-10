@@ -27,7 +27,7 @@ class RHODLMetric(BaseMetric):
             remote_df = lib_fetch(
                 url_selector='rhodl_ratio',
                 post_selector='rhodl-ratio',
-                chart_idx=1,
+                chart_idx='RHODL Ratio',
                 col_name='RHODL'
             )
         except Exception:

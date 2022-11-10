@@ -7,7 +7,7 @@ from globals import *
 def lib_fetch(
         url_selector: str,
         post_selector: str,
-        chart_idx: int,
+        chart_idx: str,
         col_name: str
 ) -> pd.DataFrame:
     request_data = {
@@ -34,12 +34,16 @@ def lib_fetch(
         timeout=HTTP_TIMEOUT)
     response.raise_for_status()
     response_json = response.json()
-    response_x = response_json['response']['chart']['figure']['data'][chart_idx]['x']
-    response_y = response_json['response']['chart']['figure']['data'][chart_idx]['y']
+
+    data = next(v
+                for v in response_json['response']['chart']['figure']['data']
+                if 'name' in v and v['name'] == chart_idx)
+
+    data_x, data_y = data['x'], data['y']
 
     df = pd.DataFrame({
-        'Date': response_x[:len(response_y)],
-        col_name: response_y,
+        'Date': data_x[:len(data_y)],
+        col_name: data_y,
     })
     df['Date'] = pd.to_datetime(df['Date']).dt.tz_localize(None)
 
