@@ -28,6 +28,9 @@ from utils import format_percentage, get_color
 
 
 def get_metrics() -> list[BaseMetric]:
+    """
+    Returns a list of available metrics to be calculated.
+    """
     return [
         PiCycleMetric(),
         RUPLMetric(),
@@ -42,6 +45,19 @@ def get_metrics() -> list[BaseMetric]:
 
 
 def calculate_confidence_score(df: pd.DataFrame, cols: list[str]) -> pd.Series:
+    """
+    Calculate the confidence score for a DataFrame.
+
+    This function takes in a DataFrame and a list of column names
+    and returns a Series with the mean value of the specified columns for each row.
+
+    Args:
+        df: A pandas DataFrame.
+        cols: A list of column names to include in the calculation.
+
+    Returns:
+        A pandas Series with the mean value for the specified columns for each row in the DataFrame.
+    """
     return df[cols].mean(axis=1)
 
 

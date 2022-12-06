@@ -75,6 +75,20 @@ def mark_highs_lows(
 
 
 def mark_days_since(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
+    """
+    This function takes a DataFrame and a list of column names
+    and calculates the number of days since the last value of 1 for each column in the list.
+
+    The resulting DataFrame will have new columns for each input column, with the column name prefixed by 'DaysSince'.
+    The value in these new columns will be the number of days since the last value of 1 in the corresponding input column.
+
+    Args:
+        df: The input DataFrame.
+        cols: The list of columns in the DataFrame to calculate the days since the last value of 1.
+
+    Returns:
+        The modified DataFrame with the new columns added.
+    """
     for col in cols:
         indexes = df.loc[df[col] == 1].index
         df[f'DaysSince{col}'] = df.index \
@@ -84,7 +98,18 @@ def mark_days_since(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
     return df
 
 
-def add_common_markers(df: pd.DataFrame, ax: plt.Axes, price_line: bool = True):
+def add_common_markers(df: pd.DataFrame, ax: plt.Axes, price_line: bool = True) -> None:
+    """
+    This function adds common markers to a plot.
+
+    Args:
+        df: The DataFrame containing the data to be plotted.
+        ax: The Axes object to be plotted on.
+        price_line: If True, a line plot of the 'PriceLogInterp' column will be added to the Axes. Default is True.
+
+    Returns:
+        None
+    """
     if price_line:
         sns.lineplot(data=df, x='Date', y='PriceLogInterp', alpha=0.4, color='orange', ax=ax)
 
@@ -102,6 +127,16 @@ def add_common_markers(df: pd.DataFrame, ax: plt.Axes, price_line: bool = True):
 
 
 def split_df_on_index_gap(df: pd.DataFrame, min_gap: int = 1) -> list[pd.DataFrame]:
+    """
+    Split a Pandas DataFrame on gaps in the index values.
+
+    Args:
+        df: The DataFrame to split.
+        min_gap: The minimum gap size in the index values to split on.
+
+    Returns:
+        A list of DataFrames split on the specified gaps in the index values.
+    """
     begin_idx = None
     end_idx = None
 
@@ -173,6 +208,15 @@ def get_color(val: float) -> str:
 
 
 def send_error_notification(exception: Exception) -> bool:
+    """
+    This function sends a notification to a Telegram chat with details of the provided exception.
+
+    Args:
+        exception: The exception to be reported.
+
+    Returns:
+        A boolean indicating whether the notification was sent successfully.
+    """
     telegram_token = os.getenv('TELEGRAM_TOKEN')
     telegram_chat_id = os.getenv('TELEGRAM_CHAT_ID')
 
