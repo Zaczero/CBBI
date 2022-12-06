@@ -6,7 +6,8 @@
 
 The official Python implementation of the **ColinTalksCrypto Bitcoin Bull Run Index** (CBBI).
 
-The CBBI is a Bitcoin index that utilizes advanced, real-time analysis of 10 metrics to help us understand what stage of the Bitcoin bull run and bear market cycles we are in.
+The CBBI is a Bitcoin index that utilizes advanced, real-time analysis of 10 metrics
+to help us understand what stage of the Bitcoin bull run and bear market cycles we are in.
 The CBBI is time-independent and price-independent.
 It simply indicates whether it believes we are approaching the top/bottom of a Bitcoin cycle.
 
@@ -14,51 +15,62 @@ If you want to learn more, [check out this video](https://www.youtube.com/watch?
 
 ## Visit our website
 
-Bookmark it to receive latest CBBI updates.
+Bookmark it and receive latest CBBI updates.
 
 - [CBBI.info](https://cbbi.info/)
 
-## Script demo
+## Script Demo
 
 [![asciicast](https://raw.githubusercontent.com/Zaczero/CBBI/main/asciinema/thumbnail.webp)](https://asciinema.org/a/KFkbKPULf9PGvY8Fmh4QLn0FE)
 
-## Docker usage
+## Docker Usage
 
-### Execute the script
+To use the CBBI script with Docker, run the following command:
 
-`$ docker run --rm --pull=always zaczero/cbbi --help`
+```sh
+$ docker run --rm --pull=always zaczero/cbbi --help
+$ docker run --rm --pull=always zaczero/cbbi
+```
 
-`$ docker run --rm --pull=always zaczero/cbbi`
+## Manual Usage
 
-## Manual usage
+To use the CBBI script without Docker, follow these steps:
 
 *Recommended Python version: 3.10*
 
-### Install pipenv
+### 1. Install pipenv:
 
 [Pipenv: Python Dev Workflow for Humans](https://pipenv.pypa.io/en/latest/#install-pipenv-today)
 
-### Install required packages
+```sh
+# TLDR;
+$ pip install --user pipenv
+```
 
-**NOTE:** The `pipenv` commands shall be executed within the project directory.
+### 2. Install required packages:
 
-`$ pipenv install`
+**NOTE:** The `pipenv` commands should be executed within the project directory.
 
-### Execute the script
+```sh
+$ pipenv install
+```
 
-`$ pipenv run python main.py --help`
+### 3. Run the script:
 
-`$ pipenv run python main.py`
+```sh
+$ pipenv run python main.py --help
+$ pipenv run python main.py
+```
 
-#### or
+#### or *(using pipenv shell)*
 
-`$ pipenv shell`
+```sh
+$ pipenv shell
+$> python main.py --help
+$> python main.py
+```
 
-`$> python main.py --help`
-
-`$> python main.py`
-
-## Metrics table
+## Metrics
 
 The current CBBI version *(November 2022)* includes the following metrics:
 
@@ -74,9 +86,16 @@ The current CBBI version *(November 2022)* includes the following metrics:
 | Reserve Risk                 | [Visit page](https://www.lookintobitcoin.com/charts/reserve-risk/)                     |
 | Woobull Top Cap vs CVDD      | [Visit page](https://charts.woobull.com/bitcoin-price-models/)                         |
 
-## Environment variables
+## Environment Variables
 
-This project supports `.env` files which provide a convenient way of setting environment variables.
+This project supports `.env` files, which provide a convenient way of setting environment variables.
+
+To use this feature, create a file called `.env` in the project's root directory,
+and add environment variables in the following format:
+
+```sh
+VARIABLE_NAME=value
+```
 
 ### GOOGLE_PROXY
 
@@ -113,3 +132,9 @@ Define both variables to receive Telegram notifications about metric errors that
 
 * Email: [kamil@monicz.pl](mailto:kamil@monicz.pl)
 * LinkedIn: [linkedin.com/in/kamil-monicz](https://www.linkedin.com/in/kamil-monicz/)
+
+### License
+
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+
+The full text of the license can be found [here](https://github.com/Zaczero/CBBI/blob/main/LICENSE).
