@@ -1,5 +1,5 @@
-import requests
 import filecache
+import requests
 
 from globals import *
 from utils import *
@@ -64,7 +64,7 @@ def fetch_price_data() -> pd.DataFrame:
 
     response.raise_for_status()
     response_json = response.json()
-    response_x = response_json['data']['points'].keys()
+    response_x = [float(k) for k in response_json['data']['points'].keys()]
     response_y = [value['v'][0] for value in response_json['data']['points'].values()]
 
     df = pd.DataFrame({

@@ -36,7 +36,7 @@ $ docker run --rm --pull=always zaczero/cbbi
 
 To use the CBBI script without Docker, follow these steps:
 
-*Recommended Python version: 3.10*
+_Recommended Python version: 3.11_
 
 ### 1. Install pipenv:
 
@@ -62,7 +62,7 @@ $ pipenv run python main.py --help
 $ pipenv run python main.py
 ```
 
-#### or *(using pipenv shell)*
+#### or _(using pipenv shell)_
 
 ```sh
 $ pipenv shell
@@ -72,10 +72,10 @@ $> python main.py
 
 ## Metrics
 
-The current CBBI version *(November 2022)* includes the following metrics:
+The current CBBI version _(November 2022)_ includes the following metrics:
 
 | Name                         | Link                                                                                   |
-|------------------------------|----------------------------------------------------------------------------------------|
+| ---------------------------- | -------------------------------------------------------------------------------------- |
 | Pi Cycle Top Indicator       | [Visit page](https://www.lookintobitcoin.com/charts/pi-cycle-top-indicator/)           |
 | RUPL/NUPL Chart              | [Visit page](https://www.lookintobitcoin.com/charts/relative-unrealized-profit--loss/) |
 | RHODL Ratio                  | [Visit page](https://www.lookintobitcoin.com/charts/rhodl-ratio/)                      |
@@ -105,8 +105,8 @@ It can be used to resolve the `Google returned a response with code 429` issue.
 
 #### Example usage
 
-* GOOGLE_PROXY=https://host:port
-* GOOGLE_PROXY=https://user:pass@host:port
+- GOOGLE_PROXY=https://host:port
+- GOOGLE_PROXY=https://user:pass@host:port
 
 ### GLASSNODE_API_KEY
 
@@ -115,7 +115,7 @@ If unset or empty, a cache fallback will be used instead (via CBBI.info).
 
 #### Example usage
 
-* GLASSNODE_API_KEY=REPLACE_ME
+- GLASSNODE_API_KEY=REPLACE_ME
 
 ### TELEGRAM_TOKEN, TELEGRAM_CHAT_ID
 
@@ -123,15 +123,15 @@ Define both variables to receive Telegram notifications about metric errors that
 
 #### Example usage
 
-* TELEGRAM_TOKEN=REPLACE_ME
-* TELEGRAM_CHAT_ID=123456
+- TELEGRAM_TOKEN=REPLACE_ME
+- TELEGRAM_CHAT_ID=123456
 
 ## Footer
 
 ### Contact
 
-* Email: [kamil@monicz.pl](mailto:kamil@monicz.pl)
-* LinkedIn: [linkedin.com/in/kamil-monicz](https://www.linkedin.com/in/kamil-monicz/)
+- Email: [kamil@monicz.pl](mailto:kamil@monicz.pl)
+- LinkedIn: [linkedin.com/in/kamil-monicz](https://www.linkedin.com/in/kamil-monicz/)
 
 ### License
 

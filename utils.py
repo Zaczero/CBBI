@@ -9,7 +9,6 @@ import seaborn as sns
 import telegram
 from matplotlib import pyplot as plt
 from sty import bg
-from telegram import ParseMode
 
 
 def mark_highs_lows(
@@ -229,5 +228,5 @@ def send_error_notification(exception: Exception) -> bool:
                                        f'\n'
                                        f'🔍️ <b>Stack trace</b>\n'
                                        f'<pre>{"".join(traceback.format_exception(exception))}</pre>',
-                     parse_mode=ParseMode.HTML)
+                     parse_mode='HTML')
     return True

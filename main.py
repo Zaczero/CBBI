@@ -9,7 +9,7 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 from pyfiglet import figlet_format
-from sty import fg, bg, rs, ef
+from sty import bg, ef, fg, rs
 from tqdm import tqdm
 
 from fetch_bitcoin_data import fetch_bitcoin_data
