@@ -5,8 +5,8 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-from utils import mark_highs_lows, add_common_markers, split_df_on_index_gap
 from metrics.base_metric import BaseMetric
+from utils import add_common_markers, mark_highs_lows, split_df_on_index_gap
 
 
 class PiCycleMetric(BaseMetric):

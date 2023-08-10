@@ -10,7 +10,7 @@ from pytrends.request import TrendReq
 from tqdm import tqdm
 
 from metrics.base_metric import BaseMetric
-from utils import mark_highs_lows, add_common_markers
+from utils import add_common_markers, mark_highs_lows
 
 pytrends: TrendReq
 
@@ -125,7 +125,7 @@ class GoogleTrendsMetric(BaseMetric):
                            (0, 1))
 
         scaled = np.log(series * self._log_intensity + 1) / \
-                 np.log(self._log_intensity + 1)
+            np.log(self._log_intensity + 1)
 
         return np.interp(scaled, (0, 1), (0, self._hybrid_separator))
 
@@ -134,7 +134,7 @@ class GoogleTrendsMetric(BaseMetric):
                  (self._hybrid_scale_target - self._hybrid_separator)
 
         scaled = np.log(series * self._log_intensity + 1) / \
-                 np.log(self._log_intensity + 1)
+            np.log(self._log_intensity + 1)
 
         return np.interp(scaled, (0, 1), (self._hybrid_separator, 1))
 

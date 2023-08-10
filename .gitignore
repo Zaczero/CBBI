@@ -190,7 +190,7 @@ fabric.properties
 
 # filecache
 *.cache.*
+*.cache
 
 # application specific
 output
-*.cache

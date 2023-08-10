@@ -69,7 +69,7 @@ def mark_highs_lows(
     df.loc[df.shape[0] - ignore_last_rows:, (col_high, col_low)] = 0
 
     # stabilize the algorithm until a next major update
-    df.loc[df['Date'] >= '2021-01-01', (col_high, col_low)] = 0
+    df.loc[df['Date'] >= '2023-07-01', (col_high, col_low)] = 0
     return df
 
 

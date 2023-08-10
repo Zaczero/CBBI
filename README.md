@@ -128,13 +128,12 @@ Define both variables to receive Telegram notifications about metric errors that
 
 ## Footer
 
-### Contact
+### Contact me
 
-- Email: [kamil@monicz.pl](mailto:kamil@monicz.pl)
-- LinkedIn: [linkedin.com/in/kamil-monicz](https://www.linkedin.com/in/kamil-monicz/)
+https://monicz.dev/#get-in-touch
 
 ### License
 
-This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+This project is licensed under the GNU Affero General Public License v3.0.
 
-The full text of the license can be found [here](https://github.com/Zaczero/CBBI/blob/main/LICENSE).
+The complete license text can be accessed in the repository at [LICENSE](https://github.com/Zaczero/CBBI/blob/main/LICENSE).

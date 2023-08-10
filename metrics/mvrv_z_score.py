@@ -5,8 +5,8 @@ from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 
 from api.lookintobitcoin_api import lib_fetch
-from utils import add_common_markers, mark_highs_lows
 from metrics.base_metric import BaseMetric
+from utils import add_common_markers, mark_highs_lows
 
 
 class MVRVMetric(BaseMetric):
