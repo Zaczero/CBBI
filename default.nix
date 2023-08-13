@@ -1,27 +1,27 @@
 { pkgs ? import <nixpkgs> { } }:
 
-let
+with pkgs; let
   shell = import ./shell.nix {
     inherit pkgs;
     isDocker = true;
   };
 
-  python-venv-lib = pkgs.buildEnv {
-    name = "python-venv-lib";
+  python-venv = buildEnv {
+    name = "python-venv";
     paths = [
-      (pkgs.runCommand "python-venv-lib" { } ''
+      (runCommand "python-venv" { } ''
         mkdir -p $out/lib
         cp -r "${./.venv/lib/python3.11/site-packages}"/* $out/lib
       '')
     ];
   };
 in
-pkgs.dockerTools.buildLayeredImage {
+dockerTools.buildLayeredImage {
   name = "zaczero/cbbi";
   tag = "latest";
   maxLayers = 10;
 
-  contents = shell.buildInputs ++ [ python-venv-lib ];
+  contents = shell.buildInputs ++ [ python-venv ];
 
   extraCommands = ''
     mkdir app && cd app
@@ -36,8 +36,8 @@ pkgs.dockerTools.buildLayeredImage {
   config = {
     WorkingDir = "/app";
     Env = [
-      "LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath shell.buildInputs}"
-      "PYTHONPATH=${python-venv-lib}/lib"
+      "LD_LIBRARY_PATH=${lib.makeLibraryPath shell.buildInputs}"
+      "PYTHONPATH=${python-venv}/lib"
       "PYTHONUNBUFFERED=1"
       "PYTHONDONTWRITEBYTECODE=1"
     ];
