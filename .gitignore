@@ -193,4 +193,5 @@ fabric.properties
 *.cache
 
 # application specific
+result
 output

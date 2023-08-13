@@ -1,6 +1,0 @@
-# filecache
-**/*.cache.*
-**/*.cache
-
-# application specific
-output
