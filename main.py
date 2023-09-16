@@ -124,7 +124,7 @@ def run(json_file: str,
                  indent=2)
 
     df_result_last = df_result.tail(1)
-    confidence_details = {description: df_result_last[name][0]
+    confidence_details = {description: df_result_last[name].iloc[0]
                           for name, description in
                           zip(metrics_cols, metrics_descriptions)}
 
@@ -132,7 +132,7 @@ def run(json_file: str,
     print(
         fg.cyan + ef.bold +
         figlet_format(
-            format_percentage(df_result_last[confidence_col][0], ''),
+            format_percentage(df_result_last[confidence_col].iloc[0], ''),
             font='univers') + rs.all,
         end='')
 

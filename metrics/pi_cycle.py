@@ -25,7 +25,7 @@ class PiCycleMetric(BaseMetric):
         df['111DMALog'] = np.log(df['111DMA'])
         df['350DMAx2Log'] = np.log(df['350DMAx2'])
         df['PiCycleDiff'] = np.abs(df['111DMALog'] - df['350DMAx2Log'])
-        df['PiCycleDiffThreshold'] = 0
+        df['PiCycleDiffThreshold'] = 0.0
 
         df['PiCycleIsFluke'] = df['111DMA'] > df['350DMAx2']
 
