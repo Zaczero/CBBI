@@ -8,25 +8,73 @@ def lib_fetch(
         url_selector: str,
         post_selector: str,
         chart_idx: str,
-        col_name: str
+        col_name: str,
+        configurable: bool = False,
 ) -> pd.DataFrame:
-    request_data = {
-        'changedPropIds': [
-            'url.pathname'
-        ],
-        'inputs': [
-            {
-                'id': 'url',
-                'property': 'pathname',
-                'value': f'/charts/{post_selector}/'
-            }
-        ],
-        'output': 'chart.figure',
-        'outputs': {
-            'id': 'chart',
-            'property': 'figure',
-        },
-    }
+    if not configurable:
+        request_data = {
+            'changedPropIds': [
+                'url.pathname'
+            ],
+            'inputs': [
+                {
+                    'id': 'url',
+                    'property': 'pathname',
+                    'value': f'/charts/{post_selector}/'
+                }
+            ],
+            'output': 'chart.figure',
+            'outputs': {
+                'id': 'chart',
+                'property': 'figure',
+            },
+        }
+    else:
+        request_data = {
+            'changedPropIds': [
+                'url.pathname'
+            ],
+            'inputs': [
+                {
+                    'id': 'url',
+                    'property': 'pathname',
+                    'value': f'/charts/{post_selector}/'
+                },
+                {
+                    "id": "resolution",
+                    "property": "value",
+                    "value": "24h"
+                },
+                {
+                    "id": "scale",
+                    "property": "value",
+                    "value": "log"
+                }
+            ],
+            'output': '..chart.figure...resolution.disabled...resolution.value...scale.disabled...scale.value..',
+            'outputs': [
+                {
+                    "id": "chart",
+                    "property": "figure"
+                },
+                {
+                    "id": "resolution",
+                    "property": "disabled"
+                },
+                {
+                    "id": "resolution",
+                    "property": "value"
+                },
+                {
+                    "id": "scale",
+                    "property": "disabled"
+                },
+                {
+                    "id": "scale",
+                    "property": "value"
+                }
+            ],
+        }
 
     response = requests.post(
         f'https://www.lookintobitcoin.com/django_plotly_dash/app/{url_selector}/_dash-update-component',

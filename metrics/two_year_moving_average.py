@@ -23,7 +23,8 @@ class TwoYearMovingAverageMetric(BaseMetric):
             url_selector='market_cycle_ma',
             post_selector='bitcoin-investor-tool',
             chart_idx='2 Year Moving Average',
-            col_name='2YMA'
+            col_name='2YMA',
+            configurable=True,
         ), on='Date', how='left')
         df['2YMA'].ffill(inplace=True)
         df['2YMALog'] = np.log(df['2YMA'])
