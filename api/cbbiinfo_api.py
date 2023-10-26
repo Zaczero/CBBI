@@ -1,14 +1,11 @@
 import pandas as pd
-import requests
 
 from globals import *
+from utils import HTTP
 
 
 def cbbi_fetch(key: str) -> pd.DataFrame:
-    response = requests.get(
-        'https://colintalkscrypto.com/cbbi/data/latest.json',
-        headers={'User-Agent': USER_AGENT},
-        timeout=HTTP_TIMEOUT)
+    response = HTTP.get('https://colintalkscrypto.com/cbbi/data/latest.json')
     response.raise_for_status()
     response_data = response.json()[key]
 

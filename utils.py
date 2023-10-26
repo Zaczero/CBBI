@@ -7,8 +7,19 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import telegram
+from httpx import Client, Timeout
 from matplotlib import pyplot as plt
 from sty import bg
+
+from globals import HTTP_TIMEOUT, USER_AGENT
+
+HTTP = Client(
+    headers={'User-Agent': USER_AGENT},
+    timeout=Timeout(HTTP_TIMEOUT),
+    follow_redirects=True,
+    http1=True,
+    http2=True,
+)
 
 
 def mark_highs_lows(

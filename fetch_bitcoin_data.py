@@ -1,5 +1,4 @@
 import filecache
-import requests
 
 from globals import *
 from utils import *
@@ -16,10 +15,10 @@ def fetch_bitcoin_data() -> pd.DataFrame:
     """
     print('📈 Requesting historical Bitcoin data…')
 
-    response = requests.get('https://api.blockchair.com/bitcoin/blocks', {
+    response = HTTP.get('https://api.blockchair.com/bitcoin/blocks', {
         'a': 'date,count(),min(id),max(id),sum(generation),sum(generation_usd)',
         's': 'date(desc)',
-    }, timeout=HTTP_TIMEOUT)
+    })
     response.raise_for_status()
     response_json = response.json()
 
@@ -57,10 +56,10 @@ def fetch_bitcoin_data() -> pd.DataFrame:
 
 
 def fetch_price_data() -> pd.DataFrame:
-    response = requests.get('https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart', {
+    response = HTTP.get('https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart', {
         'id': 1,
         'range': 'ALL',
-    }, timeout=HTTP_TIMEOUT)
+    })
 
     response.raise_for_status()
     response_json = response.json()

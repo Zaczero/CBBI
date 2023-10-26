@@ -1,7 +1,7 @@
 import pandas as pd
-import requests
 
 from globals import *
+from utils import HTTP
 
 
 def lib_fetch(
@@ -76,10 +76,9 @@ def lib_fetch(
             ],
         }
 
-    response = requests.post(
+    response = HTTP.post(
         f'https://www.lookintobitcoin.com/django_plotly_dash/app/{url_selector}/_dash-update-component',
-        json=request_data,
-        timeout=HTTP_TIMEOUT)
+        json=request_data)
     response.raise_for_status()
     response_json = response.json()
 

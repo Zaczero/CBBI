@@ -2,14 +2,13 @@ import re
 
 import numpy as np
 import pandas as pd
-import requests
 import seaborn as sns
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 
 from globals import HTTP_TIMEOUT
 from metrics.base_metric import BaseMetric
-from utils import add_common_markers
+from utils import HTTP, add_common_markers
 
 
 def _extract_metric(html: str, html_name: str, df_name: str) -> pd.DataFrame:
@@ -31,7 +30,7 @@ def _extract_metric(html: str, html_name: str, df_name: str) -> pd.DataFrame:
 
 
 def _fetch_df() -> pd.DataFrame:
-    response = requests.get('https://charts.woobull.com/bitcoin-price-models/', timeout=HTTP_TIMEOUT)
+    response = HTTP.get('https://charts.woobull.com/bitcoin-price-models/')
     response.raise_for_status()
     response_html = response.text
 
