@@ -4,7 +4,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 
-from api.lookintobitcoin_api import lib_fetch
+from api.coinsoto_api import cs_fetch
 from metrics.base_metric import BaseMetric
 from utils import add_common_markers, mark_highs_lows
 
@@ -22,10 +22,9 @@ class MVRVMetric(BaseMetric):
         bull_days_shift = 6
         low_model_adjust = 0.26
 
-        df = df.merge(lib_fetch(
-            url_selector='mvrv_zscore',
-            post_selector='mvrv-zscore',
-            chart_idx='Z-Score',
+        df = df.merge(cs_fetch(
+            path='chain/index/charts?type=/charts/mvrv-zscore/',
+            data_selector='value4',
             col_name='MVRV'
         ), on='Date', how='left')
         df.loc[df['DaysSinceHalving'] < df['DaysSincePriceLow'], 'MVRV'] = df['MVRV'].shift(bull_days_shift)

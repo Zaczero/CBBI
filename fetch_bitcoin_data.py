@@ -15,7 +15,7 @@ def fetch_bitcoin_data() -> pd.DataFrame:
     """
     print('📈 Requesting historical Bitcoin data…')
 
-    response = HTTP.get('https://api.blockchair.com/bitcoin/blocks', {
+    response = HTTP.get('https://api.blockchair.com/bitcoin/blocks', params={
         'a': 'date,count(),min(id),max(id),sum(generation),sum(generation_usd)',
         's': 'date(desc)',
     })
@@ -56,7 +56,7 @@ def fetch_bitcoin_data() -> pd.DataFrame:
 
 
 def fetch_price_data() -> pd.DataFrame:
-    response = HTTP.get('https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart', {
+    response = HTTP.get('https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart', params={
         'id': 1,
         'range': 'ALL',
     })

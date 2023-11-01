@@ -4,7 +4,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 
-from api.lookintobitcoin_api import lib_fetch
+from api.coinsoto_api import cs_fetch
 from metrics.base_metric import BaseMetric
 from utils import add_common_markers
 
@@ -19,12 +19,10 @@ class TwoYearMovingAverageMetric(BaseMetric):
         return '2 Year Moving Average'
 
     def _calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
-        df = df.merge(lib_fetch(
-            url_selector='market_cycle_ma',
-            post_selector='bitcoin-investor-tool',
-            chart_idx='2 Year Moving Average',
+        df = df.merge(cs_fetch(
+            path='getBtcMultiplier',
+            data_selector='mA730List',
             col_name='2YMA',
-            configurable=True,
         ), on='Date', how='left')
         df['2YMA'].ffill(inplace=True)
         df['2YMALog'] = np.log(df['2YMA'])

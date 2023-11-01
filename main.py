@@ -14,7 +14,6 @@ from tqdm import tqdm
 
 from fetch_bitcoin_data import fetch_bitcoin_data
 from metrics.base_metric import BaseMetric
-from metrics.google_trends import GoogleTrendsMetric
 from metrics.mvrv_z_score import MVRVMetric
 from metrics.pi_cycle import PiCycleMetric
 from metrics.puell_multiple import PuellMetric

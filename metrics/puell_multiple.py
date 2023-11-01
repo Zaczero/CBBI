@@ -4,7 +4,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 
-from api.lookintobitcoin_api import lib_fetch
+from api.coinsoto_api import cs_fetch
 from metrics.base_metric import BaseMetric
 from utils import add_common_markers
 
@@ -19,10 +19,9 @@ class PuellMetric(BaseMetric):
         return 'Puell Multiple'
 
     def _calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
-        df = df.merge(lib_fetch(
-            url_selector='puell_multiple',
-            post_selector='puell_multiple',
-            chart_idx='Puell Multiple',
+        df = df.merge(cs_fetch(
+            path='getPuellMultiple',
+            data_selector='puellMultiplList',
             col_name='Puell'
         ), on='Date', how='left')
         df['Puell'].ffill(inplace=True)

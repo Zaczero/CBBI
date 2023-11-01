@@ -4,7 +4,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 
-from api.lookintobitcoin_api import lib_fetch
+from api.coinsoto_api import cs_fetch
 from metrics.base_metric import BaseMetric
 from utils import add_common_markers
 
@@ -21,10 +21,9 @@ class ReserveRiskMetric(BaseMetric):
     def _calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
         days_shift = 1
 
-        df = df.merge(lib_fetch(
-            url_selector='reserve_risk',
-            post_selector='reserve-risk',
-            chart_idx='Reserve Risk',
+        df = df.merge(cs_fetch(
+            path='chain/index/charts?type=/charts/reserve-risk/',
+            data_selector='value4',
             col_name='Risk'
         ), on='Date', how='left')
         df['Risk'] = df['Risk'].shift(days_shift, fill_value=np.nan)

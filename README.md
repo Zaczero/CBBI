@@ -74,17 +74,17 @@ $> python main.py
 
 The current CBBI version _(November 2022)_ includes the following metrics:
 
-| Name                         | Link                                                                                   |
-| ---------------------------- | -------------------------------------------------------------------------------------- |
-| Pi Cycle Top Indicator       | [Visit page](https://www.lookintobitcoin.com/charts/pi-cycle-top-indicator/)           |
-| RUPL/NUPL Chart              | [Visit page](https://www.lookintobitcoin.com/charts/relative-unrealized-profit--loss/) |
-| RHODL Ratio                  | [Visit page](https://www.lookintobitcoin.com/charts/rhodl-ratio/)                      |
-| Puell Multiple               | [Visit page](https://www.lookintobitcoin.com/charts/puell-multiple/)                   |
-| 2 Year Moving Average        | [Visit page](https://www.lookintobitcoin.com/charts/bitcoin-investor-tool/)            |
-| Bitcoin Trolololo Trend Line | [Visit page](https://www.blockchaincenter.net/bitcoin-rainbow-chart/)                  |
-| MVRV Z-Score                 | [Visit page](https://www.lookintobitcoin.com/charts/mvrv-zscore/)                      |
-| Reserve Risk                 | [Visit page](https://www.lookintobitcoin.com/charts/reserve-risk/)                     |
-| Woobull Top Cap vs CVDD      | [Visit page](https://charts.woobull.com/bitcoin-price-models/)                         |
+| Name                         | Link                                                                  |
+| ---------------------------- | --------------------------------------------------------------------- |
+| Pi Cycle Top Indicator       | [Visit page](https://coinsoto.com/indexdata/piCycleTop)               |
+| RUPL/NUPL Chart              | [Visit page](https://coinsoto.com/indexdata/realizedProf)             |
+| RHODL Ratio                  | [Visit page](https://coinsoto.com/indexdata/rhodlRatio)               |
+| Puell Multiple               | [Visit page](https://coinsoto.com/indexdata/puellMultiple)            |
+| 2 Year Moving Average        | [Visit page](https://coinsoto.com/indexdata/year2MA)                  |
+| Bitcoin Trolololo Trend Line | [Visit page](https://www.blockchaincenter.net/bitcoin-rainbow-chart/) |
+| MVRV Z-Score                 | [Visit page](https://coinsoto.com/indexdata/score)                    |
+| Reserve Risk                 | [Visit page](https://coinsoto.com/indexdata/reserveRisk)              |
+| Woobull Top Cap vs CVDD      | [Visit page](https://charts.woobull.com/bitcoin-price-models/)        |
 
 ## Environment Variables
 
@@ -96,17 +96,6 @@ and add environment variables in the following format:
 ```sh
 VARIABLE_NAME=value
 ```
-
-### GOOGLE_PROXY
-
-Defines a requests-supported proxy string used during Google Trends metric calculation.
-If unset or empty, a direct connection will be made.
-It can be used to resolve the `Google returned a response with code 429` issue.
-
-#### Example usage
-
-- GOOGLE_PROXY=https://host:port
-- GOOGLE_PROXY=https://user:pass@host:port
 
 ### GLASSNODE_API_KEY
 

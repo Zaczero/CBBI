@@ -5,10 +5,10 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
-from sty import fg, bg, rs
+from sty import bg, fg, rs
 
+from api.coinsoto_api import cs_fetch
 from api.glassnode_api import gn_fetch
-from api.lookintobitcoin_api import lib_fetch
 from metrics.base_metric import BaseMetric
 from utils import add_common_markers
 
@@ -24,10 +24,9 @@ class RHODLMetric(BaseMetric):
 
     def _calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
         try:
-            remote_df = lib_fetch(
-                url_selector='rhodl_ratio',
-                post_selector='rhodl-ratio',
-                chart_idx='RHODL Ratio',
+            remote_df = cs_fetch(
+                path='chain/index/charts?type=/charts/rhodl-ratio/',
+                data_selector='value1',
                 col_name='RHODL'
             )
         except Exception:

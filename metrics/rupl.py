@@ -3,9 +3,9 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 
-from api.lookintobitcoin_api import lib_fetch
-from utils import mark_highs_lows, add_common_markers
+from api.coinsoto_api import cs_fetch
 from metrics.base_metric import BaseMetric
+from utils import add_common_markers, mark_highs_lows
 
 
 class RUPLMetric(BaseMetric):
@@ -18,10 +18,9 @@ class RUPLMetric(BaseMetric):
         return 'RUPL/NUPL Chart'
 
     def _calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
-        df = df.merge(lib_fetch(
-            url_selector='unrealised_profit_loss',
-            post_selector='relative-unrealized-profit--loss',
-            chart_idx='Net Unrealised Profit / Loss (NUPL)',
+        df = df.merge(cs_fetch(
+            path='chain/index/charts?type=/charts/relative-unrealized-prof/',
+            data_selector='value1',
             col_name='RUPL'
         ), on='Date', how='left')
         df['RUPL'].ffill(inplace=True)
