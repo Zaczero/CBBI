@@ -6,36 +6,27 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 
-from globals import HTTP_TIMEOUT
 from metrics.base_metric import BaseMetric
 from utils import HTTP, add_common_markers
 
 
-def _extract_metric(html: str, html_name: str, df_name: str) -> pd.DataFrame:
-    match = re.search(html_name + r"\s*=\s*{\s*x:\s*\[(?P<x>[',\d\s:-]+)],\s*y:\s*\[(?P<y>[,\d.eE-]+)]", html)
-
-    if not match:
-        raise Exception(f'Failed to extract the "{html_name}" metric')
-
-    match_x = match.group('x').split(',')
-    match_y = match.group('y').split(',')
-
-    df = pd.DataFrame({
-        'Date': [x.strip('\'') for x in match_x],
-        df_name: [float(y) for y in match_y],
-    })
-    df['Date'] = pd.to_datetime(df['Date']).dt.tz_localize(None)
-
-    return df
-
-
 def _fetch_df() -> pd.DataFrame:
-    response = HTTP.get('https://charts.woobull.com/bitcoin-price-models/')
+    response = HTTP.get('https://woocharts.com/bitcoin-price-models/data/chart.json')
     response.raise_for_status()
-    response_html = response.text
+    data = response.json()
 
-    df_top = _extract_metric(response_html, 'top_', 'Top')
-    df_cvdd = _extract_metric(response_html, 'cvdd', 'CVDD')
+    df_top = pd.DataFrame({
+        'Date': data['top_']['x'],
+        'Top': data['top_']['y'],
+    })
+    df_top['Date'] = pd.to_datetime(df_top['Date'], unit='ms').dt.tz_localize(None)
+
+    df_cvdd = pd.DataFrame({
+        'Date': data['cvdd']['x'],
+        'CVDD': data['cvdd']['y'],
+    })
+    df_cvdd['Date'] = pd.to_datetime(df_cvdd['Date'], unit='ms').dt.tz_localize(None)
+
     df = df_top.merge(df_cvdd, on='Date')
 
     return df
