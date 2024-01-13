@@ -34,9 +34,7 @@ $ docker run --rm --pull=always zaczero/cbbi
 
 ## Manual Usage
 
-To use the CBBI script without Docker, follow these steps:
-
-_Recommended Python version: 3.12_
+To use the CBBI script without Docker, follow these two simple steps:
 
 ### 1. Install nix
 
