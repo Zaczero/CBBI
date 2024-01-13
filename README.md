@@ -1,6 +1,6 @@
 # ColinTalksCrypto Bitcoin Bull Run Index (CBBI)
 
-![GitHub Pipenv locked Python version](https://shields.monicz.dev/github/pipenv/locked/python-version/Zaczero/CBBI)
+![Python version](https://shields.monicz.dev/badge/python-v3.12-blue)
 [![Project license](https://shields.monicz.dev/github/license/Zaczero/CBBI)](https://github.com/Zaczero/CBBI/blob/main/LICENSE)
 [![GitHub Repo stars](https://shields.monicz.dev/github/stars/Zaczero/CBBI?style=social)](https://github.com/Zaczero/CBBI)
 
@@ -36,38 +36,23 @@ $ docker run --rm --pull=always zaczero/cbbi
 
 To use the CBBI script without Docker, follow these steps:
 
-_Recommended Python version: 3.11_
+_Recommended Python version: 3.12_
 
-### 1. Install pipenv:
+### 1. Install nix
 
-[Pipenv: Python Dev Workflow for Humans](https://pipenv.pypa.io/en/latest/#install-pipenv-today)
+Before you jump in, make sure to install the [❄️ Nix](https://nixos.org/download) package manager. It's your shortcut to seamless dependency management and reproducible environment setup. It will save you lots of time and spare you from unnecessary stress.
+
+### 2. Run the application
 
 ```sh
-# TLDR;
-$ pip install --user pipenv
+nix-shell --run "python main.py --help"
 ```
 
-### 2. Install required packages:
-
-**NOTE:** The `pipenv` commands should be executed within the project directory.
+#### or with using interactive shell:
 
 ```sh
-$ pipenv install
-```
-
-### 3. Run the script:
-
-```sh
-$ pipenv run python main.py --help
-$ pipenv run python main.py
-```
-
-#### or _(using pipenv shell)_
-
-```sh
-$ pipenv shell
-$> python main.py --help
-$> python main.py
+nix-shell
+python main.py --help
 ```
 
 ## Metrics
