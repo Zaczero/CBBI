@@ -1,7 +1,8 @@
 import filecache
+import numpy as np
+import pandas as pd
 
-from globals import *
-from utils import *
+from utils import HTTP, mark_days_since, mark_highs_lows
 
 
 @filecache.filecache(2 * filecache.HOUR)
@@ -15,22 +16,28 @@ def fetch_bitcoin_data() -> pd.DataFrame:
     """
     print('📈 Requesting historical Bitcoin data…')
 
-    response = HTTP.get('https://api.blockchair.com/bitcoin/blocks', params={
-        'a': 'date,count(),min(id),max(id),sum(generation),sum(generation_usd)',
-        's': 'date(desc)',
-    })
+    response = HTTP.get(
+        'https://api.blockchair.com/bitcoin/blocks',
+        params={
+            'a': 'date,count(),min(id),max(id),sum(generation),sum(generation_usd)',
+            's': 'date(desc)',
+        },
+    )
     response.raise_for_status()
     response_json = response.json()
 
     df = pd.DataFrame(response_json['data'][::-1])
-    df.rename(columns={
-        'date': 'Date',
-        'count()': 'TotalBlocks',
-        'min(id)': 'MinBlockID',
-        'max(id)': 'MaxBlockID',
-        'sum(generation)': 'TotalGeneration',
-        'sum(generation_usd)': 'TotalGenerationUSD'
-    }, inplace=True)
+    df.rename(
+        columns={
+            'date': 'Date',
+            'count()': 'TotalBlocks',
+            'min(id)': 'MinBlockID',
+            'max(id)': 'MaxBlockID',
+            'sum(generation)': 'TotalGeneration',
+            'sum(generation_usd)': 'TotalGenerationUSD',
+        },
+        inplace=True,
+    )
 
     df['Date'] = pd.to_datetime(df['Date'])
     df['TotalGeneration'] /= 1e8
@@ -40,9 +47,11 @@ def fetch_bitcoin_data() -> pd.DataFrame:
     df = df.merge(fetch_price_data(), on='Date', how='left')
     df.loc[df['Price'].isna(), 'Price'] = df['BlockGenerationUSD'] / df['BlockGeneration']
     df['PriceLog'] = np.log(df['Price'])
-    df['PriceLogInterp'] = np.interp(df['PriceLog'],
-                                     (df['PriceLog'].min(), df['PriceLog'].max()),
-                                     (0, 1))
+    df['PriceLogInterp'] = np.interp(
+        x=df['PriceLog'],
+        xp=(df['PriceLog'].min(), df['PriceLog'].max()),
+        fp=(0, 1),
+    )
 
     df = df.loc[df['Date'] >= '2011-06-27']
     df.reset_index(drop=True, inplace=True)
@@ -56,20 +65,25 @@ def fetch_bitcoin_data() -> pd.DataFrame:
 
 
 def fetch_price_data() -> pd.DataFrame:
-    response = HTTP.get('https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart', params={
-        'id': 1,
-        'range': 'ALL',
-    })
+    response = HTTP.get(
+        'https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart',
+        params={
+            'id': 1,
+            'range': 'ALL',
+        },
+    )
 
     response.raise_for_status()
     response_json = response.json()
-    response_x = [float(k) for k in response_json['data']['points'].keys()]
+    response_x = [float(k) for k in response_json['data']['points']]
     response_y = [value['v'][0] for value in response_json['data']['points'].values()]
 
-    df = pd.DataFrame({
-        'Date': response_x,
-        'Price': response_y,
-    })
+    df = pd.DataFrame(
+        {
+            'Date': response_x,
+            'Price': response_y,
+        }
+    )
     df['Date'] = pd.to_datetime(df['Date'], unit='s').dt.tz_localize(None).dt.floor('d')
     df.sort_values(by='Date', inplace=True)
     df.drop_duplicates('Date', keep='last', inplace=True)
@@ -98,11 +112,14 @@ def add_block_halving_data(df: pd.DataFrame) -> pd.DataFrame:
     df['NextHalvingBlock'] = current_block_halving_id
 
     while True:
-        df.loc[(current_block_halving_id - reward_halving_every) <= df[
-            'MaxBlockID'], 'BlockGeneration'] = current_block_production
+        df.loc[
+            (current_block_halving_id - reward_halving_every) <= df['MaxBlockID'],
+            'BlockGeneration',
+        ] = current_block_production
 
-        block_halving_row = df[(df['MinBlockID'] <= current_block_halving_id) &
-                               (df['MaxBlockID'] >= current_block_halving_id)].squeeze()
+        block_halving_row = df[
+            (df['MinBlockID'] <= current_block_halving_id) & (df['MaxBlockID'] >= current_block_halving_id)
+        ].squeeze()
 
         if block_halving_row.shape[0] == 0:
             break

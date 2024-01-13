@@ -19,11 +19,15 @@ class TwoYearMovingAverageMetric(BaseMetric):
         return '2 Year Moving Average'
 
     def _calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
-        df = df.merge(cs_fetch(
-            path='getBtcMultiplier',
-            data_selector='mA730List',
-            col_name='2YMA',
-        ), on='Date', how='left')
+        df = df.merge(
+            cs_fetch(
+                path='getBtcMultiplier',
+                data_selector='mA730List',
+                col_name='2YMA',
+            ),
+            on='Date',
+            how='left',
+        )
         df['2YMA'].ffill(inplace=True)
         df['2YMALog'] = np.log(df['2YMA'])
         df['2YMALogDiff'] = df['PriceLog'] - df['2YMALog']
@@ -48,8 +52,7 @@ class TwoYearMovingAverageMetric(BaseMetric):
         df['2YMAHighModel'] = df['2YMALogOvershootModel'] + df['2YMALog']
         df['2YMALowModel'] = df['2YMALogUndershootModel'] + df['2YMALog']
 
-        df['2YMAIndex'] = (df['PriceLog'] - df['2YMALowModel']) / \
-                          (df['2YMAHighModel'] - df['2YMALowModel'])
+        df['2YMAIndex'] = (df['PriceLog'] - df['2YMALowModel']) / (df['2YMAHighModel'] - df['2YMALowModel'])
 
         df['2YMAIndexNoNa'] = df['2YMAIndex'].fillna(0)
         ax[0].set_title(self.description)

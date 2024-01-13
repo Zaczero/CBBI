@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 import matplotlib.pyplot as plt
 import pandas as pd
-from sty import fg, bg, rs
+from sty import bg, fg, rs
 
 from api.cbbiinfo_api import cbbi_fetch
 from utils import send_error_notification

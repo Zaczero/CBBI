@@ -1,7 +1,6 @@
 import time
 import traceback
 from pathlib import Path
-from typing import Optional
 
 import fire
 import numpy as np
@@ -60,13 +59,8 @@ def calculate_confidence_score(df: pd.DataFrame, cols: list[str]) -> pd.Series:
     return df[cols].mean(axis=1)
 
 
-def run(json_file: str,
-        charts_file: str,
-        output_dir: Optional[str]) -> None:
-    if output_dir is None:
-        output_dir_path = Path.cwd()
-    else:
-        output_dir_path = Path(output_dir)
+def run(json_file: str, charts_file: str, output_dir: str | None) -> None:
+    output_dir_path = Path.cwd() if output_dir is None else Path(output_dir)
 
     json_file_path = output_dir_path / Path(json_file)
     charts_file_path = output_dir_path / Path(charts_file)
@@ -78,32 +72,34 @@ def run(json_file: str,
     df_bitcoin_org = df_bitcoin.copy()
 
     current_price = df_bitcoin['Price'].tail(1).values[0]
-    print(f'Current Bitcoin price: ' + ef.b + fg.li_green + bg.da_green + f' $ {round(current_price):,} ' + rs.all)
+    print('Current Bitcoin price: ' + ef.b + fg.li_green + bg.da_green + f' $ {round(current_price):,} ' + rs.all)
 
     metrics = get_metrics()
     metrics_cols = []
     metrics_descriptions = []
 
-    sns.set(font_scale=0.15, rc={
-        # 'font.size': 6,
-        'figure.titlesize': 8,
-        'axes.titlesize': 5,
-        'axes.labelsize': 4,
-        'xtick.labelsize': 4,
-        'ytick.labelsize': 4,
-        'lines.linewidth': 0.5,
-        'grid.linewidth': 0.3,
-
-        'savefig.dpi': 1000,
-        'figure.dpi': 300,
-    })
+    sns.set(
+        font_scale=0.15,
+        rc={
+            # 'font.size': 6,
+            'figure.titlesize': 8,
+            'axes.titlesize': 5,
+            'axes.labelsize': 4,
+            'xtick.labelsize': 4,
+            'ytick.labelsize': 4,
+            'lines.linewidth': 0.5,
+            'grid.linewidth': 0.3,
+            'savefig.dpi': 1000,
+            'figure.dpi': 300,
+        },
+    )
 
     axes_per_metric = 2
     fig, axes = plt.subplots(len(metrics), axes_per_metric, figsize=(4 * axes_per_metric, 3 * len(metrics)))
     axes = axes.reshape(-1, axes_per_metric)
     plt.tight_layout(pad=14)
 
-    for metric, ax in zip(metrics, axes):
+    for metric, ax in zip(metrics, axes, strict=True):
         df_bitcoin[metric.name] = metric.calculate(df_bitcoin_org.copy(), ax).clip(0, 1)
         metrics_cols.append(metric.name)
         metrics_descriptions.append(metric.description)
@@ -113,27 +109,25 @@ def run(json_file: str,
 
     confidence_col = 'Confidence'
 
-    df_result = pd.DataFrame(df_bitcoin[['Date', 'Price'] + metrics_cols])
+    df_result = pd.DataFrame(df_bitcoin[['Date', 'Price', *metrics_cols]])
     df_result.set_index('Date', inplace=True)
     df_result[confidence_col] = calculate_confidence_score(df_result, metrics_cols)
-    df_result \
-        .to_json(json_file_path,
-                 double_precision=4,
-                 date_unit='s',
-                 indent=2)
+    df_result.to_json(json_file_path, double_precision=4, date_unit='s', indent=2)
 
     df_result_last = df_result.tail(1)
-    confidence_details = {description: df_result_last[name].iloc[0]
-                          for name, description in
-                          zip(metrics_cols, metrics_descriptions)}
+    confidence_details = {
+        description: df_result_last[name].iloc[0]
+        for name, description in zip(metrics_cols, metrics_descriptions, strict=True)
+    }
 
     print('\n' + ef.b + ':: Confidence we are at the peak ::' + rs.all)
     print(
-        fg.cyan + ef.bold +
-        figlet_format(
-            format_percentage(df_result_last[confidence_col].iloc[0], ''),
-            font='univers') + rs.all,
-        end='')
+        fg.cyan
+        + ef.bold
+        + figlet_format(format_percentage(df_result_last[confidence_col].iloc[0], ''), font='univers')
+        + rs.all,
+        end='',
+    )
 
     for description, value in confidence_details.items():
         if not np.isnan(value):
@@ -146,11 +140,13 @@ def run(json_file: str,
     print()
 
 
-def run_and_retry(json_file: str = 'latest.json',
-                  charts_file: str = 'charts.svg',
-                  output_dir: Optional[str] = 'output',
-                  max_attempts: int = 10,
-                  sleep_seconds_on_error: int = 10) -> None:
+def run_and_retry(
+    json_file: str = 'latest.json',
+    charts_file: str = 'charts.svg',
+    output_dir: str | None = 'output',
+    max_attempts: int = 10,
+    sleep_seconds_on_error: int = 10,
+) -> None:
     """
     Calculates the current CBBI confidence value alongside all the required metrics.
     Everything gets pretty printed to the current standard output and a clean copy
@@ -188,7 +184,7 @@ def run_and_retry(json_file: str = 'latest.json',
                 time.sleep(1)
 
     print(f'Max attempts limit has been reached ({max_attempts}).')
-    print(f'Better luck next time!')
+    print('Better luck next time!')
     exit(-1)
 
 

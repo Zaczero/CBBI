@@ -1,5 +1,3 @@
-import re
-
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -15,16 +13,20 @@ def _fetch_df() -> pd.DataFrame:
     response.raise_for_status()
     data = response.json()
 
-    df_top = pd.DataFrame({
-        'Date': data['top_']['x'],
-        'Top': data['top_']['y'],
-    })
+    df_top = pd.DataFrame(
+        {
+            'Date': data['top_']['x'],
+            'Top': data['top_']['y'],
+        }
+    )
     df_top['Date'] = pd.to_datetime(df_top['Date'], unit='ms').dt.tz_localize(None)
 
-    df_cvdd = pd.DataFrame({
-        'Date': data['cvdd']['x'],
-        'CVDD': data['cvdd']['y'],
-    })
+    df_cvdd = pd.DataFrame(
+        {
+            'Date': data['cvdd']['x'],
+            'CVDD': data['cvdd']['y'],
+        }
+    )
     df_cvdd['Date'] = pd.to_datetime(df_cvdd['Date'], unit='ms').dt.tz_localize(None)
 
     df = df_top.merge(df_cvdd, on='Date')
@@ -48,8 +50,7 @@ class WoobullMetric(BaseMetric):
         df['CVDD'].ffill(inplace=True)
         df['CVDDLog'] = np.log(df['CVDD'])
 
-        df['Woobull'] = (df['PriceLog'] - df['CVDDLog']) / \
-                        (df['TopLog'] - df['CVDDLog'])
+        df['Woobull'] = (df['PriceLog'] - df['CVDDLog']) / (df['TopLog'] - df['CVDDLog'])
 
         high_rows = df.loc[df['PriceHigh'] == 1]
         high_x = high_rows.index.values.reshape(-1, 1)
@@ -68,8 +69,7 @@ class WoobullMetric(BaseMetric):
         lin_model.fit(low_x, low_y)
         df['WoobullLowModel'] = lin_model.predict(x)
 
-        df['WoobullIndex'] = (df['Woobull'] - df['WoobullLowModel']) / \
-                             (df['WoobullHighModel'] - df['WoobullLowModel'])
+        df['WoobullIndex'] = (df['Woobull'] - df['WoobullLowModel']) / (df['WoobullHighModel'] - df['WoobullLowModel'])
 
         ax[0].set_title(self.description)
         sns.lineplot(data=df, x='Date', y='WoobullIndex', ax=ax[0])

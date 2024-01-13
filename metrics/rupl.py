@@ -18,11 +18,15 @@ class RUPLMetric(BaseMetric):
         return 'RUPL/NUPL Chart'
 
     def _calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
-        df = df.merge(cs_fetch(
-            path='chain/index/charts?type=/charts/relative-unrealized-prof/',
-            data_selector='value1',
-            col_name='RUPL'
-        ), on='Date', how='left')
+        df = df.merge(
+            cs_fetch(
+                path='chain/index/charts?type=/charts/relative-unrealized-prof/',
+                data_selector='value1',
+                col_name='RUPL',
+            ),
+            on='Date',
+            how='left',
+        )
         df['RUPL'].ffill(inplace=True)
 
         df = mark_highs_lows(df, 'RUPL', False, 120, 120)
@@ -47,8 +51,7 @@ class RUPLMetric(BaseMetric):
         lin_model.fit(low_x, low_y)
         df['RUPLLowModel'] = lin_model.predict(x)
 
-        df['RUPLIndex'] = (df['RUPL'] - df['RUPLLowModel']) / \
-                          (df['RUPLHighModel'] - df['RUPLLowModel'])
+        df['RUPLIndex'] = (df['RUPL'] - df['RUPLLowModel']) / (df['RUPLHighModel'] - df['RUPLLowModel'])
 
         ax[0].set_title(self.description)
         sns.lineplot(data=df, x='Date', y='RUPLIndex', ax=ax[0])

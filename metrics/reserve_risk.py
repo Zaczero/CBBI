@@ -21,11 +21,15 @@ class ReserveRiskMetric(BaseMetric):
     def _calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
         days_shift = 1
 
-        df = df.merge(cs_fetch(
-            path='chain/index/charts?type=/charts/reserve-risk/',
-            data_selector='value4',
-            col_name='Risk'
-        ), on='Date', how='left')
+        df = df.merge(
+            cs_fetch(
+                path='chain/index/charts?type=/charts/reserve-risk/',
+                data_selector='value4',
+                col_name='Risk',
+            ),
+            on='Date',
+            how='left',
+        )
         df['Risk'] = df['Risk'].shift(days_shift, fill_value=np.nan)
         df['Risk'].ffill(inplace=True)
         df['RiskLog'] = np.log(df['Risk'])
@@ -47,8 +51,7 @@ class ReserveRiskMetric(BaseMetric):
         lin_model.fit(low_x, low_y)
         df['RiskLogLowModel'] = lin_model.predict(x)
 
-        df['RiskIndex'] = (df['RiskLog'] - df['RiskLogLowModel']) / \
-                          (df['RiskLogHighModel'] - df['RiskLogLowModel'])
+        df['RiskIndex'] = (df['RiskLog'] - df['RiskLogLowModel']) / (df['RiskLogHighModel'] - df['RiskLogLowModel'])
 
         df['RiskIndexNoNa'] = df['RiskIndex'].fillna(0)
         ax[0].set_title(self.description)

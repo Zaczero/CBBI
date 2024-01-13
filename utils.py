@@ -7,15 +7,13 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import telegram
-from httpx import Client, Timeout
+from httpx import Client
 from matplotlib import pyplot as plt
 from sty import bg
 
-from globals import HTTP_TIMEOUT, USER_AGENT
-
 HTTP = Client(
-    headers={'User-Agent': USER_AGENT},
-    timeout=Timeout(HTTP_TIMEOUT),
+    headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/118.0'},
+    timeout=30,
     follow_redirects=True,
     http1=True,
     http2=True,
@@ -23,11 +21,11 @@ HTTP = Client(
 
 
 def mark_highs_lows(
-        df: pd.DataFrame,
-        col: str,
-        begin_with_high: bool,
-        window_size: float,
-        ignore_last_rows: int
+    df: pd.DataFrame,
+    col: str,
+    begin_with_high: bool,
+    window_size: float,
+    ignore_last_rows: int,
 ) -> pd.DataFrame:
     """
     Marks highs and lows (peaks) of the column values inside the given DataFrame.
@@ -48,8 +46,8 @@ def mark_highs_lows(
     col_low = col + 'Low'
 
     assert col in df.columns, f'The column name "{col}" (col) could not be found inside the given DataFrame (df)'
-    assert col_high not in df.columns, 'The DataFrame (df) already contains the "High" column - bugprone'
-    assert col_low not in df.columns, 'The DataFrame (df) already contains the "Low" column - bugprone'
+    assert col_high not in df.columns, 'The DataFrame (df) already contains the "High" column - bug prone'
+    assert col_low not in df.columns, 'The DataFrame (df) already contains the "Low" column - bug prone'
     assert window_size > 0, 'Value of the window_size argument must be at least 1'
 
     df[col_high] = 0
@@ -59,7 +57,7 @@ def mark_highs_lows(
     current_index = df.index[0]
 
     while True:
-        window = df.loc[current_index:current_index + window_size, col]
+        window = df.loc[current_index : current_index + window_size, col]
 
         if sum(~np.isnan(window)) == 0 and window.shape[0] > 1:
             current_index += window.shape[0]
@@ -77,7 +75,7 @@ def mark_highs_lows(
 
         current_index = window_index
 
-    df.loc[df.shape[0] - ignore_last_rows:, (col_high, col_low)] = 0
+    df.loc[df.shape[0] - ignore_last_rows :, (col_high, col_low)] = 0
 
     # stabilize the algorithm until a next major update
     df.loc[df['Date'] >= '2023-07-01', (col_high, col_low)] = 0
@@ -101,9 +99,9 @@ def mark_days_since(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
     """
     for col in cols:
         indexes = df.loc[df[col] == 1].index
-        df[f'DaysSince{col}'] = df.index \
-            .to_series() \
-            .apply(lambda v: min([v - index if index <= v else np.nan for index in indexes]))
+        df[f'DaysSince{col}'] = df.index.to_series().apply(
+            lambda v: min([v - index if index <= v else np.nan for index in indexes])  # noqa: B023
+        )
 
     return df
 
@@ -150,7 +148,7 @@ def split_df_on_index_gap(df: pd.DataFrame, min_gap: int = 1) -> list[pd.DataFra
     begin_idx = None
     end_idx = None
 
-    for i, row in df.iterrows():
+    for i, _ in df.iterrows():
         if begin_idx is None:
             begin_idx = i
             end_idx = i
@@ -203,13 +201,13 @@ def get_color(val: float) -> str:
 
     config = [
         bg.da_red,
-        .3,
+        0.3,
         bg.da_yellow,
-        .65,
+        0.65,
         bg.da_green,
-        .85,
+        0.85,
         bg.da_cyan,
-        .97,
+        0.97,
         bg.da_magenta,
     ]
 
@@ -235,9 +233,12 @@ def send_error_notification(exception: Exception) -> bool:
 
     bot = telegram.Bot(telegram_token)
 
-    bot.send_message(telegram_chat_id, f'🚨 An error has occurred: <b>{str(exception)}</b>\n'
-                                       f'\n'
-                                       f'🔍️ <b>Stack trace</b>\n'
-                                       f'<pre>{"".join(traceback.format_exception(exception))}</pre>',
-                     parse_mode='HTML')
+    bot.send_message(
+        telegram_chat_id,
+        f'🚨 An error has occurred: <b>{exception!s}</b>\n'
+        f'\n'
+        f'🔍️ <b>Stack trace</b>\n'
+        f'<pre>{"".join(traceback.format_exception(exception))}</pre>',
+        parse_mode='HTML',
+    )
     return True

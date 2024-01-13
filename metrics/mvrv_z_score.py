@@ -22,11 +22,15 @@ class MVRVMetric(BaseMetric):
         bull_days_shift = 6
         low_model_adjust = 0.26
 
-        df = df.merge(cs_fetch(
-            path='chain/index/charts?type=/charts/mvrv-zscore/',
-            data_selector='value4',
-            col_name='MVRV'
-        ), on='Date', how='left')
+        df = df.merge(
+            cs_fetch(
+                path='chain/index/charts?type=/charts/mvrv-zscore/',
+                data_selector='value4',
+                col_name='MVRV',
+            ),
+            on='Date',
+            how='left',
+        )
         df.loc[df['DaysSinceHalving'] < df['DaysSincePriceLow'], 'MVRV'] = df['MVRV'].shift(bull_days_shift)
         df['MVRV'].ffill(inplace=True)
         df['MVRV'] = np.log(df['MVRV'] + 1)
@@ -51,8 +55,7 @@ class MVRVMetric(BaseMetric):
         lin_model.fit(low_x, low_y)
         df['LowModel'] = lin_model.predict(x) + low_model_adjust
 
-        df['Index'] = (df['MVRV'] - df['LowModel']) / \
-                      (df['HighModel'] - df['LowModel'])
+        df['Index'] = (df['MVRV'] - df['LowModel']) / (df['HighModel'] - df['LowModel'])
 
         df['IndexNoNa'] = df['Index'].fillna(0)
         ax[0].set_title(self.description)

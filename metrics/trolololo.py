@@ -4,8 +4,8 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 from sklearn.linear_model import LinearRegression
 
-from utils import add_common_markers
 from metrics.base_metric import BaseMetric
+from utils import add_common_markers
 
 
 class TrolololoMetric(BaseMetric):
@@ -22,9 +22,12 @@ class TrolololoMetric(BaseMetric):
 
         df['TroloDaysSinceBegin'] = (df['Date'] - begin_date).dt.days
 
-        df['TroloTopPrice'] = np.power(10, 2.900 * np.log(df['TroloDaysSinceBegin'] + 1400) - 19.463)  # Maximum Bubble Territory
+        # Maximum Bubble Territory
+        df['TroloTopPrice'] = np.power(10, 2.900 * np.log(df['TroloDaysSinceBegin'] + 1400) - 19.463)
         df['TroloTopPriceLog'] = np.log(df['TroloTopPrice'])
-        df['TroloBottomPrice'] = np.power(10, 2.788 * np.log(df['TroloDaysSinceBegin'] + 1200) - 19.463)  # Basically a Fire Sale
+
+        # Basically a Fire Sale
+        df['TroloBottomPrice'] = np.power(10, 2.788 * np.log(df['TroloDaysSinceBegin'] + 1200) - 19.463)
         df['TroloBottomPriceLog'] = np.log(df['TroloBottomPrice'])
 
         df['TroloDifference'] = df['TroloTopPriceLog'] - df['TroloBottomPriceLog']
@@ -52,8 +55,7 @@ class TrolololoMetric(BaseMetric):
         df['TroloHighModel'] = df['TroloTopPriceLog'] + df['TroloOvershootModel']
         df['TroloLowModel'] = df['TroloBottomPriceLog'] + df['TroloUndershootModel']
 
-        df['TroloIndex'] = (df['PriceLog'] - df['TroloLowModel']) / \
-                           (df['TroloHighModel'] - df['TroloLowModel'])
+        df['TroloIndex'] = (df['PriceLog'] - df['TroloLowModel']) / (df['TroloHighModel'] - df['TroloLowModel'])
 
         ax[0].set_title(self.description)
         sns.lineplot(data=df, x='Date', y='TroloIndex', ax=ax[0])

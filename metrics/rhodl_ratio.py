@@ -27,17 +27,13 @@ class RHODLMetric(BaseMetric):
             remote_df = cs_fetch(
                 path='chain/index/charts?type=/charts/rhodl-ratio/',
                 data_selector='value1',
-                col_name='RHODL'
+                col_name='RHODL',
             )
         except Exception:
             traceback.print_exc()
             print(fg.black + bg.yellow + f' Requesting fallback values for {self.name} (from GlassNode) ' + rs.all)
 
-            remote_df = gn_fetch(
-                url_selector='rhodl_ratio',
-                col_name='RHODL',
-                a='BTC'
-            )
+            remote_df = gn_fetch(url_selector='rhodl_ratio', col_name='RHODL', a='BTC')
 
         df = df.merge(remote_df, on='Date', how='left')
         df['RHODL'].ffill(inplace=True)
@@ -60,8 +56,9 @@ class RHODLMetric(BaseMetric):
         lin_model.fit(low_x, low_y)
         df['RHODLLogLowModel'] = lin_model.predict(x)
 
-        df['RHODLIndex'] = (df['RHODLLog'] - df['RHODLLogLowModel']) / \
-                           (df['RHODLLogHighModel'] - df['RHODLLogLowModel'])
+        df['RHODLIndex'] = (df['RHODLLog'] - df['RHODLLogLowModel']) / (
+            df['RHODLLogHighModel'] - df['RHODLLogLowModel']
+        )
 
         df['RHODLIndexNoNa'] = df['RHODLIndex'].fillna(0)
         ax[0].set_title(self.description)

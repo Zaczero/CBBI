@@ -19,11 +19,15 @@ class PuellMetric(BaseMetric):
         return 'Puell Multiple'
 
     def _calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
-        df = df.merge(cs_fetch(
-            path='getPuellMultiple',
-            data_selector='puellMultiplList',
-            col_name='Puell'
-        ), on='Date', how='left')
+        df = df.merge(
+            cs_fetch(
+                path='getPuellMultiple',
+                data_selector='puellMultiplList',
+                col_name='Puell',
+            ),
+            on='Date',
+            how='left',
+        )
         df['Puell'].ffill(inplace=True)
         df['PuellLog'] = np.log(df['Puell'])
 
@@ -31,9 +35,9 @@ class PuellMetric(BaseMetric):
         high_x = high_rows.index.values.reshape(-1, 1)
         high_y = high_rows['PuellLog'].values.reshape(-1, 1)
 
-        low_rows = df.loc[df['PriceLow'] == 1][1:]
-        low_x = low_rows.index.values.reshape(-1, 1)
-        low_y = low_rows['PuellLog'].values.reshape(-1, 1)
+        # low_rows = df.loc[df['PriceLow'] == 1][1:]
+        # low_x = low_rows.index.values.reshape(-1, 1)
+        # low_y = low_rows['PuellLog'].values.reshape(-1, 1)
 
         x = df.index.values.reshape(-1, 1)
 
@@ -45,8 +49,9 @@ class PuellMetric(BaseMetric):
         # df['PuellLogLowModel'] = lin_model.predict(x)
         df['PuellLogLowModel'] = -1
 
-        df['PuellIndex'] = (df['PuellLog'] - df['PuellLogLowModel']) / \
-                           (df['PuellLogHighModel'] - df['PuellLogLowModel'])
+        df['PuellIndex'] = (df['PuellLog'] - df['PuellLogLowModel']) / (
+            df['PuellLogHighModel'] - df['PuellLogLowModel']
+        )
 
         df['PuellIndexNoNa'] = df['PuellIndex'].fillna(0)
         ax[0].set_title(self.description)

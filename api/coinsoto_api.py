@@ -1,6 +1,5 @@
 import pandas as pd
 
-from globals import *
 from utils import HTTP
 
 
@@ -16,10 +15,12 @@ def cs_fetch(path: str, data_selector: str, col_name: str) -> pd.DataFrame:
     data_y = data[data_selector]
     assert len(data_x) == len(data_y), f'{len(data_x)=} != {len(data_y)=}'
 
-    df = pd.DataFrame({
-        'Date': data_x[:len(data_y)],
-        col_name: data_y,
-    })
+    df = pd.DataFrame(
+        {
+            'Date': data_x[: len(data_y)],
+            col_name: data_y,
+        }
+    )
 
     df['Date'] = pd.to_datetime(df['Date'], unit='ms').dt.tz_localize(None)
 
