@@ -5,7 +5,7 @@ from sklearn.linear_model import LinearRegression
 
 from api.coinsoto_api import cs_fetch
 from metrics.base_metric import BaseMetric
-from utils import add_common_markers, mark_highs_lows
+from utils import add_common_markers
 
 
 class RUPLMetric(BaseMetric):
@@ -29,12 +29,7 @@ class RUPLMetric(BaseMetric):
         )
         df['RUPL'] = df['RUPL'].ffill()
 
-        df = mark_highs_lows(df, 'RUPL', False, 120, 120)
-        df.fillna({'RUPLHigh': 0, 'RUPLLow': 0}, inplace=True)
-
-        df.loc[df['RUPL'] < 0.75, 'RUPLHigh'] = 0
-
-        high_rows = df.loc[df['RUPLHigh'] == 1]
+        high_rows = df.loc[df['PriceHigh'] == 1]
         high_x = high_rows.index.values.reshape(-1, 1)
         high_y = high_rows['RUPL'].values.reshape(-1, 1)
 
@@ -46,20 +41,20 @@ class RUPLMetric(BaseMetric):
 
         lin_model = LinearRegression()
         lin_model.fit(high_x, high_y)
-        df['RUPLHighModel'] = lin_model.predict(x)
+        df['HighModel'] = lin_model.predict(x)
 
         lin_model.fit(low_x, low_y)
-        df['RUPLLowModel'] = lin_model.predict(x)
+        df['LowModel'] = lin_model.predict(x)
 
-        df['RUPLIndex'] = (df['RUPL'] - df['RUPLLowModel']) / (df['RUPLHighModel'] - df['RUPLLowModel'])
+        df['RUPLIndex'] = (df['RUPL'] - df['LowModel']) / (df['HighModel'] - df['LowModel'])
 
         ax[0].set_title(self.description)
         sns.lineplot(data=df, x='Date', y='RUPLIndex', ax=ax[0])
         add_common_markers(df, ax[0])
 
         sns.lineplot(data=df, x='Date', y='RUPL', ax=ax[1])
-        sns.lineplot(data=df, x='Date', y='RUPLHighModel', ax=ax[1])
-        sns.lineplot(data=df, x='Date', y='RUPLLowModel', ax=ax[1])
+        sns.lineplot(data=df, x='Date', y='HighModel', ax=ax[1])
+        sns.lineplot(data=df, x='Date', y='LowModel', ax=ax[1])
         add_common_markers(df, ax[1], price_line=False)
 
         return df['RUPLIndex']

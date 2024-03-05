@@ -59,8 +59,12 @@ def fetch_bitcoin_data() -> pd.DataFrame:
     df = fix_current_day_data(df)
     df = add_block_halving_data(df)
     df = mark_highs_lows(df, 'Price', False, round(365 * 2), 180)
-    df = mark_days_since(df, ['PriceHigh', 'PriceLow', 'Halving'])
 
+    # move 2021' peak to the first price peak
+    df.loc[df['Date'] == '2021-11-09', 'PriceHigh'] = 0
+    df.loc[df['Date'] == '2021-04-14', 'PriceHigh'] = 1
+
+    df = mark_days_since(df, ['PriceHigh', 'PriceLow', 'Halving'])
     return df
 
 

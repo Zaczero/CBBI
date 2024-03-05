@@ -6,7 +6,7 @@ from sklearn.linear_model import LinearRegression
 
 from api.coinsoto_api import cs_fetch
 from metrics.base_metric import BaseMetric
-from utils import add_common_markers, mark_highs_lows
+from utils import add_common_markers
 
 
 class MVRVMetric(BaseMetric):
@@ -35,10 +35,7 @@ class MVRVMetric(BaseMetric):
         df['MVRV'] = df['MVRV'].ffill()
         df['MVRV'] = np.log(df['MVRV'] + 1)
 
-        df = mark_highs_lows(df, 'MVRV', True, round(365 * 2), 365)
-        df.fillna({'MVRVHigh': 0, 'MVRVLow': 0}, inplace=True)
-
-        high_rows = df.loc[df['MVRVHigh'] == 1]
+        high_rows = df.loc[df['PriceHigh'] == 1]
         high_x = high_rows.index.values.reshape(-1, 1)
         high_y = high_rows['MVRV'].values.reshape(-1, 1)
 
