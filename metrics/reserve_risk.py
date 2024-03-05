@@ -31,7 +31,7 @@ class ReserveRiskMetric(BaseMetric):
             how='left',
         )
         df['Risk'] = df['Risk'].shift(days_shift, fill_value=np.nan)
-        df['Risk'].ffill(inplace=True)
+        df['Risk'] = df['Risk'].ffill()
         df['RiskLog'] = np.log(df['Risk'])
 
         high_rows = df.loc[df['PriceHigh'] == 1]

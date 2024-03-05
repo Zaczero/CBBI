@@ -28,7 +28,7 @@ class TwoYearMovingAverageMetric(BaseMetric):
             on='Date',
             how='left',
         )
-        df['2YMA'].ffill(inplace=True)
+        df['2YMA'] = df['2YMA'].ffill()
         df['2YMALog'] = np.log(df['2YMA'])
         df['2YMALogDiff'] = df['PriceLog'] - df['2YMALog']
 

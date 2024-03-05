@@ -28,7 +28,7 @@ class PuellMetric(BaseMetric):
             on='Date',
             how='left',
         )
-        df['Puell'].ffill(inplace=True)
+        df['Puell'] = df['Puell'].ffill()
         df['PuellLog'] = np.log(df['Puell'])
 
         high_rows = df.loc[df['PriceHigh'] == 1]

@@ -45,9 +45,9 @@ class WoobullMetric(BaseMetric):
 
     def _calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
         df = df.merge(_fetch_df(), on='Date', how='left')
-        df['Top'].ffill(inplace=True)
+        df['Top'] = df['Top'].ffill()
         df['TopLog'] = np.log(df['Top'])
-        df['CVDD'].ffill(inplace=True)
+        df['CVDD'] = df['CVDD'].ffill()
         df['CVDDLog'] = np.log(df['CVDD'])
 
         df['Woobull'] = (df['PriceLog'] - df['CVDDLog']) / (df['TopLog'] - df['CVDDLog'])

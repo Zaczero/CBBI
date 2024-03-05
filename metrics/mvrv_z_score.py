@@ -32,7 +32,7 @@ class MVRVMetric(BaseMetric):
             how='left',
         )
         df.loc[df['DaysSinceHalving'] < df['DaysSincePriceLow'], 'MVRV'] = df['MVRV'].shift(bull_days_shift)
-        df['MVRV'].ffill(inplace=True)
+        df['MVRV'] = df['MVRV'].ffill()
         df['MVRV'] = np.log(df['MVRV'] + 1)
 
         df = mark_highs_lows(df, 'MVRV', True, round(365 * 2), 365)

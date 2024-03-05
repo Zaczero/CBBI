@@ -30,14 +30,11 @@ with pkgs; dockerTools.buildLayeredImage {
     mkdir api metrics
     cp "${./api}"/*.py api
     cp "${./metrics}"/*.py metrics
-    export PATH="${lib.makeBinPath shell.buildInputs}:$PATH"
-    ${shell.shellHook}
   '';
 
   config = {
     WorkingDir = "/app";
     Env = [
-      "LD_LIBRARY_PATH=${lib.makeLibraryPath shell.buildInputs}"
       "PYTHONPATH=${python-venv}/lib"
       "PYTHONUNBUFFERED=1"
       "PYTHONDONTWRITEBYTECODE=1"

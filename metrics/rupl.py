@@ -27,7 +27,7 @@ class RUPLMetric(BaseMetric):
             on='Date',
             how='left',
         )
-        df['RUPL'].ffill(inplace=True)
+        df['RUPL'] = df['RUPL'].ffill()
 
         df = mark_highs_lows(df, 'RUPL', False, 120, 120)
         df.fillna({'RUPLHigh': 0, 'RUPLLow': 0}, inplace=True)

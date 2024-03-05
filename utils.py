@@ -134,7 +134,7 @@ def add_common_markers(df: pd.DataFrame, ax: plt.Axes, price_line: bool = True) 
         ax.axvline(x=days_since_epoch, color='red', linestyle=':')
 
 
-def split_df_on_index_gap(df: pd.DataFrame, min_gap: int = 1) -> list[pd.DataFrame]:
+def split_df_on_index_gap(df: pd.DataFrame, min_gap: int = 1):
     """
     Split a Pandas DataFrame on gaps in the index values.
 

@@ -36,7 +36,7 @@ class RHODLMetric(BaseMetric):
             remote_df = gn_fetch(url_selector='rhodl_ratio', col_name='RHODL', a='BTC')
 
         df = df.merge(remote_df, on='Date', how='left')
-        df['RHODL'].ffill(inplace=True)
+        df['RHODL'] = df['RHODL'].ffill()
         df['RHODLLog'] = np.log(df['RHODL'])
 
         high_rows = df.loc[df['PriceHigh'] == 1]

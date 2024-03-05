@@ -26,7 +26,7 @@ class BaseMetric(ABC):
 
     def _fallback(self, df: pd.DataFrame) -> pd.Series:
         df = df.merge(cbbi_fetch(self.name), on='Date', how='left')
-        df['Value'].ffill(inplace=True)
+        df['Value'] = df['Value'].ffill()
 
         return df['Value']
 

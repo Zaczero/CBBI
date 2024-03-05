@@ -1,11 +1,11 @@
-import filecache
 import numpy as np
 import pandas as pd
+from filecache import filecache
 
 from utils import HTTP, mark_days_since, mark_highs_lows
 
 
-@filecache.filecache(2 * filecache.HOUR)
+@filecache(7200)  # 2 hours
 def fetch_bitcoin_data() -> pd.DataFrame:
     """
     Fetches historical Bitcoin data into a DataFrame.
@@ -129,6 +129,6 @@ def add_block_halving_data(df: pd.DataFrame) -> pd.DataFrame:
         df.loc[block_halving_row.name, 'Halving'] = 1
         df.loc[df.index > block_halving_row.name, 'NextHalvingBlock'] = current_block_halving_id
 
-    df['DaysToHalving'] = pd.TimedeltaIndex((df['NextHalvingBlock'] - df['MaxBlockID']) / (24 * 6), unit='D')
+    df['DaysToHalving'] = pd.to_timedelta((df['NextHalvingBlock'] - df['MaxBlockID']) / (24 * 6), unit='D')
     df['NextHalvingDate'] = df['Date'] + df['DaysToHalving']
     return df
