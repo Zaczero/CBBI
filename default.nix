@@ -16,7 +16,7 @@ with pkgs; let
   };
 in
 with pkgs; dockerTools.buildLayeredImage {
-  name = "zaczero/cbbi";
+  name = "docker.io/zaczero/cbbi";
   tag = "latest";
   maxLayers = 10;
 
