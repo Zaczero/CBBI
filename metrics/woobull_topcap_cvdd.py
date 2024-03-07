@@ -64,20 +64,21 @@ class WoobullMetric(BaseMetric):
 
         lin_model = LinearRegression()
         lin_model.fit(high_x, high_y)
-        df['WoobullHighModel'] = lin_model.predict(x)
+        df['HighModel'] = lin_model.predict(x)
+        df['HighModel'] = df['HighModel'] - 0.025
 
         lin_model.fit(low_x, low_y)
-        df['WoobullLowModel'] = lin_model.predict(x)
+        df['LowModel'] = lin_model.predict(x)
 
-        df['WoobullIndex'] = (df['Woobull'] - df['WoobullLowModel']) / (df['WoobullHighModel'] - df['WoobullLowModel'])
+        df['WoobullIndex'] = (df['Woobull'] - df['LowModel']) / (df['HighModel'] - df['LowModel'])
 
         ax[0].set_title(self.description)
         sns.lineplot(data=df, x='Date', y='WoobullIndex', ax=ax[0])
         add_common_markers(df, ax[0])
 
         sns.lineplot(data=df, x='Date', y='Woobull', ax=ax[1])
-        sns.lineplot(data=df, x='Date', y='WoobullHighModel', ax=ax[1])
-        sns.lineplot(data=df, x='Date', y='WoobullLowModel', ax=ax[1])
+        sns.lineplot(data=df, x='Date', y='HighModel', ax=ax[1])
+        sns.lineplot(data=df, x='Date', y='LowModel', ax=ax[1])
         add_common_markers(df, ax[1], price_line=False)
 
         return df['WoobullIndex']
