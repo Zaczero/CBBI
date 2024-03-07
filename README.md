@@ -6,7 +6,7 @@
 
 The official Python implementation of the **ColinTalksCrypto Bitcoin Bull Run Index** (CBBI).
 
-The CBBI is a Bitcoin index that utilizes advanced, real-time analysis of 10 metrics
+The CBBI is a Bitcoin index that utilizes advanced, real-time analysis of 9 metrics
 to help us understand what stage of the Bitcoin bull run and bear market cycles we are in.
 The CBBI is time-independent and price-independent.
 It simply indicates whether it believes we are approaching the top/bottom of a Bitcoin cycle.
@@ -28,8 +28,8 @@ Bookmark it and receive latest CBBI updates.
 To use the CBBI script with Docker, run the following command:
 
 ```sh
-$ docker run --rm --pull=always zaczero/cbbi --help
-$ docker run --rm --pull=always zaczero/cbbi
+docker run --rm --pull=always zaczero/cbbi --help
+docker run --rm --pull=always zaczero/cbbi
 ```
 
 ## Manual Usage
@@ -46,7 +46,7 @@ Before you jump in, make sure to install the [❄️ Nix](https://nixos.org/down
 nix-shell --run "python main.py --help"
 ```
 
-#### or with using interactive shell:
+#### or with using interactive shell
 
 ```sh
 nix-shell
@@ -102,7 +102,7 @@ Define both variables to receive Telegram notifications about metric errors that
 
 ### Contact me
 
-https://monicz.dev/#get-in-touch
+<https://monicz.dev/#get-in-touch>
 
 ### License
 
