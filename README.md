@@ -59,14 +59,14 @@ The current CBBI version _(November 2022)_ includes the following metrics:
 
 | Name                         | Link                                                                  |
 | ---------------------------- | --------------------------------------------------------------------- |
-| Pi Cycle Top Indicator       | [Visit page](https://coinsoto.com/indexdata/piCycleTop)               |
-| RUPL/NUPL Chart              | [Visit page](https://coinsoto.com/indexdata/realizedProf)             |
-| RHODL Ratio                  | [Visit page](https://coinsoto.com/indexdata/rhodlRatio)               |
-| Puell Multiple               | [Visit page](https://coinsoto.com/indexdata/puellMultiple)            |
-| 2 Year Moving Average        | [Visit page](https://coinsoto.com/indexdata/year2MA)                  |
+| Pi Cycle Top Indicator       | [Visit page](https://coinank.com/indexdata/piCycleTop)               |
+| RUPL/NUPL Chart              | [Visit page](https://coinank.com/indexdata/realizedProf)             |
+| RHODL Ratio                  | [Visit page](https://coinank.com/indexdata/rhodlRatio)               |
+| Puell Multiple               | [Visit page](https://coinank.com/indexdata/puellMultiple)            |
+| 2 Year Moving Average        | [Visit page](https://coinank.com/indexdata/year2MA)                  |
 | Bitcoin Trolololo Trend Line | [Visit page](https://www.blockchaincenter.net/bitcoin-rainbow-chart/) |
-| MVRV Z-Score                 | [Visit page](https://coinsoto.com/indexdata/score)                    |
-| Reserve Risk                 | [Visit page](https://coinsoto.com/indexdata/reserveRisk)              |
+| MVRV Z-Score                 | [Visit page](https://coinank.com/indexdata/score)                    |
+| Reserve Risk                 | [Visit page](https://coinank.com/indexdata/reserveRisk)              |
 | Woobull Top Cap vs CVDD      | [Visit page](https://woocharts.com/bitcoin-price-models/)             |
 
 ## Environment Variables

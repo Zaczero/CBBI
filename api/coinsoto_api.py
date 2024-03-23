@@ -4,7 +4,7 @@ from utils import HTTP
 
 
 def cs_fetch(path: str, data_selector: str, col_name: str) -> pd.DataFrame:
-    response = HTTP.get(f'https://coinsoto.com/indicatorapi/{path}')
+    response = HTTP.get(f'https://coinank.com/indicatorapi/{path}')
     response.raise_for_status()
     data = response.json()['data']
 
