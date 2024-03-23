@@ -1,9 +1,9 @@
 { isDevelopment ? true }:
 
 let
-  # Currently using nixpkgs-23.11-darwin
+  # Currently using nixpkgs-unstable
   # Update with `nixpkgs-update` command
-  pkgs = import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/b3a5f534d8a260328c5e13bd81c19c0432afbe9f.tar.gz") { };
+  pkgs = import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/a3ed7406349a9335cb4c2a71369b697cecd9d351.tar.gz") { };
 
   libraries' = with pkgs; [
     # Base libraries
@@ -33,7 +33,7 @@ let
     # -- Misc
     (writeShellScriptBin "nixpkgs-update" ''
       set -e
-      hash=$(git ls-remote https://github.com/NixOS/nixpkgs nixpkgs-23.11-darwin | cut -f 1)
+      hash=$(git ls-remote https://github.com/NixOS/nixpkgs nixpkgs-unstable | cut -f 1)
       sed -i -E "s|/nixpkgs/archive/[0-9a-f]{40}\.tar\.gz|/nixpkgs/archive/$hash.tar.gz|" shell.nix
       echo "Nixpkgs updated to $hash"
     '')
@@ -45,7 +45,9 @@ let
   ];
 
   shell' = with pkgs; lib.optionalString isDevelopment ''
-    [ ! -e .venv/bin/python ] && [ -h .venv/bin/python ] && rm -r .venv
+    current_python=$(readlink -e .venv/bin/python || echo "")
+    current_python=''${current_python%/bin/*}
+    [ "$current_python" != "${wrappedPython}" ] && rm -r .venv
 
     echo "Installing Python dependencies"
     export POETRY_VIRTUALENVS_IN_PROJECT=1
@@ -67,6 +69,6 @@ let
   '';
 in
 pkgs.mkShell {
-  buildInputs = libraries' ++ packages';
+  buildInputs = packages';
   shellHook = shell';
 }
