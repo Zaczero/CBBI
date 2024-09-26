@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
 from sklearn.linear_model import LinearRegression
 
 from api.coinsoto_api import cs_fetch
@@ -18,7 +18,7 @@ class TwoYearMovingAverageMetric(BaseMetric):
     def description(self) -> str:
         return '2 Year Moving Average'
 
-    def _calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
+    def _calculate(self, df: pd.DataFrame, ax: list[Axes]) -> pd.Series:
         df = df.merge(
             cs_fetch(
                 path='getBtcMultiplier',

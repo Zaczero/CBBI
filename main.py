@@ -6,6 +6,7 @@ import fire
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import uvloop
 from matplotlib import pyplot as plt
 from pyfiglet import figlet_format
 from sty import bg, ef, fg, rs
@@ -59,7 +60,7 @@ def calculate_confidence_score(df: pd.DataFrame, cols: list[str]) -> pd.Series:
     return df[cols].mean(axis=1)
 
 
-def run(json_file: str, charts_file: str, output_dir: str | None) -> None:
+async def run(json_file: str, charts_file: str, output_dir: str | None) -> None:
     output_dir_path = Path.cwd() if output_dir is None else Path(output_dir)
 
     json_file_path = output_dir_path / Path(json_file)
@@ -95,12 +96,12 @@ def run(json_file: str, charts_file: str, output_dir: str | None) -> None:
     )
 
     axes_per_metric = 2
-    fig, axes = plt.subplots(len(metrics), axes_per_metric, figsize=(4 * axes_per_metric, 3 * len(metrics)))
+    axes = plt.subplots(len(metrics), axes_per_metric, figsize=(4 * axes_per_metric, 3 * len(metrics)))[1]
     axes = axes.reshape(-1, axes_per_metric)
     plt.tight_layout(pad=14)
 
     for metric, ax in zip(metrics, axes, strict=True):
-        df_bitcoin[metric.name] = metric.calculate(df_bitcoin_org.copy(), ax).clip(0, 1)
+        df_bitcoin[metric.name] = (await metric.calculate(df_bitcoin_org.copy(), ax)).clip(0, 1)
         metrics_cols.append(metric.name)
         metrics_descriptions.append(metric.description)
 
@@ -172,7 +173,7 @@ def run_and_retry(
 
     for _ in range(max_attempts):
         try:
-            run(json_file, charts_file, output_dir)
+            uvloop.run(run(json_file, charts_file, output_dir))
             exit(0)
 
         except Exception:

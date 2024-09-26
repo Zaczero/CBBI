@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
 from sklearn.linear_model import LinearRegression
 
 from metrics.base_metric import BaseMetric
@@ -17,7 +17,7 @@ class TrolololoMetric(BaseMetric):
     def description(self) -> str:
         return 'Bitcoin Trolololo Trend Line'
 
-    def _calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
+    def _calculate(self, df: pd.DataFrame, ax: list[Axes]) -> pd.Series:
         begin_date = pd.to_datetime('2012-01-01')
 
         df['TroloDaysSinceBegin'] = (df['Date'] - begin_date).dt.days

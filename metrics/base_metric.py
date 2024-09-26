@@ -1,8 +1,8 @@
 import traceback
 from abc import ABC, abstractmethod
 
-import matplotlib.pyplot as plt
 import pandas as pd
+from matplotlib.axes import Axes
 from sty import bg, fg, rs
 
 from api.cbbiinfo_api import cbbi_fetch
@@ -21,7 +21,7 @@ class BaseMetric(ABC):
         pass
 
     @abstractmethod
-    def _calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
+    def _calculate(self, df: pd.DataFrame, ax: list[Axes]) -> pd.Series:
         pass
 
     def _fallback(self, df: pd.DataFrame) -> pd.Series:
@@ -30,13 +30,12 @@ class BaseMetric(ABC):
 
         return df['Value']
 
-    def calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
+    async def calculate(self, df: pd.DataFrame, ax: list[Axes]) -> pd.Series:
         try:
             return self._calculate(df, ax)
         except Exception as ex:
             traceback.print_exc()
-
-            send_error_notification(ex)
+            await send_error_notification(ex)
 
             print(fg.black + bg.yellow + f' Requesting fallback values for {self.name} (from CBBI.info) ' + rs.all)
             return self._fallback(df)

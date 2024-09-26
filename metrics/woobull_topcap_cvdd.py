@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
 from sklearn.linear_model import LinearRegression
 
 from metrics.base_metric import BaseMetric
@@ -43,7 +43,7 @@ class WoobullMetric(BaseMetric):
     def description(self) -> str:
         return 'Woobull Top Cap vs CVDD'
 
-    def _calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
+    def _calculate(self, df: pd.DataFrame, ax: list[Axes]) -> pd.Series:
         df = df.merge(_fetch_df(), on='Date', how='left')
         df['Top'] = df['Top'].ffill()
         df['TopLog'] = np.log(df['Top'])

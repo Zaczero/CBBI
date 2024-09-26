@@ -3,7 +3,7 @@ import traceback
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
 from sklearn.linear_model import LinearRegression
 from sty import bg, fg, rs
 
@@ -22,7 +22,7 @@ class RHODLMetric(BaseMetric):
     def description(self) -> str:
         return 'RHODL Ratio'
 
-    def _calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
+    def _calculate(self, df: pd.DataFrame, ax: list[Axes]) -> pd.Series:
         try:
             remote_df = cs_fetch(
                 path='chain/index/charts?type=/charts/rhodl-ratio/',

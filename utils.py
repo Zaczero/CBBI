@@ -8,15 +8,13 @@ import pandas as pd
 import seaborn as sns
 import telegram
 from httpx import Client
-from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
 from sty import bg
 
 HTTP = Client(
-    headers={'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/118.0'},
+    headers={'User-Agent': 'Mozilla/5.0 (Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0'},
     timeout=30,
     follow_redirects=True,
-    http1=True,
-    http2=True,
 )
 
 
@@ -106,7 +104,7 @@ def mark_days_since(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
     return df
 
 
-def add_common_markers(df: pd.DataFrame, ax: plt.Axes, price_line: bool = True) -> None:
+def add_common_markers(df: pd.DataFrame, ax: Axes, price_line: bool = True) -> None:
     """
     This function adds common markers to a plot.
 
@@ -215,7 +213,7 @@ def get_color(val: float) -> str:
     return config[::2][bin_index]
 
 
-def send_error_notification(exception: Exception) -> bool:
+async def send_error_notification(exception: Exception) -> bool:
     """
     This function sends a notification to a Telegram chat with details of the provided exception.
 
@@ -227,18 +225,16 @@ def send_error_notification(exception: Exception) -> bool:
     """
     telegram_token = os.getenv('TELEGRAM_TOKEN')
     telegram_chat_id = os.getenv('TELEGRAM_CHAT_ID')
-
     if not telegram_token or not telegram_chat_id:
         return False
 
-    bot = telegram.Bot(telegram_token)
-
-    bot.send_message(
-        telegram_chat_id,
-        f'🚨 An error has occurred: <b>{exception!s}</b>\n'
-        f'\n'
-        f'🔍️ <b>Stack trace</b>\n'
-        f'<pre>{"".join(traceback.format_exception(exception))}</pre>',
-        parse_mode='HTML',
-    )
+    async with telegram.Bot(telegram_token) as bot:
+        await bot.send_message(
+            telegram_chat_id,
+            f'🚨 An error has occurred: <b>{exception!s}</b>\n'
+            f'\n'
+            f'🔍️ <b>Stack trace</b>\n'
+            f'<pre>{"".join(traceback.format_exception(exception))}</pre>',
+            parse_mode='HTML',
+        )
     return True

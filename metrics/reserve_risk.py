@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
 from sklearn.linear_model import LinearRegression
 
 from api.coinsoto_api import cs_fetch
@@ -18,7 +18,7 @@ class ReserveRiskMetric(BaseMetric):
     def description(self) -> str:
         return 'Reserve Risk'
 
-    def _calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
+    def _calculate(self, df: pd.DataFrame, ax: list[Axes]) -> pd.Series:
         days_shift = 1
 
         df = df.merge(

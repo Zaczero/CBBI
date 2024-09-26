@@ -3,7 +3,7 @@ from itertools import zip_longest
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
 
 from metrics.base_metric import BaseMetric
 from utils import add_common_markers, mark_highs_lows, split_df_on_index_gap
@@ -18,7 +18,7 @@ class PiCycleMetric(BaseMetric):
     def description(self) -> str:
         return 'Pi Cycle Top Indicator'
 
-    def _calculate(self, df: pd.DataFrame, ax: list[plt.Axes]) -> pd.Series:
+    def _calculate(self, df: pd.DataFrame, ax: list[Axes]) -> pd.Series:
         df['111DMA'] = df['Price'].rolling(111).mean()
         df['350DMAx2'] = df['Price'].rolling(350).mean() * 2
 
