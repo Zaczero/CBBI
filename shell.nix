@@ -1,9 +1,8 @@
 { isDevelopment ? true }:
 
 let
-  # Currently using nixpkgs-unstable
   # Update with `nixpkgs-update` command
-  pkgs = import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/4f31540079322e6013930b5b2563fd10f96917f0.tar.gz") { };
+  pkgs = import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/85f7e662eda4fa3a995556527c87b2524b691933.tar.gz") { };
 
   pythonLibs = with pkgs; [
     stdenv.cc.cc.lib
@@ -11,10 +10,10 @@ let
   ];
   python' = with pkgs; (symlinkJoin {
     name = "python";
-    paths = [ python312 ];
+    paths = [ python313 ];
     buildInputs = [ makeWrapper ];
     postBuild = ''
-      wrapProgram "$out/bin/python3.12" --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath pythonLibs}"
+      wrapProgram "$out/bin/python3.13" --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath pythonLibs}"
     '';
   });
 

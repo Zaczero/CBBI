@@ -1,3 +1,4 @@
+import asyncio
 import time
 import traceback
 from pathlib import Path
@@ -6,7 +7,6 @@ import fire
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import uvloop
 from matplotlib import pyplot as plt
 from pyfiglet import figlet_format
 from sty import bg, ef, fg, rs
@@ -173,7 +173,7 @@ def run_and_retry(
 
     for _ in range(max_attempts):
         try:
-            uvloop.run(run(json_file, charts_file, output_dir))
+            asyncio.run(run(json_file, charts_file, output_dir))
             exit(0)
 
         except Exception:

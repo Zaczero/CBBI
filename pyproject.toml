@@ -12,10 +12,9 @@ dependencies = [
   "seaborn",
   "sty",
   "tqdm",
-  "uvloop",
 ]
 name = "cbbi"
-requires-python = "~=3.12"
+requires-python = "~=3.13"
 version = "0.0.0"
 
 [tool.uv]
@@ -54,14 +53,14 @@ exclude = [
 
 indent-width = 4
 line-length = 120
-target-version = "py312"
+target-version = "py313"
 
 [tool.ruff.lint]
 ignore = [
   "S101", # assert
 ]
+# see https://docs.astral.sh/ruff/rules/ for rules documentation
 select = [
-  # see https://docs.astral.sh/ruff/rules/ for rules documentation
   "A",     # flake8-builtins
   "ARG",   # flake8-unused-argumentsf
   "ASYNC", # flake8-async
@@ -102,12 +101,8 @@ select = [
   "YTT", # flake8-2020
 ]
 
-# Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
 unfixable = []
-
-# Allow unused variables when underscore-prefixed.
-dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.ruff.format]
 quote-style = "single"

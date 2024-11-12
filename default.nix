@@ -10,7 +10,7 @@ with pkgs; let
     paths = [
       (pkgs.runCommand "python-venv" { } ''
         mkdir -p $out/lib
-        cp -r "${./.venv/lib/python3.12/site-packages}"/* $out/lib
+        cp -r "${./.venv/lib/python3.13/site-packages}"/* $out/lib
       '')
     ];
   };
