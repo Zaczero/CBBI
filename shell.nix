@@ -1,8 +1,8 @@
-{ isDevelopment ? true }:
+{}:
 
 let
   # Update with `nixpkgs-update` command
-  pkgs = import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/85f7e662eda4fa3a995556527c87b2524b691933.tar.gz") { };
+  pkgs = import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/2bfc080955153be0be56724be6fa5477b4eefabb.tar.gz") { };
 
   pythonLibs = with pkgs; [
     stdenv.cc.cc.lib
@@ -22,8 +22,6 @@ let
     uv
     ruff
 
-    # Scripts
-    # -- Misc
     (writeShellScriptBin "nixpkgs-update" ''
       set -e
       hash=$(
@@ -41,8 +39,9 @@ let
     '')
   ];
 
-  shell' = with pkgs; lib.optionalString isDevelopment ''
+  shell' = ''
     export PYTHONNOUSERSITE=1
+    export PYTHONPATH=""
     export TZ=UTC
 
     current_python=$(readlink -e .venv/bin/python || echo "")
@@ -50,7 +49,6 @@ let
     [ "$current_python" != "${python'}" ] && rm -rf .venv/
 
     echo "Installing Python dependencies"
-    export UV_COMPILE_BYTECODE=1
     export UV_PYTHON="${python'}/bin/python"
     uv sync --frozen
 
