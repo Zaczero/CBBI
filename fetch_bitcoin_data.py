@@ -64,6 +64,8 @@ def fetch_bitcoin_data() -> pd.DataFrame:
     df.loc[df['Date'] == '2021-11-09', 'PriceHigh'] = 0
     df.loc[df['Date'] == '2021-04-14', 'PriceHigh'] = 1
 
+    df.loc[df['Date'] == '2024-12-18', 'PriceHigh'] = 1
+
     df = mark_days_since(df, ['PriceHigh', 'PriceLow', 'Halving'])
     return df
 
