@@ -39,7 +39,7 @@ class RHODLMetric(BaseMetric):
         df['RHODL'] = df['RHODL'].ffill()
         df['RHODLLog'] = np.log(df['RHODL'])
 
-        high_rows = df.loc[df['PriceHigh'] == 1]
+        high_rows = df.loc[(df['PriceHigh'] == 1) | (df['Date'] == '2024-12-18')]
         high_x = high_rows.index.values.reshape(-1, 1)
         high_y = high_rows['RHODLLog'].values.reshape(-1, 1)
 
