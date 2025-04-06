@@ -80,12 +80,11 @@ async def run(json_file: str, charts_file: str, output_dir: str | None) -> None:
     metrics_descriptions = []
 
     sns.set(
-        font_scale=0.15,
+        font_scale=0.225,
         rc={
-            # 'font.size': 6,
-            'figure.titlesize': 8,
-            'axes.titlesize': 5,
-            'axes.labelsize': 4,
+            'figure.titlesize': 12,  # For suptitle (overridden later)
+            'axes.titlesize': 7.5,   # 50% larger than original 5
+            'axes.labelsize': 6,     # 50% larger than original 4
             'xtick.labelsize': 4,
             'ytick.labelsize': 4,
             'lines.linewidth': 0.5,
@@ -96,14 +95,51 @@ async def run(json_file: str, charts_file: str, output_dir: str | None) -> None:
     )
 
     axes_per_metric = 2
-    axes = plt.subplots(len(metrics), axes_per_metric, figsize=(4 * axes_per_metric, 3 * len(metrics)))[1]
+    fig, axes = plt.subplots(len(metrics), axes_per_metric, figsize=(4 * axes_per_metric, 3 * len(metrics)))
     axes = axes.reshape(-1, axes_per_metric)
-    plt.tight_layout(pad=14)
+    
+    # Adjust layout
+    plt.tight_layout(pad=10)
+    plt.subplots_adjust(top=0.98)
+    
+    # Updated title
+    plt.suptitle("CBBI metric data input → output", fontsize=11.25, weight='bold', y=0.99508)
 
-    for metric, ax in zip(metrics, axes, strict=True):
-        df_bitcoin[metric.name] = (await metric.calculate(df_bitcoin_org.copy(), ax)).clip(0, 1)
+    for metric, ax_row in zip(metrics, axes, strict=True):
+        # Swap chart positions so visual flow goes from left to right.
+        df_bitcoin[metric.name] = (await metric.calculate(df_bitcoin_org.copy(), [ax_row[1], ax_row[0]])).clip(0, 1)
         metrics_cols.append(metric.name)
         metrics_descriptions.append(metric.description)
+
+        # Add black horizontal lines at y=1 and y=0 to show metric boundaries.
+        ax_row[1].axhline(y=1, color='black', linewidth=0.5)
+        ax_row[1].axhline(y=0, color='black', linewidth=0.5)
+
+        # Shade above y=1 and below y=0 with 10% black, to bring focus to the data within range.
+        y_min, y_max = ax_row[1].get_ylim()  # Get the y-axis limits for reference
+        # Shade above y=1 to the top edge
+        ax_row[1].fill_betweenx(
+            y=[1, y_max],  # From y=1 to the top
+            x1=0, x2=1,    # Full width in axes fraction (0 to 1)
+            transform=ax_row[1].get_yaxis_transform(),  # Use y-data coordinates, x-axes fraction
+            color='black', alpha=0.1, edgecolor='none', zorder=0
+        )
+        # Shade below y=0 to the bottom edge
+        ax_row[1].fill_betweenx(
+            y=[y_min, 0],  # From bottom to y=0
+            x1=0, x2=1,    # Full width in axes fraction (0 to 1)
+            transform=ax_row[1].get_yaxis_transform(),  # Use y-data coordinates, x-axes fraction
+            color='black', alpha=0.1, edgecolor='none', zorder=0
+        )
+
+        # Add a gray arrow between charts, to make directional flow very clear.
+        ax_row[0].annotate(
+            '', 
+            xy=(1.0967, 0.75), xycoords='axes fraction',
+            xytext=(1.0367, 0.75), textcoords='axes fraction',
+            arrowprops=dict(arrowstyle='->', color='darkgray', lw=1.5, shrinkA=0, shrinkB=0, mutation_scale=10),
+            ha='center', va='center'
+        )
 
     print('Generating charts…')
     plt.savefig(charts_file_path)
