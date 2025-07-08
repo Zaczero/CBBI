@@ -145,8 +145,8 @@ def run_and_retry(
     json_file: str = 'latest.json',
     charts_file: str = 'charts.svg',
     output_dir: str | None = 'output',
-    max_attempts: int = 10,
-    sleep_seconds_on_error: int = 10,
+    max_attempts: int = 3,
+    sleep_seconds_on_error: int = 60,
 ) -> None:
     """
     Calculates the current CBBI confidence value alongside all the required metrics.

@@ -12,7 +12,7 @@ from matplotlib.axes import Axes
 from sty import bg
 
 HTTP = Client(
-    headers={'User-Agent': 'Mozilla/5.0 (Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0'},
+    headers={'User-Agent': 'Mozilla/5.0 (Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0'},
     timeout=30,
     follow_redirects=True,
 )
