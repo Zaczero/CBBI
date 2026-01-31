@@ -4,7 +4,6 @@ import seaborn as sns
 from matplotlib.axes import Axes
 from sklearn.linear_model import LinearRegression
 
-from api.coinsoto_api import cs_fetch
 from metrics.base_metric import BaseMetric
 from utils import add_common_markers
 
@@ -19,15 +18,11 @@ class PuellMetric(BaseMetric):
         return 'Puell Multiple'
 
     def _calculate(self, df: pd.DataFrame, ax: list[Axes]) -> pd.Series:
-        df = df.merge(
-            cs_fetch(
-                path='getPuellMultiple',
-                data_selector='puellMultiplList',
-                col_name='Puell',
-            ),
-            on='Date',
-            how='left',
-        )
+        # Calculate Puell Multiple locally from mining revenue data
+        # Puell = daily_mining_revenue / 365-day_MA_of_mining_revenue
+        # TotalGenerationUSD contains daily mining revenue in USD from Blockchain.com
+        df['MiningRevenue365MA'] = df['TotalGenerationUSD'].rolling(window=365, min_periods=1).mean()
+        df['Puell'] = df['TotalGenerationUSD'] / df['MiningRevenue365MA']
         df['Puell'] = df['Puell'].ffill()
         df['PuellLog'] = np.log(df['Puell'])
 

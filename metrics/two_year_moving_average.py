@@ -4,7 +4,6 @@ import seaborn as sns
 from matplotlib.axes import Axes
 from sklearn.linear_model import LinearRegression
 
-from api.coinsoto_api import cs_fetch
 from metrics.base_metric import BaseMetric
 from utils import add_common_markers
 
@@ -19,15 +18,9 @@ class TwoYearMovingAverageMetric(BaseMetric):
         return '2 Year Moving Average'
 
     def _calculate(self, df: pd.DataFrame, ax: list[Axes]) -> pd.Series:
-        df = df.merge(
-            cs_fetch(
-                path='getBtcMultiplier',
-                data_selector='mA730List',
-                col_name='2YMA',
-            ),
-            on='Date',
-            how='left',
-        )
+        # Calculate 2-year (730-day) moving average locally from price data
+        # No external API needed - we have the price data already
+        df['2YMA'] = df['Price'].rolling(window=730, min_periods=1).mean()
         df['2YMA'] = df['2YMA'].ffill()
         df['2YMALog'] = np.log(df['2YMA'])
         df['2YMALogDiff'] = df['PriceLog'] - df['2YMALog']
