@@ -1,5 +1,3 @@
-import traceback
-
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -30,7 +28,7 @@ class RHODLMetric(BaseMetric):
                 col_name='RHODL',
             )
         except Exception:
-            traceback.print_exc()
+            # Silently try GlassNode fallback - no traceback printed
             print(fg.black + bg.yellow + f' Requesting fallback values for {self.name} (from GlassNode) ' + rs.all)
 
             remote_df = gn_fetch(url_selector='rhodl_ratio', col_name='RHODL', a='BTC')
