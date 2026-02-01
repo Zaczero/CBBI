@@ -4,7 +4,7 @@ import seaborn as sns
 from matplotlib.axes import Axes
 from sklearn.linear_model import LinearRegression
 
-from api.coinsoto_api import cs_fetch
+from api.bgeometrics_api import bg_fetch
 from metrics.base_metric import BaseMetric
 from utils import add_common_markers
 
@@ -22,9 +22,9 @@ class ReserveRiskMetric(BaseMetric):
         days_shift = 1
 
         df = df.merge(
-            cs_fetch(
-                path='chain/index/charts?type=/charts/reserve-risk/',
-                data_selector='value4',
+            bg_fetch(
+                endpoint='reserve-risk',
+                value_col='reserveRisk',
                 col_name='Risk',
             ),
             on='Date',

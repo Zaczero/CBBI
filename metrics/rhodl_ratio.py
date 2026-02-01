@@ -5,7 +5,7 @@ from matplotlib.axes import Axes
 from sklearn.linear_model import LinearRegression
 from sty import bg, fg, rs
 
-from api.coinsoto_api import cs_fetch
+from api.bgeometrics_api import bg_fetch
 from api.glassnode_api import gn_fetch
 from metrics.base_metric import BaseMetric
 from utils import add_common_markers
@@ -22,13 +22,15 @@ class RHODLMetric(BaseMetric):
 
     def _calculate(self, df: pd.DataFrame, ax: list[Axes]) -> pd.Series:
         try:
-            remote_df = cs_fetch(
-                path='chain/index/charts?type=/charts/rhodl-ratio/',
-                data_selector='value1',
+            remote_df = bg_fetch(
+                endpoint='rhodl-ratio',
+                value_col='rhodlRatio',
                 col_name='RHODL',
             )
         except Exception:
-            # Silently try GlassNode fallback - no traceback printed
+            # Print full traceback for backend debugging
+            import traceback
+            traceback.print_exc()
             print(fg.black + bg.yellow + f' Requesting fallback values for {self.name} (from GlassNode) ' + rs.all)
 
             remote_df = gn_fetch(url_selector='rhodl_ratio', col_name='RHODL', a='BTC')

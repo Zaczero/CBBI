@@ -3,7 +3,7 @@ import seaborn as sns
 from matplotlib.axes import Axes
 from sklearn.linear_model import LinearRegression
 
-from api.coinsoto_api import cs_fetch
+from api.bgeometrics_api import bg_fetch
 from metrics.base_metric import BaseMetric
 from utils import add_common_markers
 
@@ -19,9 +19,9 @@ class RUPLMetric(BaseMetric):
 
     def _calculate(self, df: pd.DataFrame, ax: list[Axes]) -> pd.Series:
         df = df.merge(
-            cs_fetch(
-                path='chain/index/charts?type=/charts/relative-unrealized-prof/',
-                data_selector='value1',
+            bg_fetch(
+                endpoint='nupl',
+                value_col='nupl',
                 col_name='RUPL',
             ),
             on='Date',

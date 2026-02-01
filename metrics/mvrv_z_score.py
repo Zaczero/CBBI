@@ -4,7 +4,7 @@ import seaborn as sns
 from matplotlib.axes import Axes
 from sklearn.linear_model import LinearRegression
 
-from api.coinsoto_api import cs_fetch
+from api.bgeometrics_api import bg_fetch
 from metrics.base_metric import BaseMetric
 from utils import add_common_markers
 
@@ -23,9 +23,9 @@ class MVRVMetric(BaseMetric):
         low_model_adjust = 0.26
 
         df = df.merge(
-            cs_fetch(
-                path='chain/index/charts?type=/charts/mvrv-zscore/',
-                data_selector='value4',
+            bg_fetch(
+                endpoint='mvrv',
+                value_col='mvrv',
                 col_name='MVRV',
             ),
             on='Date',
