@@ -15,7 +15,6 @@ def cbbi_fetch(key: str) -> pd.DataFrame:
             'Value',
         ],
     )
-    # Convert string timestamps to int before datetime conversion to avoid FutureWarning
-    df['Date'] = pd.to_datetime(df['Date'].astype(int), unit='s').dt.tz_localize(None)
+    df['Date'] = pd.to_datetime(df['Date'], unit='s').dt.tz_localize(None)
 
     return df

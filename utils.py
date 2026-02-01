@@ -1,71 +1,21 @@
 import os
-import time
 import traceback
 from datetime import datetime
 from math import ceil
-from functools import wraps
 
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import telegram
-from httpx import Client, HTTPStatusError
+from httpx import Client
 from matplotlib.axes import Axes
 from sty import bg
 
-# HTTP client with browser-like headers to reduce blocking
 HTTP = Client(
-    headers={
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'application/json, text/plain, */*',
-        'Accept-Language': 'en-US,en;q=0.9',
-    },
+    headers={'User-Agent': 'Mozilla/5.0 (Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0'},
     timeout=30,
     follow_redirects=True,
 )
-
-
-def http_get_with_retry(url: str, params: dict = None, max_retries: int = 3, delay: float = 1.0):
-    """
-    Make an HTTP GET request with retry logic and exponential backoff.
-    
-    Args:
-        url: The URL to fetch
-        params: Optional query parameters
-        max_retries: Maximum number of retry attempts
-        delay: Initial delay between retries (doubles each attempt)
-    
-    Returns:
-        The HTTP response object
-    
-    Raises:
-        HTTPStatusError: If all retries fail
-    """
-    last_error = None
-    
-    for attempt in range(max_retries):
-        try:
-            response = HTTP.get(url, params=params)
-            response.raise_for_status()
-            return response
-        except HTTPStatusError as e:
-            last_error = e
-            # Don't retry on client errors (4xx) except rate limiting (429)
-            if 400 <= e.response.status_code < 500 and e.response.status_code != 429:
-                raise
-            # Wait before retry with exponential backoff
-            if attempt < max_retries - 1:
-                wait_time = delay * (2 ** attempt)
-                time.sleep(wait_time)
-        except Exception as e:
-            last_error = e
-            if attempt < max_retries - 1:
-                wait_time = delay * (2 ** attempt)
-                time.sleep(wait_time)
-    
-    if last_error:
-        raise last_error
-    raise Exception(f"Failed to fetch {url} after {max_retries} attempts")
 
 
 def mark_highs_lows(

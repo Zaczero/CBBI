@@ -1,3 +1,4 @@
+import traceback
 from abc import ABC, abstractmethod
 
 import pandas as pd
@@ -33,7 +34,7 @@ class BaseMetric(ABC):
         try:
             return self._calculate(df, ax)
         except Exception as ex:
-            # Silently fall back - no traceback printed to keep logs clean
+            traceback.print_exc()
             await send_error_notification(ex)
 
             print(fg.black + bg.yellow + f' Requesting fallback values for {self.name} (from CBBI.info) ' + rs.all)

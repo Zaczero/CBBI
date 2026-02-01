@@ -63,4 +63,8 @@ class PiCycleMetric(BaseMetric):
         sns.lineplot(data=df, x='Date', y='PiCycleIndexNoNa', ax=ax[0])
         add_common_markers(df, ax[0])
 
+        sns.lineplot(data=df, x='Date', y='PiCycleDiff', ax=ax[1])
+        sns.lineplot(data=df, x='Date', y='PiCycleDiffThreshold', ax=ax[1], linestyle='--')
+        add_common_markers(df, ax[1], price_line=False)
+
         return df['PiCycleIndex']

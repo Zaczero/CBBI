@@ -21,8 +21,7 @@ class PuellMetric(BaseMetric):
         # Calculate Puell Multiple locally from mining revenue data
         # Puell = daily_mining_revenue / 365-day_MA_of_mining_revenue
         # TotalGenerationUSD contains daily mining revenue in USD from Blockchain.com
-        df['MiningRevenue365MA'] = df['TotalGenerationUSD'].rolling(window=365, min_periods=1).mean()
-        df['Puell'] = df['TotalGenerationUSD'] / df['MiningRevenue365MA']
+        df['Puell'] = df['TotalGenerationUSD'] / df['TotalGenerationUSD'].rolling(window=365, min_periods=1).mean()
         df['Puell'] = df['Puell'].ffill()
         df['PuellLog'] = np.log(df['Puell'])
 
