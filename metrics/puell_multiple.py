@@ -5,7 +5,7 @@ from matplotlib.axes import Axes
 from sklearn.linear_model import LinearRegression
 
 from metrics.base_metric import BaseMetric
-from utils import add_common_markers
+from utils import add_common_markers, mark_highs_lows
 
 
 class PuellMetric(BaseMetric):
@@ -25,7 +25,9 @@ class PuellMetric(BaseMetric):
         df['Puell'] = df['Puell'].ffill()
         df['PuellLog'] = np.log(df['Puell'])
 
-        high_rows = df.loc[df['PriceHigh'] == 1]
+        df = mark_highs_lows(df, 'PuellLog', True, round(365 * 2), 365)
+        high_rows = df.loc[(df['PuellLogHigh'] == 1) & (df.index > 365)]
+        
         high_x = high_rows.index.values.reshape(-1, 1)
         high_y = high_rows['PuellLog'].values.reshape(-1, 1)
 
@@ -37,7 +39,9 @@ class PuellMetric(BaseMetric):
 
         lin_model = LinearRegression()
         lin_model.fit(high_x, high_y)
-        df['PuellLogHighModel'] = lin_model.predict(x)
+        predictions = lin_model.predict(x)
+        min_peak = high_y.min()
+        df['PuellLogHighModel'] = np.maximum(predictions, min_peak)
 
         # lin_model.fit(low_x, low_y)
         # df['PuellLogLowModel'] = lin_model.predict(x)
