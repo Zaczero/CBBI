@@ -1,67 +1,66 @@
 import numpy as np
-import pandas as pd
+import polars as pl
 import seaborn as sns
 from matplotlib.axes import Axes
-from sklearn.linear_model import LinearRegression
 
 from api.coinsoto_api import cs_fetch
+from metrics._common import join_left_on_date, linreg_predict
 from metrics.base_metric import BaseMetric
-from utils import add_common_markers
 
 
 class MVRVMetric(BaseMetric):
     @property
-    def name(self) -> str:
+    def name(self):
         return 'MVRV'
 
     @property
-    def description(self) -> str:
+    def description(self):
         return 'MVRV Z-Score'
 
-    def _calculate(self, df: pd.DataFrame, ax: list[Axes]) -> pd.Series:
+    def _calculate(self, df: pl.DataFrame, ax: list[Axes]):
         bull_days_shift = 6
         low_model_adjust = 0.26
 
-        df = df.merge(
+        df = join_left_on_date(
+            df,
             cs_fetch(
                 path='chain/index/charts?type=/charts/mvrv-zscore/',
                 data_selector='value4',
                 col_name='MVRV',
             ),
-            on='Date',
-            how='left',
         )
-        df.loc[df['DaysSinceHalving'] < df['DaysSincePriceLow'], 'MVRV'] = df['MVRV'].shift(bull_days_shift)
-        df['MVRV'] = df['MVRV'].ffill()
-        df['MVRV'] = np.log(df['MVRV'] + 1)
 
-        high_rows = df.loc[df['PriceHigh'] == 1]
-        high_x = high_rows.index.values.reshape(-1, 1)
-        high_y = high_rows['MVRV'].values.reshape(-1, 1)
+        df = df.with_columns(
+            MVRV=(
+                pl
+                .when(pl.col('DaysSinceHalving') < pl.col('DaysSincePriceLow'))
+                .then(pl.col('MVRV').shift(bull_days_shift))
+                .otherwise(pl.col('MVRV'))
+            )
+        )
+        df = df.with_columns(MVRV=(pl.col('MVRV').forward_fill() + 1).log())
 
-        low_rows = df.loc[df['PriceLow'] == 1]
-        low_x = low_rows.index.values.reshape(-1, 1)
-        low_y = low_rows['MVRV'].values.reshape(-1, 1)
+        row_nr = np.arange(df.height)
+        high_idx = row_nr[df.get_column('PriceHigh').to_numpy()]
+        low_idx = row_nr[df.get_column('PriceLow').to_numpy()]
 
-        x = df.index.values.reshape(-1, 1)
+        mvrv = df.get_column('MVRV').to_numpy()
+        high_model = linreg_predict(high_idx, mvrv[high_idx], row_nr)
+        low_model = linreg_predict(low_idx, mvrv[low_idx], row_nr) + low_model_adjust
 
-        lin_model = LinearRegression()
-        lin_model.fit(high_x, high_y)
-        df['HighModel'] = lin_model.predict(x)
+        x = df.get_column('Date').to_numpy()
+        mvrv_index = (mvrv - low_model) / (high_model - low_model)
+        y_out = np.nan_to_num(mvrv_index, nan=0.0)
 
-        lin_model.fit(low_x, low_y)
-        df['LowModel'] = lin_model.predict(x) + low_model_adjust
-
-        df['Index'] = (df['MVRV'] - df['LowModel']) / (df['HighModel'] - df['LowModel'])
-
-        df['IndexNoNa'] = df['Index'].fillna(0)
         ax[0].set_title(self.description)
-        sns.lineplot(data=df, x='Date', y='IndexNoNa', ax=ax[0])
-        add_common_markers(df, ax[0])
+        ax[0].set_xlabel('Date')
+        ax[0].set_ylabel('MVRVIndex')
+        sns.lineplot(x=x, y=y_out, ax=ax[0])
 
-        sns.lineplot(data=df, x='Date', y='MVRV', ax=ax[1])
-        sns.lineplot(data=df, x='Date', y='HighModel', ax=ax[1])
-        sns.lineplot(data=df, x='Date', y='LowModel', ax=ax[1])
-        add_common_markers(df, ax[1], price_line=False)
+        ax[1].set_xlabel('Date')
+        ax[1].set_ylabel('MVRV')
+        sns.lineplot(x=x, y=mvrv, ax=ax[1])
+        sns.lineplot(x=x, y=high_model, ax=ax[1])
+        sns.lineplot(x=x, y=low_model, ax=ax[1])
 
-        return df['Index']
+        return pl.Series(mvrv_index)

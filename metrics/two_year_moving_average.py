@@ -1,67 +1,51 @@
 import numpy as np
-import pandas as pd
+import polars as pl
 import seaborn as sns
 from matplotlib.axes import Axes
-from sklearn.linear_model import LinearRegression
 
-from api.coinsoto_api import cs_fetch
+from metrics._common import linreg_predict
 from metrics.base_metric import BaseMetric
-from utils import add_common_markers
 
 
 class TwoYearMovingAverageMetric(BaseMetric):
     @property
-    def name(self) -> str:
+    def name(self):
         return '2YMA'
 
     @property
-    def description(self) -> str:
+    def description(self):
         return '2 Year Moving Average'
 
-    def _calculate(self, df: pd.DataFrame, ax: list[Axes]) -> pd.Series:
-        df = df.merge(
-            cs_fetch(
-                path='getBtcMultiplier',
-                data_selector='mA730List',
-                col_name='2YMA',
-            ),
-            on='Date',
-            how='left',
+    def _calculate(self, df: pl.DataFrame, ax: list[Axes]):
+        row_nr = np.arange(df.height)
+        high_idx = row_nr[df.get_column('PriceHigh').to_numpy()]
+        low_idx = row_nr[df.get_column('PriceLow').to_numpy()]
+
+        price_log = df.get_column('PriceLog').to_numpy()
+        two_yma = df.get_column('Price730DMA').to_numpy()
+        two_yma_log = np.log(two_yma)
+        log_diff = price_log - two_yma_log
+
+        overshoot_model = linreg_predict(high_idx, log_diff[high_idx], row_nr)
+        undershoot_model = linreg_predict(low_idx, log_diff[low_idx], row_nr)
+
+        x = df.get_column('Date').to_numpy()
+        two_yma_high_model = overshoot_model + two_yma_log
+        two_yma_low_model = undershoot_model + two_yma_log
+        two_yma_index = (price_log - two_yma_low_model) / (
+            two_yma_high_model - two_yma_low_model
         )
-        df['2YMA'] = df['2YMA'].ffill()
-        df['2YMALog'] = np.log(df['2YMA'])
-        df['2YMALogDiff'] = df['PriceLog'] - df['2YMALog']
+        y_out = np.nan_to_num(two_yma_index, nan=0.0)
 
-        high_rows = df.loc[df['PriceHigh'] == 1]
-        high_x = high_rows.index.values.reshape(-1, 1)
-        high_y = high_rows['2YMALogDiff'].values.reshape(-1, 1)
-
-        low_rows = df.loc[df['PriceLow'] == 1]
-        low_x = low_rows.index.values.reshape(-1, 1)
-        low_y = low_rows['2YMALogDiff'].values.reshape(-1, 1)
-
-        x = df.index.values.reshape(-1, 1)
-
-        lin_model = LinearRegression()
-        lin_model.fit(high_x, high_y)
-        df['2YMALogOvershootModel'] = lin_model.predict(x)
-
-        lin_model.fit(low_x, low_y)
-        df['2YMALogUndershootModel'] = lin_model.predict(x)
-
-        df['2YMAHighModel'] = df['2YMALogOvershootModel'] + df['2YMALog']
-        df['2YMALowModel'] = df['2YMALogUndershootModel'] + df['2YMALog']
-
-        df['2YMAIndex'] = (df['PriceLog'] - df['2YMALowModel']) / (df['2YMAHighModel'] - df['2YMALowModel'])
-
-        df['2YMAIndexNoNa'] = df['2YMAIndex'].fillna(0)
         ax[0].set_title(self.description)
-        sns.lineplot(data=df, x='Date', y='2YMAIndexNoNa', ax=ax[0])
-        add_common_markers(df, ax[0])
+        ax[0].set_xlabel('Date')
+        ax[0].set_ylabel('2YMAIndex')
+        sns.lineplot(x=x, y=y_out, ax=ax[0])
 
-        sns.lineplot(data=df, x='Date', y='PriceLog', ax=ax[1])
-        sns.lineplot(data=df, x='Date', y='2YMAHighModel', ax=ax[1])
-        sns.lineplot(data=df, x='Date', y='2YMALowModel', ax=ax[1])
-        add_common_markers(df, ax[1], price_line=False)
+        ax[1].set_xlabel('Date')
+        ax[1].set_ylabel('PriceLog')
+        sns.lineplot(x=x, y=price_log, ax=ax[1])
+        sns.lineplot(x=x, y=two_yma_high_model, ax=ax[1])
+        sns.lineplot(x=x, y=two_yma_low_model, ax=ax[1])
 
-        return df['2YMAIndex']
+        return pl.Series(two_yma_index)

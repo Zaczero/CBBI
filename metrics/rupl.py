@@ -1,60 +1,57 @@
-import pandas as pd
+import numpy as np
+import polars as pl
 import seaborn as sns
 from matplotlib.axes import Axes
-from sklearn.linear_model import LinearRegression
 
 from api.coinsoto_api import cs_fetch
+from metrics._common import join_left_on_date, linreg_predict
 from metrics.base_metric import BaseMetric
-from utils import add_common_markers
 
 
 class RUPLMetric(BaseMetric):
     @property
-    def name(self) -> str:
+    def name(self):
         return 'RUPL'
 
     @property
-    def description(self) -> str:
+    def description(self):
         return 'RUPL/NUPL Chart'
 
-    def _calculate(self, df: pd.DataFrame, ax: list[Axes]) -> pd.Series:
-        df = df.merge(
+    def _calculate(self, df: pl.DataFrame, ax: list[Axes]):
+        df = join_left_on_date(
+            df,
             cs_fetch(
                 path='chain/index/charts?type=/charts/relative-unrealized-prof/',
                 data_selector='value1',
                 col_name='RUPL',
             ),
-            on='Date',
-            how='left',
         )
-        df['RUPL'] = df['RUPL'].ffill()
 
-        high_rows = df.loc[df['PriceHigh'] == 1]
-        high_x = high_rows.index.values.reshape(-1, 1)
-        high_y = high_rows['RUPL'].values.reshape(-1, 1)
+        df = df.with_columns(RUPL=pl.col('RUPL').forward_fill())
 
-        low_rows = df.loc[df['PriceLow'] == 1][1:]
-        low_x = low_rows.index.values.reshape(-1, 1)
-        low_y = low_rows['RUPL'].values.reshape(-1, 1)
+        row_nr = np.arange(df.height)
+        high_idx = row_nr[df.get_column('PriceHigh').to_numpy()]
+        low_idx = row_nr[df.get_column('PriceLow').to_numpy()][1:]
 
-        x = df.index.values.reshape(-1, 1)
+        rupl = df.get_column('RUPL').to_numpy()
+        x_all = row_nr
 
-        lin_model = LinearRegression()
-        lin_model.fit(high_x, high_y)
-        df['HighModel'] = lin_model.predict(x)
+        high_model = linreg_predict(high_idx, rupl[high_idx], x_all)
+        low_model = linreg_predict(low_idx, rupl[low_idx], x_all)
 
-        lin_model.fit(low_x, low_y)
-        df['LowModel'] = lin_model.predict(x)
-
-        df['RUPLIndex'] = (df['RUPL'] - df['LowModel']) / (df['HighModel'] - df['LowModel'])
+        x = df.get_column('Date').to_numpy()
+        rupl_index = (rupl - low_model) / (high_model - low_model)
+        y_out = np.nan_to_num(rupl_index, nan=0.0)
 
         ax[0].set_title(self.description)
-        sns.lineplot(data=df, x='Date', y='RUPLIndex', ax=ax[0])
-        add_common_markers(df, ax[0])
+        ax[0].set_xlabel('Date')
+        ax[0].set_ylabel('RUPLIndex')
+        sns.lineplot(x=x, y=y_out, ax=ax[0])
 
-        sns.lineplot(data=df, x='Date', y='RUPL', ax=ax[1])
-        sns.lineplot(data=df, x='Date', y='HighModel', ax=ax[1])
-        sns.lineplot(data=df, x='Date', y='LowModel', ax=ax[1])
-        add_common_markers(df, ax[1], price_line=False)
+        ax[1].set_xlabel('Date')
+        ax[1].set_ylabel('RUPL')
+        sns.lineplot(x=x, y=rupl, ax=ax[1])
+        sns.lineplot(x=x, y=high_model, ax=ax[1])
+        sns.lineplot(x=x, y=low_model, ax=ax[1])
 
-        return df['RUPLIndex']
+        return pl.Series(rupl_index)

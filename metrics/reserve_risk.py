@@ -1,67 +1,56 @@
 import numpy as np
-import pandas as pd
+import polars as pl
 import seaborn as sns
 from matplotlib.axes import Axes
-from sklearn.linear_model import LinearRegression
 
 from api.coinsoto_api import cs_fetch
+from metrics._common import join_left_on_date, linreg_predict
 from metrics.base_metric import BaseMetric
-from utils import add_common_markers
 
 
 class ReserveRiskMetric(BaseMetric):
     @property
-    def name(self) -> str:
+    def name(self):
         return 'ReserveRisk'
 
     @property
-    def description(self) -> str:
+    def description(self):
         return 'Reserve Risk'
 
-    def _calculate(self, df: pd.DataFrame, ax: list[Axes]) -> pd.Series:
+    def _calculate(self, df: pl.DataFrame, ax: list[Axes]):
         days_shift = 1
 
-        df = df.merge(
+        df = join_left_on_date(
+            df,
             cs_fetch(
                 path='chain/index/charts?type=/charts/reserve-risk/',
                 data_selector='value4',
                 col_name='Risk',
             ),
-            on='Date',
-            how='left',
         )
-        df['Risk'] = df['Risk'].shift(days_shift, fill_value=np.nan)
-        df['Risk'] = df['Risk'].ffill()
-        df['RiskLog'] = np.log(df['Risk'])
+        df = df.with_columns(Risk=pl.col('Risk').shift(days_shift).forward_fill())
 
-        high_rows = df.loc[df['PriceHigh'] == 1]
-        high_x = high_rows.index.values.reshape(-1, 1)
-        high_y = high_rows['RiskLog'].values.reshape(-1, 1)
+        row_nr = np.arange(df.height)
+        high_idx = row_nr[df.get_column('PriceHigh').to_numpy()]
+        low_idx = row_nr[df.get_column('PriceLow').to_numpy()][1:]
 
-        low_rows = df.loc[df['PriceLow'] == 1][1:]
-        low_x = low_rows.index.values.reshape(-1, 1)
-        low_y = low_rows['RiskLog'].values.reshape(-1, 1)
+        risk_log = np.log(df.get_column('Risk').to_numpy())
+        high_model = linreg_predict(high_idx, risk_log[high_idx], row_nr) - 0.15
+        low_model = linreg_predict(low_idx, risk_log[low_idx], row_nr)
 
-        x = df.index.values.reshape(-1, 1)
+        x = df.get_column('Date').to_numpy()
+        risk_index = (risk_log - low_model) / (high_model - low_model)
+        y_out = np.nan_to_num(risk_index, nan=0.0)
 
-        lin_model = LinearRegression()
-        lin_model.fit(high_x, high_y)
-        df['HighModel'] = lin_model.predict(x)
-        df['HighModel'] = df['HighModel'] - 0.15
-
-        lin_model.fit(low_x, low_y)
-        df['LowModel'] = lin_model.predict(x)
-
-        df['RiskIndex'] = (df['RiskLog'] - df['LowModel']) / (df['HighModel'] - df['LowModel'])
-
-        df['RiskIndexNoNa'] = df['RiskIndex'].fillna(0)
         ax[0].set_title(self.description)
-        sns.lineplot(data=df, x='Date', y='RiskIndexNoNa', ax=ax[0])
-        add_common_markers(df, ax[0])
+        ax[0].set_xlabel('Date')
+        ax[0].set_ylabel('RiskIndex')
+        sns.lineplot(x=x, y=y_out, ax=ax[0])
 
-        sns.lineplot(data=df, x='Date', y='RiskLog', ax=ax[1])
-        sns.lineplot(data=df, x='Date', y='HighModel', ax=ax[1])
-        sns.lineplot(data=df, x='Date', y='LowModel', ax=ax[1])
-        add_common_markers(df, ax[1], price_line=False)
+        ax[1].set_xlabel('Date')
+        ax[1].set_ylabel('RiskLog')
+        sns.lineplot(x=x, y=risk_log, ax=ax[1])
+        sns.lineplot(x=x, y=high_model, ax=ax[1])
+        sns.lineplot(x=x, y=low_model, ax=ax[1])
 
-        return df['RiskIndex']
+        return pl.Series(risk_index)

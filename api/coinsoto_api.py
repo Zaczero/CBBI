@@ -1,9 +1,9 @@
-import pandas as pd
+import polars as pl
 
 from utils import HTTP
 
 
-def cs_fetch(path: str, data_selector: str, col_name: str) -> pd.DataFrame:
+def cs_fetch(path: str, data_selector: str, col_name: str):
     response = HTTP.get(f'https://api.coinank.com/indicatorapi/{path}')
     response.raise_for_status()
     data = response.json()['data']
@@ -13,13 +13,20 @@ def cs_fetch(path: str, data_selector: str, col_name: str) -> pd.DataFrame:
 
     data_x = data['timeList']
     data_y = data[data_selector]
-    assert len(data_x) == len(data_y), f'{len(data_x)=} != {len(data_y)=}'
 
-    df = pd.DataFrame({
-        'Date': data_x[: len(data_y)],
-        col_name: data_y,
-    })
-
-    df['Date'] = pd.to_datetime(df['Date'], unit='ms').dt.tz_localize(None)
-
-    return df
+    return (
+        pl
+        .DataFrame({
+            'Date': data_x[: len(data_y)],
+            col_name: data_y,
+        })
+        .with_columns(
+            Date=(
+                pl
+                .from_epoch(pl.col('Date'), time_unit='ms')
+                .dt.cast_time_unit('us')
+                .dt.replace_time_zone('UTC')
+            )
+        )
+        .select('Date', col_name)
+    )

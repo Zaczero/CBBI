@@ -1,73 +1,59 @@
-import traceback
-
 import numpy as np
-import pandas as pd
+import polars as pl
 import seaborn as sns
 from matplotlib.axes import Axes
-from sklearn.linear_model import LinearRegression
-from sty import bg, fg, rs
 
 from api.coinsoto_api import cs_fetch
-from api.glassnode_api import gn_fetch
+from metrics._common import join_left_on_date, linreg_predict
 from metrics.base_metric import BaseMetric
-from utils import add_common_markers
 
 
 class RHODLMetric(BaseMetric):
     @property
-    def name(self) -> str:
+    def name(self):
         return 'RHODL'
 
     @property
-    def description(self) -> str:
+    def description(self):
         return 'RHODL Ratio'
 
-    def _calculate(self, df: pd.DataFrame, ax: list[Axes]) -> pd.Series:
-        try:
-            remote_df = cs_fetch(
-                path='chain/index/charts?type=/charts/rhodl-ratio/',
-                data_selector='value1',
-                col_name='RHODL',
-            )
-        except Exception:
-            traceback.print_exc()
-            print(fg.black + bg.yellow + f' Requesting fallback values for {self.name} (from GlassNode) ' + rs.all)
-
-            remote_df = gn_fetch(url_selector='rhodl_ratio', col_name='RHODL', a='BTC')
-
-        df = df.merge(remote_df, on='Date', how='left')
-        df['RHODL'] = df['RHODL'].ffill()
-        df['RHODLLog'] = np.log(df['RHODL'])
-
-        high_rows = df.loc[(df['PriceHigh'] == 1) | (df['Date'] == '2024-12-18')]
-        high_x = high_rows.index.values.reshape(-1, 1)
-        high_y = high_rows['RHODLLog'].values.reshape(-1, 1)
-
-        low_rows = df.loc[df['PriceLow'] == 1][1:]
-        low_x = low_rows.index.values.reshape(-1, 1)
-        low_y = low_rows['RHODLLog'].values.reshape(-1, 1)
-
-        x = df.index.values.reshape(-1, 1)
-
-        lin_model = LinearRegression()
-        lin_model.fit(high_x, high_y)
-        df['RHODLLogHighModel'] = lin_model.predict(x)
-
-        lin_model.fit(low_x, low_y)
-        df['RHODLLogLowModel'] = lin_model.predict(x)
-
-        df['RHODLIndex'] = (df['RHODLLog'] - df['RHODLLogLowModel']) / (
-            df['RHODLLogHighModel'] - df['RHODLLogLowModel']
+    def _calculate(self, df: pl.DataFrame, ax: list[Axes]):
+        remote_df = cs_fetch(
+            path='chain/index/charts?type=/charts/rhodl-ratio/',
+            data_selector='value1',
+            col_name='RHODL',
         )
 
-        df['RHODLIndexNoNa'] = df['RHODLIndex'].fillna(0)
+        df = join_left_on_date(df, remote_df).with_columns(
+            RHODL=pl.col('RHODL').forward_fill()
+        )
+
+        row_nr = np.arange(df.height)
+        high_mask = df.get_column('PriceHigh').to_numpy() | (
+            df.get_column('Date').to_numpy() == np.datetime64('2024-12-18')
+        )
+        high_idx = row_nr[high_mask]
+        low_idx = row_nr[df.get_column('PriceLow').to_numpy()][1:]
+
+        rhodl = df.get_column('RHODL').to_numpy()
+        rhodl_log = np.log(rhodl)
+
+        high_model = linreg_predict(high_idx, rhodl_log[high_idx], row_nr)
+        low_model = linreg_predict(low_idx, rhodl_log[low_idx], row_nr)
+
+        x = df.get_column('Date').to_numpy()
+        rhodl_index = (rhodl_log - low_model) / (high_model - low_model)
+        y_out = np.nan_to_num(rhodl_index, nan=0.0)
+
         ax[0].set_title(self.description)
-        sns.lineplot(data=df, x='Date', y='RHODLIndexNoNa', ax=ax[0])
-        add_common_markers(df, ax[0])
+        ax[0].set_xlabel('Date')
+        ax[0].set_ylabel('RHODLIndex')
+        sns.lineplot(x=x, y=y_out, ax=ax[0])
 
-        sns.lineplot(data=df, x='Date', y='RHODLLog', ax=ax[1])
-        sns.lineplot(data=df, x='Date', y='RHODLLogHighModel', ax=ax[1])
-        sns.lineplot(data=df, x='Date', y='RHODLLogLowModel', ax=ax[1])
-        add_common_markers(df, ax[1], price_line=False)
+        ax[1].set_xlabel('Date')
+        ax[1].set_ylabel('RHODLLog')
+        sns.lineplot(x=x, y=rhodl_log, ax=ax[1])
+        sns.lineplot(x=x, y=high_model, ax=ax[1])
+        sns.lineplot(x=x, y=low_model, ax=ax[1])
 
-        return df['RHODLIndex']
+        return pl.Series(rhodl_index)

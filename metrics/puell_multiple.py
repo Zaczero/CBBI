@@ -1,66 +1,50 @@
 import numpy as np
-import pandas as pd
+import polars as pl
 import seaborn as sns
 from matplotlib.axes import Axes
-from sklearn.linear_model import LinearRegression
 
-from api.coinsoto_api import cs_fetch
+from metrics._common import linreg_predict
 from metrics.base_metric import BaseMetric
-from utils import add_common_markers
 
 
 class PuellMetric(BaseMetric):
     @property
-    def name(self) -> str:
+    def name(self):
         return 'Puell'
 
     @property
-    def description(self) -> str:
+    def description(self):
         return 'Puell Multiple'
 
-    def _calculate(self, df: pd.DataFrame, ax: list[Axes]) -> pd.Series:
-        df = df.merge(
-            cs_fetch(
-                path='getPuellMultiple',
-                data_selector='puellMultiplList',
-                col_name='Puell',
-            ),
-            on='Date',
-            how='left',
-        )
-        df['Puell'] = df['Puell'].ffill()
-        df['PuellLog'] = np.log(df['Puell'])
-
-        high_rows = df.loc[df['PriceHigh'] == 1]
-        high_x = high_rows.index.values.reshape(-1, 1)
-        high_y = high_rows['PuellLog'].values.reshape(-1, 1)
-
-        # low_rows = df.loc[df['PriceLow'] == 1][1:]
-        # low_x = low_rows.index.values.reshape(-1, 1)
-        # low_y = low_rows['PuellLog'].values.reshape(-1, 1)
-
-        x = df.index.values.reshape(-1, 1)
-
-        lin_model = LinearRegression()
-        lin_model.fit(high_x, high_y)
-        df['PuellLogHighModel'] = lin_model.predict(x)
-
-        # lin_model.fit(low_x, low_y)
-        # df['PuellLogLowModel'] = lin_model.predict(x)
-        df['PuellLogLowModel'] = -1
-
-        df['PuellIndex'] = (df['PuellLog'] - df['PuellLogLowModel']) / (
-            df['PuellLogHighModel'] - df['PuellLogLowModel']
+    def _calculate(self, df: pl.DataFrame, ax: list[Axes]):
+        puell_log = (
+            df
+            .get_column('PuellMultiple')
+            .forward_fill()
+            .log()
+            .rolling_mean(window_size=3, min_samples=1)
+            .to_numpy()
         )
 
-        df['PuellIndexNoNa'] = df['PuellIndex'].fillna(0)
+        row_nr = np.arange(df.height)
+        high_idx = row_nr[df.get_column('PriceHigh').to_numpy()]
+
+        high_model = linreg_predict(high_idx, puell_log[high_idx], row_nr)
+        low_model = -1.0
+
+        x = df.get_column('Date').to_numpy()
+        puell_index = (puell_log - low_model) / (high_model - low_model)
+        y_out = np.nan_to_num(puell_index, nan=0.0)
+
         ax[0].set_title(self.description)
-        sns.lineplot(data=df, x='Date', y='PuellIndexNoNa', ax=ax[0])
-        add_common_markers(df, ax[0])
+        ax[0].set_xlabel('Date')
+        ax[0].set_ylabel('PuellIndex')
+        sns.lineplot(x=x, y=y_out, ax=ax[0])
 
-        sns.lineplot(data=df, x='Date', y='PuellLog', ax=ax[1])
-        sns.lineplot(data=df, x='Date', y='PuellLogHighModel', ax=ax[1])
-        sns.lineplot(data=df, x='Date', y='PuellLogLowModel', ax=ax[1])
-        add_common_markers(df, ax[1], price_line=False)
+        ax[1].set_xlabel('Date')
+        ax[1].set_ylabel('PuellLog')
+        sns.lineplot(x=x, y=puell_log, ax=ax[1])
+        sns.lineplot(x=x, y=high_model, ax=ax[1])
+        sns.lineplot(x=x, y=np.full(df.height, low_model, dtype=np.float64), ax=ax[1])
 
-        return df['PuellIndex']
+        return pl.Series(puell_index)

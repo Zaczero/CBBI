@@ -1,4 +1,4 @@
-import pandas as pd
+import polars as pl
 
 from utils import HTTP
 
@@ -10,7 +10,7 @@ def cm_fetch_asset_metrics(
     frequency: str = '1d',
     start_time: str,
     page_size: int = 10_000,
-    null_as_zero: bool = True,
+    null_as_zero: bool = False,
 ):
     """
     Fetch Coin Metrics Community time series asset metrics.
@@ -41,12 +41,12 @@ def cm_fetch_asset_metrics(
         response_json = response.json()
         data.extend(response_json['data'])
 
-    df = pd.DataFrame(data)
-    df['Date'] = pd.to_datetime(df['time']).dt.tz_localize(None).dt.floor('d')
-    df.drop(columns=['time'], inplace=True)
-
-    for col in metrics:
-        if col in df.columns:
-            df[col] = pd.to_numeric(df[col])
-
-    return df
+    return (
+        pl
+        .from_dicts(data, infer_schema_length=None)
+        .with_columns(
+            *[pl.col(col).cast(pl.Float64) for col in metrics if col in data[0]],
+            Date=pl.col('time').str.to_datetime(time_zone='UTC').dt.truncate('1d'),
+        )
+        .drop('time')
+    )

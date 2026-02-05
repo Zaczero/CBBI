@@ -1,7 +1,7 @@
 import traceback
 from abc import ABC, abstractmethod
 
-import pandas as pd
+import polars as pl
 from matplotlib.axes import Axes
 from sty import bg, fg, rs
 
@@ -21,21 +21,28 @@ class BaseMetric(ABC):
         pass
 
     @abstractmethod
-    def _calculate(self, df: pd.DataFrame, ax: list[Axes]) -> pd.Series:
+    def _calculate(self, df: pl.DataFrame, ax: list[Axes]) -> pl.Series:
         pass
 
-    def _fallback(self, df: pd.DataFrame) -> pd.Series:
-        df = df.merge(cbbi_fetch(self.name), on='Date', how='left')
-        df['Value'] = df['Value'].ffill()
+    def _fallback(self, df: pl.DataFrame):
+        return (
+            df
+            .join(cbbi_fetch(self.name), on='Date', how='left', maintain_order='left')
+            .with_columns(pl.col('Value').forward_fill())
+            .get_column('Value')
+        )
 
-        return df['Value']
-
-    async def calculate(self, df: pd.DataFrame, ax: list[Axes]) -> pd.Series:
+    async def calculate(self, df: pl.DataFrame, ax: list[Axes]):
         try:
             return self._calculate(df, ax)
         except Exception as ex:
             traceback.print_exc()
             await send_error_notification(ex)
 
-            print(fg.black + bg.yellow + f' Requesting fallback values for {self.name} (from CBBI.info) ' + rs.all)
+            print(
+                fg.black
+                + bg.yellow
+                + f' Requesting fallback values for {self.name} (from CBBI.info) '
+                + rs.all
+            )
             return self._fallback(df)

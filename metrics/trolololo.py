@@ -1,69 +1,67 @@
 import numpy as np
-import pandas as pd
+import polars as pl
 import seaborn as sns
 from matplotlib.axes import Axes
-from sklearn.linear_model import LinearRegression
 
+from metrics._common import linreg_predict
 from metrics.base_metric import BaseMetric
-from utils import add_common_markers
 
 
 class TrolololoMetric(BaseMetric):
     @property
-    def name(self) -> str:
+    def name(self):
         return 'Trolololo'
 
     @property
-    def description(self) -> str:
+    def description(self):
         return 'Bitcoin Trolololo Trend Line'
 
-    def _calculate(self, df: pd.DataFrame, ax: list[Axes]) -> pd.Series:
-        begin_date = pd.to_datetime('2012-01-01')
+    def _calculate(self, df: pl.DataFrame, ax: list[Axes]):
+        x = df.get_column('Date').to_numpy()
+        price_log = df.get_column('PriceLog').to_numpy()
 
-        df['TroloDaysSinceBegin'] = (df['Date'] - begin_date).dt.days
+        begin_date = np.datetime64('2012-01-01T00:00:00')
+        days_since_begin = (x - begin_date) / np.timedelta64(1, 'D')
 
-        # Maximum Bubble Territory
-        df['TroloTopPrice'] = np.power(10, 2.900 * np.log(df['TroloDaysSinceBegin'] + 1400) - 19.463)
-        df['TroloTopPriceLog'] = np.log(df['TroloTopPrice'])
+        trolo_top_log = np.log(10.0) * (
+            2.900 * np.log(days_since_begin + 1400) - 19.463
+        )
+        trolo_bottom_log = np.log(10.0) * (
+            2.788 * np.log(days_since_begin + 1200) - 19.463
+        )
 
-        # Basically a Fire Sale
-        df['TroloBottomPrice'] = np.power(10, 2.788 * np.log(df['TroloDaysSinceBegin'] + 1200) - 19.463)
-        df['TroloBottomPriceLog'] = np.log(df['TroloBottomPrice'])
+        overshoot_actual = price_log - trolo_top_log
+        undershoot_actual = price_log - trolo_bottom_log
 
-        df['TroloDifference'] = df['TroloTopPriceLog'] - df['TroloBottomPriceLog']
-        df['TroloOvershootActual'] = df['PriceLog'] - df['TroloTopPriceLog']
-        df['TroloUndershootActual'] = df['PriceLog'] - df['TroloBottomPriceLog']
+        row_nr = np.arange(df.height)
+        after_begin = days_since_begin >= 0
+        high_mask = df.get_column('PriceHigh').to_numpy() & after_begin
+        low_mask = df.get_column('PriceLow').to_numpy() & after_begin
 
-        high_rows = df.loc[(df['PriceHigh'] == 1) & (df['Date'] >= begin_date)]
-        high_x = high_rows.index.values.reshape(-1, 1)
-        high_y = high_rows['TroloOvershootActual'].values.reshape(-1, 1)
+        high_idx = row_nr[high_mask]
+        low_idx = row_nr[low_mask]
+
+        high_y = overshoot_actual[high_idx].copy()
         high_y[0] *= 0.6  # the first value seems too high
 
-        low_rows = df.loc[(df['PriceLow'] == 1) & (df['Date'] >= begin_date)]
-        low_x = low_rows.index.values.reshape(-1, 1)
-        low_y = low_rows['TroloUndershootActual'].values.reshape(-1, 1)
+        overshoot_model = linreg_predict(high_idx, high_y, row_nr)
+        undershoot_model = linreg_predict(low_idx, undershoot_actual[low_idx], row_nr)
 
-        x = df.index.values.reshape(-1, 1)
+        high_model = trolo_top_log + overshoot_model
+        low_model = trolo_bottom_log + undershoot_model
+        trolo_index = (price_log - low_model) / (high_model - low_model)
 
-        lin_model = LinearRegression()
-        lin_model.fit(high_x, high_y)
-        df['TroloOvershootModel'] = lin_model.predict(x)
-
-        lin_model.fit(low_x, low_y)
-        df['TroloUndershootModel'] = lin_model.predict(x)
-
-        df['TroloHighModel'] = df['TroloTopPriceLog'] + df['TroloOvershootModel']
-        df['TroloLowModel'] = df['TroloBottomPriceLog'] + df['TroloUndershootModel']
-
-        df['TroloIndex'] = (df['PriceLog'] - df['TroloLowModel']) / (df['TroloHighModel'] - df['TroloLowModel'])
+        y_out = np.nan_to_num(trolo_index, nan=0.0)
 
         ax[0].set_title(self.description)
-        sns.lineplot(data=df, x='Date', y='TroloIndex', ax=ax[0])
-        add_common_markers(df, ax[0])
+        ax[0].set_xlabel('Date')
+        ax[0].set_ylabel('TroloIndex')
+        sns.lineplot(x=x, y=y_out, ax=ax[0])
 
-        sns.lineplot(data=df, x='Date', y='PriceLog', ax=ax[1])
-        sns.lineplot(data=df, x='Date', y='TroloHighModel', ax=ax[1])
-        sns.lineplot(data=df, x='Date', y='TroloLowModel', ax=ax[1])
-        add_common_markers(df, ax[1], price_line=False)
+        ax[1].set_xlabel('Date')
+        ax[1].set_ylabel('PriceLog')
+        sns.lineplot(x=x, y=price_log, ax=ax[1])
+        sns.lineplot(x=x, y=high_model, ax=ax[1])
+        sns.lineplot(x=x, y=low_model, ax=ax[1])
 
-        return df['TroloIndex']
+        return pl.Series(trolo_index)

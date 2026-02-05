@@ -79,15 +79,6 @@ and add environment variables in the following format:
 VARIABLE_NAME=value
 ```
 
-### GLASSNODE_API_KEY
-
-Defines an API key to be used during GlassNode fallback requests.
-If unset or empty, a cache fallback will be used instead (via CBBI.info).
-
-#### Example usage
-
-- GLASSNODE_API_KEY=REPLACE_ME
-
 ### TELEGRAM_TOKEN, TELEGRAM_CHAT_ID
 
 Define both variables to receive Telegram notifications about metric errors that occur during the execution.
