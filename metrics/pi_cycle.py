@@ -3,6 +3,7 @@ import polars as pl
 import seaborn as sns
 from matplotlib.axes import Axes
 
+from metrics._common import linreg_predict
 from metrics.base_metric import BaseMetric
 from utils import mark_highs_lows
 
@@ -23,74 +24,74 @@ class PiCycleMetric(BaseMetric):
         df = df.with_columns(
             dma_111.alias('111DMA'),
             dma_350x2.alias('350DMAx2'),
-        ).with_columns(
-            PiCycleDiff=(pl.col('111DMA').log() - pl.col('350DMAx2').log()).abs()
-        )
+        ).with_columns(PiCycleDiff=pl.col('111DMA').log() - pl.col('350DMAx2').log())
 
         diff = df.get_column('PiCycleDiff').to_numpy()
-        dma_111 = df.get_column('111DMA').to_numpy()
-        dma_350x2 = df.get_column('350DMAx2').to_numpy()
-        fluke = (dma_111 > dma_350x2) & ~np.isnan(dma_111) & ~np.isnan(dma_350x2)
-
-        idx_fluke = np.flatnonzero(fluke)
-        idx_actual = np.flatnonzero(~fluke)
-        fluke_segments = (
-            np.split(idx_fluke, np.where(np.diff(idx_fluke) > 1)[0] + 1)
-            if idx_fluke.size
-            else []
-        )
-        actual_segments = (
-            np.split(idx_actual, np.where(np.diff(idx_actual) > 1)[0] + 1)
-            if idx_actual.size
-            else []
-        )
-
-        threshold = np.zeros(len(diff), dtype=np.float64)
-        for i, fluke_seg in enumerate(fluke_segments):
-            if fluke_seg.size == 0:
-                continue
-
-            seg_diff = diff[fluke_seg]
-            max_pos = int(np.nanargmax(seg_diff))
-            max_idx = int(fluke_seg[max_pos])
-            max_val = float(seg_diff[max_pos])
-
-            threshold[max_idx + 1 :] = max_val
-
-            actual_seg = (
-                actual_segments[i + 1] if i + 1 < len(actual_segments) else None
-            )
-            if actual_seg is not None and actual_seg.size:
-                actual_diff = diff[actual_seg]
-                above = actual_seg[actual_diff >= max_val]
-                if above.size:
-                    threshold[int(above.min()) :] = 0
-
-            fluke_next = fluke_segments[i + 1] if i + 1 < len(fluke_segments) else None
-            if fluke_next is not None and fluke_next.size:
-                threshold[int(fluke_next.min()) :] = 0
-
-        diff = np.where(diff < threshold, threshold, diff)
-
-        df = df.with_columns(
-            pl.Series('PiCycleDiffThreshold', threshold),
-            pl.Series('PiCycleDiff', diff),
-        )
         df = mark_highs_lows(df, 'PiCycleDiff', True, 365 * 2, 365)
 
-        high_marks = df.get_column('PiCycleDiffHigh').to_numpy()
-        idx = np.where(high_marks, np.arange(df.height), -1)
-        last_idx = np.maximum.accumulate(idx)
+        crossed = diff > 0
+        crossed_idx = np.flatnonzero(crossed)
+        uncrossed_idx = np.flatnonzero(~crossed)
+        crossed_segments = (
+            np.split(crossed_idx, np.where(np.diff(crossed_idx) > 1)[0] + 1)
+            if crossed_idx.size
+            else []
+        )
+        uncrossed_segments = (
+            np.split(uncrossed_idx, np.where(np.diff(uncrossed_idx) > 1)[0] + 1)
+            if uncrossed_idx.size
+            else []
+        )
 
-        last_high_inclusive = np.full(df.height, np.nan, dtype=np.float64)
-        valid = last_idx >= 0
-        last_high_inclusive[valid] = diff[last_idx[valid]]
+        distance_floor = np.zeros(df.height, dtype=np.float64)
+        distance_from_zero = np.abs(diff)
+        for i, crossed_seg in enumerate(crossed_segments):
+            seg_distance = distance_from_zero[crossed_seg]
+            max_pos = int(np.nanargmax(seg_distance))
+            max_idx = int(crossed_seg[max_pos])
+            max_distance = float(seg_distance[max_pos])
 
-        prev_high = np.roll(last_high_inclusive, 1)
-        prev_high[0] = np.nan
+            distance_floor[max_idx + 1 :] = max_distance
 
-        index = 1 - (diff / prev_high)
-        index[index < 0] = 0
+            uncrossed_seg = (
+                uncrossed_segments[i + 1] if i + 1 < len(uncrossed_segments) else None
+            )
+            if uncrossed_seg is not None and uncrossed_seg.size:
+                above = uncrossed_seg[distance_from_zero[uncrossed_seg] >= max_distance]
+                if above.size:
+                    distance_floor[int(above.min()) :] = 0
+
+            crossed_next = (
+                crossed_segments[i + 1] if i + 1 < len(crossed_segments) else None
+            )
+            if crossed_next is not None and crossed_next.size:
+                distance_floor[int(crossed_next.min()) :] = 0
+
+        high_idx = np.flatnonzero(df.get_column('PiCycleDiffHigh').to_numpy())
+        row_nr = np.arange(df.height)
+        low_idx = np.flatnonzero(df.get_column('PiCycleDiffLow').to_numpy())
+
+        target = np.zeros(df.height, dtype=np.float64)
+        if high_idx.size >= 3:
+            target = np.minimum(
+                linreg_predict(high_idx, diff[high_idx], row_nr),
+                0.0,
+            )
+
+        finite_idx = np.flatnonzero(np.isfinite(diff))
+        cold_model = np.full(df.height, np.nan, dtype=np.float64)
+
+        cycle_starts = np.array([int(finite_idx[0]), *low_idx], dtype=np.int64)
+        for i, start in enumerate(cycle_starts):
+            end = (
+                int(cycle_starts[i + 1] - 1)
+                if i + 1 < cycle_starts.size
+                else df.height - 1
+            )
+            cold_model[start : end + 1] = diff[start]
+
+        distance = np.maximum(np.maximum(target - diff, 0.0), distance_floor)
+        index = 1 - distance / np.abs(target - cold_model)
 
         x = df.get_column('Date').to_numpy()
         y_out = np.nan_to_num(index, nan=0.0)
@@ -102,12 +103,9 @@ class PiCycleMetric(BaseMetric):
 
         ax[1].set_xlabel('Date')
         ax[1].set_ylabel('PiCycleDiff')
-        sns.lineplot(x=x, y=df.get_column('PiCycleDiff').to_numpy(), ax=ax[1])
-        sns.lineplot(
-            x=x,
-            y=df.get_column('PiCycleDiffThreshold').to_numpy(),
-            ax=ax[1],
-            linestyle='--',
-        )
+        sns.lineplot(x=x, y=diff, ax=ax[1])
+        sns.lineplot(x=x, y=target, ax=ax[1])
+        sns.lineplot(x=x, y=cold_model, ax=ax[1])
+        sns.lineplot(x=x, y=target - distance_floor, ax=ax[1], linestyle='--')
 
         return pl.Series('PiCycleIndex', index)
