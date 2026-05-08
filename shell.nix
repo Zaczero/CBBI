@@ -4,7 +4,7 @@ let
   # Update with `nixpkgs-update` command
   pkgs =
     import
-      (fetchTarball "https://github.com/NixOS/nixpkgs/archive/41965737c1797c1d83cfb0b644ed0840a6220bd1.tar.gz")
+      (fetchTarball "https://github.com/NixOS/nixpkgs/archive/68a8af93ff4297686cb68880845e61e5e2e41d92.tar.gz")
       { };
 
   pythonLibs = with pkgs; [
@@ -15,10 +15,10 @@ let
     with pkgs;
     (symlinkJoin {
       name = "python";
-      paths = [ python313 ];
+      paths = [ python314 ];
       buildInputs = [ makeWrapper ];
       postBuild = ''
-        wrapProgram "$out/bin/python3.13" --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath pythonLibs}"
+        wrapProgram "$out/bin/python3.14" --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath pythonLibs}"
       '';
     });
 

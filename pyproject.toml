@@ -1,7 +1,7 @@
 [project]
 name = "cbbi"
 version = "0.0.0"
-requires-python = "~=3.13.0"
+requires-python = "~=3.14.0"
 dependencies = [
   "fire",
   "httpx[brotli,zstd]",
@@ -18,7 +18,7 @@ dependencies = [
 [tool.ruff]
 indent-width = 4
 line-length = 88
-target-version = "py313"
+target-version = "py314"
 
 [tool.ruff.lint]
 ignore = [
