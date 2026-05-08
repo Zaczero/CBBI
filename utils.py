@@ -79,7 +79,7 @@ def mark_highs_lows(
         low_marks[-ignore_last_rows:] = False
 
     # stabilize the algorithm until a next major update
-    stabilize_mask = df.get_column('Date').to_numpy() >= np.datetime64('2023-07-01')
+    stabilize_mask = df.get_column('Date').to_numpy() >= np.datetime64('2025-10-07')
     high_marks[stabilize_mask] = False
     low_marks[stabilize_mask] = False
 
