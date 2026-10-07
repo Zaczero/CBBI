@@ -88,6 +88,14 @@ Define both variables to receive Telegram notifications about metric errors that
 - TELEGRAM_TOKEN=REPLACE_ME
 - TELEGRAM_CHAT_ID=123456
 
+## Tests
+
+Run the metric regression checks in the development environment:
+
+```sh
+uv run pytest
+```
+
 ## Footer
 
 ### Contact me

@@ -18,6 +18,13 @@ dependencies = [
 [dependency-groups]
 dev = ["pytest"]
 
+[tool.pytest.ini_options]
+addopts = ["-ra", "--import-mode=importlib"]
+filterwarnings = ["error"]
+pythonpath = ["."]
+strict = true
+testpaths = ["tests"]
+
 [tool.ruff]
 indent-width = 4
 line-length = 88

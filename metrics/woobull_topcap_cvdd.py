@@ -43,7 +43,9 @@ def _fetch_df():
         y_name='CVDD',
     )
 
-    return df_top.join(df_cvdd, on='Date', how='inner', maintain_order='left')
+    return df_top.join(
+        df_cvdd, on='Date', how='full', coalesce=True, maintain_order='left'
+    )
 
 
 class WoobullMetric(BaseMetric):
@@ -56,7 +58,9 @@ class WoobullMetric(BaseMetric):
         return 'Woobull Top Cap vs CVDD'
 
     def _calculate(self, df: pl.DataFrame, ax: list[Axes]):
-        df = join_left_on_date(df, _fetch_df())
+        df = join_left_on_date(df, _fetch_df()).with_columns(
+            pl.col('Top', 'CVDD').forward_fill()
+        )
 
         row_nr = np.arange(df.height)
         high_idx = row_nr[df.get_column('PriceHigh').to_numpy()]

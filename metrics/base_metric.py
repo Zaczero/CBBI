@@ -1,3 +1,4 @@
+import math
 import traceback
 from abc import ABC, abstractmethod
 
@@ -32,12 +33,21 @@ class BaseMetric(ABC):
             .get_column('Value')
         )
 
+    def _require_current_value(self, values: pl.Series):
+        current = values[-1] if len(values) else None
+        if current is None or not math.isfinite(current):
+            raise ValueError(f'{self.description} has no finite current value')
+        return values
+
     async def calculate(self, df: pl.DataFrame, ax: list[Axes]):
         try:
-            return self._calculate(df, ax)
+            return self._require_current_value(self._calculate(df, ax))
         except Exception as ex:
             traceback.print_exc()
-            await send_error_notification(ex)
+            try:
+                await send_error_notification(ex)
+            except Exception:
+                traceback.print_exc()
 
             print(
                 fg.black
@@ -45,4 +55,4 @@ class BaseMetric(ABC):
                 + f' Requesting fallback values for {self.name} (from CBBI.info) '
                 + rs.all
             )
-            return self._fallback(df)
+            return self._require_current_value(self._fallback(df))
