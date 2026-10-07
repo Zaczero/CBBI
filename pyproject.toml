@@ -15,6 +15,9 @@ dependencies = [
   "tqdm",
 ]
 
+[dependency-groups]
+dev = ["pytest"]
+
 [tool.ruff]
 indent-width = 4
 line-length = 88
